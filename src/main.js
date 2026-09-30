@@ -107,7 +107,8 @@ function handleEvents(events) {
         vfx.burst(e.x, Math.max(0.4, e.y), { heavy: true, color: 0xff5a4a });
         arena.excite(0.6);
         break;
-      case 'locked': hud.pop(e.fighter.x, e.fighter.stats.height + 0.8, 'BLOQUEADO!', 'lock'); break;
+      case 'locked': break; // o cadeado 3D acima da cabeça (StatusFx) já mostra; o hit já grita BLOQUEADO!
+      case 'grab': stage.shake(0.12); stage.punch(0.05); arena.excite(0.5); break;
       case 'ultimate': hud.ultimate(e.fighter, e.name); stage.shake(0.3); arena.excite(1); break;
       case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); arena.excite(1); break;
       case 'roundWin': break;

@@ -10,6 +10,7 @@ import { JUMP_V } from '../fight/constants.js';
 import { XandorAvatar } from './ultimates/XandorAvatar.js';
 import { LulacioPolvo } from './ultimates/LulacioPolvo.js';
 import { SpecialFx } from './SpecialFx.js';
+import { StatusFx } from './StatusFx.js';
 
 const ULTIMATE_FX = { xandorAvatar: XandorAvatar, lulacioPolvo: LulacioPolvo };
 
@@ -53,6 +54,7 @@ export class FighterView {
         .catch(() => console.info(`[visual] ${fighter.data.id}: sem GLB em ${visual.model}, usando placeholder`));
     }
     if (visual.specialFx) this.spFx = new SpecialFx(scene, visual.specialFx);
+    this.status = new StatusFx(scene); // estrelinhas (atordoado) e cadeado (BLOQUEADO)
     // VFX da ultimate (composição por personagem)
     if (visual.ultimateFx && ULTIMATE_FX[visual.ultimateFx]) this.ultFx = new ULTIMATE_FX[visual.ultimateFx](scene);
     const tr = visual.transform;
@@ -98,9 +100,18 @@ export class FighterView {
 
   update(dt, match) {
     const f = this.f;
-    this.group.position.set(f.x, f.y, 0);
-    const targetTurn = f.facing > 0 ? Math.PI / 2 : -Math.PI / 2;
-    this.turn += (targetTurn - this.turn) * Math.min(1, dt * 18);
+    // Abraço: o preso orbita em Z (a lógica é 2D) e fica um pouco erguido; os dois se encaram durante o giro
+    const heldZ = f.heldZ || 0;
+    this.group.position.set(f.x, f.y + (f.heldBy ? 0.3 : 0), heldZ);
+    const other = f.held || f.heldBy;
+    if (other) {
+      this.turn = Math.atan2(other.x - f.x, (other.heldZ || 0) - heldZ);
+    } else {
+      const targetTurn = f.facing > 0 ? Math.PI / 2 : -Math.PI / 2;
+      let d = targetTurn - this.turn;
+      d = Math.atan2(Math.sin(d), Math.cos(d)); // volta pelo caminho curto depois do giro
+      this.turn += d * Math.min(1, dt * 18);
+    }
     this.group.rotation.y = this.turn;
 
     // forma de ultimate: entra depois da cinemática de ativação
@@ -123,9 +134,16 @@ export class FighterView {
     model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' || f.state === 'special' ? f.t : undefined, airP });
     // GLB sem animação de queda/KO: deita o modelo proceduralmente (nunca fica em pé nocauteado)
     const lying = LYING.has(f.animKey) && model.hasClip && !model.hasClip(f.animKey === 'getup' ? 'getup' : 'ko');
-    const layTarget = lying ? (f.animKey === 'getup' ? Math.max(0, 1 - f.t / 18) : 1) : 0;
+    let layTarget = lying ? (f.animKey === 'getup' ? Math.max(0, 1 - f.t / 18) : 1) : 0;
+    // Abraço: o preso vai deitando pra fora conforme o giro acelera (força centrífuga), pés fora do chão
+    const g = f.heldBy, gsp = g?.sp?.spin ? g.sp : null;
+    if (gsp) layTarget = Math.min(0.8, ((g.t - gsp.startup) / gsp.spin.frames) * 1.3);
+    this.group.position.y += this.lay * 0.5 * (gsp ? 1 : 0);
     this.lay += (layTarget - this.lay) * Math.min(1, dt * 12);
     model.object.rotation.x = -this.lay * Math.PI / 2;
+    // atordoado: corpo balança de tonto (lado a lado)
+    const dz = f.state === 'hitstun' && f.animKey === 'dizzy' ? Math.sin(performance.now() / 160) * 0.1 : 0;
+    model.object.rotation.z += (dz - model.object.rotation.z) * Math.min(1, dt * 10);
     // ultimate com VFX próprio: brilho dourado FIXO (sem piscar); sem VFX: stand-in piscando (antigo)
     const ultBlink = this.form === 'ultimate' && !this.ultimateModel && !this.ultFx && Math.floor(performance.now() / 90) % 2 === 0;
     model.setFlash(f.flash > 0 || ultBlink, this.form === 'ultimate' && this.ultFx ? tr.tint : null);
@@ -136,9 +154,10 @@ export class FighterView {
     }
     this.ultFx?.update(dt, f, match, model);
     this.spFx?.update(dt, f, model);
+    this.status.update(dt, f, model, this.formScale);
     if (this.ultFx) model.object.visible = !this.ultFx.hideBase; // polvo substitui o corpo
 
-    this.blob.position.x = f.x;
+    this.blob.position.set(f.x, 0.012, heldZ);
     const s = Math.max(0.4, 1 - f.y * 0.25) * this.formScale;
     this.blob.scale.set(s, s, s);
     if (this.aura) {
@@ -163,5 +182,6 @@ export class FighterView {
     this.ultimateModel?.dispose();
     this.ultFx?.dispose();
     this.spFx?.dispose();
+    this.status.dispose();
   }
 }

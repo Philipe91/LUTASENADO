@@ -7,3 +7,4 @@
 - Pulo fases visíveis em pranchas Lulácio; falta revisão contínua Xandor/lados/aéreo. Ultimates Xandor VFX implementado candidato; polvo procedural PROTÓTIPO, não arte final. Dor facial, Abraço, demais poderes pendentes. Não chamar implementado de revisado.
 - Sem gasto Meshy GPT autorizado aqui. Claude relatou até70 na sessão dele; registrar se gastar sem presumir autorização nossa. Uso último direto38%semanal/96%5h; teto conservador relatado60%, aviso55%, sem resets. Rever em lotes econômicos.
 - Próximo: aguardar FEITO consolidado respondendo G-012, revisar apenas mudanças/evidências, atualizar cursor e resumo. Não expandir assets antes de estabilizar.
+- Encerramento 30/09 08:05: vigia PAUSADO; relatório entregue, G-013. Sem mensagens depois C-019; G-012 pendente. Retomar só quando usuário pedir, ajustando prazo da automação.

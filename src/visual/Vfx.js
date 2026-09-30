@@ -2,6 +2,7 @@
 // Nada é criado/destruído durante a luta: tudo vem de pools e volta pra eles (ENTRA → IMPACTA → SOME).
 import * as THREE from 'three';
 import { PROJECTILE_VISUALS } from './projectiles.js';
+import { XANDOR_VISUALS } from './xandorVisuals.js';
 import { loadGLTF } from './models/GLBModel.js';
 
 function sparkTexture() {
@@ -42,7 +43,7 @@ function animateDrop(v, h) {
   d.position.y = v.userData.fromY - (v.userData.fromY - 0.25) * k * k;
   d.visible = k > 0.35;
 }
-const VISUALS = { ...BASIC_VISUALS, ...PROJECTILE_VISUALS };
+const VISUALS = { ...BASIC_VISUALS, ...PROJECTILE_VISUALS, ...XANDOR_VISUALS };
 
 export class Vfx {
   constructor(scene) {

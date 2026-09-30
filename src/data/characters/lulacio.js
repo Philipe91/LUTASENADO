@@ -22,10 +22,12 @@ export default {
     },
   },
   specials: {
+    // DISCURSO: 3 pulsos de voz em cone (empurram pouco, prendem o alvo) → o ÚLTIMO atordoa (estrelinhas na cabeça)
     neutral: {
-      name: 'Discurso Interminável', kind: 'strike', startup: 10, active: 16, recovery: 16, rehit: 8,
-      damage: 3, hitstun: 12, stun: 18, push: 0.12, cooldown: 120,
-      box: { x: 0.3, y: 0.7, w: 1.7, h: 1.0 }, text: 'BLÁ BLÁ BLÁ!',
+      name: 'Discurso Interminável', kind: 'strike', startup: 10, active: 30, recovery: 18, rehit: 10,
+      damage: 2, hitstun: 14, push: 0.03, cooldown: 150,
+      box: { x: 0.3, y: 0.5, w: 1.9, h: 1.3 },
+      final: { damage: 4, stun: 55, push: 0.1, text: 'ATORDOADO!' },
     },
     // PICANHA DO POVO: picanha em arco → ao acertar / chegar perto / cair, vira uma onda de apoiadores
     forward: {
@@ -39,9 +41,11 @@ export default {
         box: { y: 0, w: 1.6, h: 1.6 }, visual: 'civilCrowd', color: 0xd62828,
       },
     },
+    // ABRAÇO: agarra, gira 3 voltas com o alvo (acelerando) e arremessa longe
     down: {
-      name: 'Abraço do Palanque', kind: 'grab', startup: 7, recovery: 28, cooldown: 140,
-      range: 1.5, damage: 16, push: 0.2, text: 'ABRAÇO!',
+      name: 'Abraço do Palanque', kind: 'grab', startup: 7, recovery: 26, cooldown: 160,
+      range: 1.5, damage: 16, push: 0.24, text: 'ABRAÇO!', throwText: 'VOOU!',
+      spin: { turns: 3, frames: 54, radius: 0.95 },
     },
   },
   ultimate: { name: 'O POLVÃO DO POVO', hits: 6, interval: 14, damage: 4, finisher: 12, range: 4.5, text: 'POLVÃO!' },
@@ -81,6 +85,7 @@ export default {
       sweep: { start: 0.2, contact: 0.5, activeEnd: 0.6, end: 1.0 },
       special2: { start: 0.2, contact: 0.95, activeEnd: 1.05, end: 1.9 }, // picanha: solta a mão no frame de spawn
       special1: { start: 1.0, contact: 1.6, activeEnd: 4.3, end: 5.2 },   // discurso: gesticula durante a janela ativa
+      special3: { start: 0.4, contact: 1.2, activeEnd: 2.5, end: 3.6 },   // abraço: agarra → segura durante o giro → joga
     },
     // efeitos presos ao corpo: pulsos de voz no Discurso; picanha na mão até o arremesso
     specialFx: {

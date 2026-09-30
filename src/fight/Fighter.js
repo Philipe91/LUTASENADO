@@ -9,9 +9,9 @@ const DEFAULT_STATS = { hp: 100, walk: 1, jump: 1, width: 0.8, height: 1.8, dama
 const WALK = 0.055;
 import { JUMP_V } from "./constants.js";
 const JUMP_X = 0.075;
-const INVULNERABLE = new Set(['knockdown', 'down', 'getup', 'ko', 'victory', 'intro', 'ultimate']);
+const INVULNERABLE = new Set(['knockdown', 'down', 'getup', 'ko', 'victory', 'intro', 'ultimate', 'held']);
 const FRICTION = new Set(['hitstun', 'blockstun', 'down', 'getup', 'ko']);
-const NOT_THROWABLE = new Set(['hitstun', 'blockstun', 'knockdown', 'down', 'getup', 'ko', 'ultimate', 'intro', 'victory']);
+const NOT_THROWABLE = new Set(['held', 'hitstun', 'blockstun', 'knockdown', 'down', 'getup', 'ko', 'ultimate', 'intro', 'victory']);
 const BUTTONS = ['punch', 'kick', 'special', 'ultimate'];
 export const SPECIAL_ANIM = { neutral: 'special1', forward: 'special2', down: 'special3' };
 
@@ -47,6 +47,8 @@ export class Fighter {
     this.stun = 0; this.comboTaken = 0; this.comboCount = 0; this.likes = 0;
     this.buffT = 0; this.lockT = 0; this.flash = 0; this.armorUsed = false; this.airAttackUsed = false;
     this.cooldowns = { neutral: 0, forward: 0, down: 0 };
+    this.held = null; this.heldBy = null; this.heldZ = 0; this.spinAng = 0; // Abraço giratório
+    this.ultRes = []; // resultado de cada hit da ultimate ('hit'|'miss'): o visual só mostra contato quando acertou
     this.setState('intro', 'intro');
   }
 
@@ -114,7 +116,9 @@ export class Fighter {
       const s = this.sp;
       if (this.t >= s.startup && this.t < s.startup + s.active) {
         const n = Math.floor((this.t - s.startup) / (s.rehit || 999));
-        return { id: this.hitId * 100 + n, box: this.relBox(s.box), hit: s };
+        // último pulso do multi-hit pode ter efeito próprio (ex.: Discurso atordoa no final)
+        const last = Math.floor((s.active - 1) / (s.rehit || 999));
+        return { id: this.hitId * 100 + n, box: this.relBox(s.box), hit: n === last && s.final ? { ...s, ...s.final } : s };
       }
     }
     return null;
@@ -151,6 +155,8 @@ export class Fighter {
     if (this.lockT > 0) this.lockT--;
     if (this.buffT > 0) this.buffT--;
     if (this.flash > 0) this.flash--;
+    // agarrão interrompido (tomou golpe, KO...): solta quem estava preso
+    if (this.held && this.state !== 'special') this.releaseHeld();
     // golpe com impacto no chão (pisão): poeira no 1º frame ativo, acertando ou não
     if (this.state === 'attack' && this.move?.groundFx && this.t === this.move.startup) {
       match.emit({ type: 'dust', x: this.x + this.facing * (this.move.hitbox.x + this.move.hitbox.w / 2), size: this.move.groundFx });
@@ -172,6 +178,10 @@ export class Fighter {
       case 'special': this.updateSpecial(match); break;
       case 'ultimate': this.updateUltimate(match); break;
       case 'hitstun': case 'blockstun': if (this.t >= this.stun && this.grounded) this.toNeutral(); break;
+      case 'held':
+        // o agarrador controla a posição; se ele soltou sem arremessar, cai
+        if (!this.heldBy) { this.heldZ = 0; this.setState('knockdown', 'knockdown'); this.vy = 0.1; this.y = 0.001; }
+        break;
       case 'down': if (this.t >= 34) this.setState('getup', 'getup', 18); break;
       case 'getup': if (this.t >= 18) this.toNeutral(); break;
       default: break; // knockdown / ko: física resolve
@@ -270,17 +280,52 @@ export class Fighter {
         const tx = s.atOpponent ? o.x : this.x + this.facing * (s.dist ?? 2.5);
         match.spawn(new Hitter({
           owner: this, hit: s, x: tx, y: s.box.y ?? 0, w: s.box.w, h: s.box.h, delay: s.delay ?? 30,
-          life: s.activeFrames ?? 8, hitsLeft: s.hits ?? 1, rehit: s.rehit ?? 10, visual: s.visual, color: s.color, facing: this.facing,
+          life: (s.activeFrames ?? 8) + (s.linger ?? 0), activeUntil: (s.delay ?? 30) + (s.activeFrames ?? 8), linger: !!s.linger, hitsLeft: s.hits ?? 1, rehit: s.rehit ?? 10, visual: s.visual, color: s.color, facing: this.facing,
         }));
       } else if (s.kind === 'grab') {
         if (this.distTo(o) <= s.range && o.canBeThrown()) {
-          applyHit(match, this, o, { ...s, throw: true, unblockable: true, knockdown: true, heavy: true }, this.x);
+          if (s.spin) this.startSpin(o, match);
+          else applyHit(match, this, o, { ...s, throw: true, unblockable: true, knockdown: true, heavy: true }, this.x);
         } else {
           match.emit({ type: 'text', fighter: this, text: 'ERROU!', cls: 'miss' });
         }
       }
     }
+    if (this.held) this.updateSpin(match);
     if (this.t >= total) this.toNeutral();
+  }
+
+  // ---------- Abraço giratório (grab com spin): prende, gira N voltas em volta de si e arremessa ----------
+  startSpin(o, match) {
+    const s = this.sp;
+    this.held = o; o.heldBy = this;
+    o.move = null; o.sp = null; o.comboTaken = 0; o.vx = 0; o.vy = 0; o.y = 0;
+    o.setState('held', 'hit');
+    s.active = s.spin.frames; // o giro vira a janela "ativa" do especial
+    this.animLen = s.startup + s.active + s.recovery; this.animSeq++; // replay com as fases novas (scrub)
+    match.emit({ type: 'grab', fighter: this, target: o });
+    if (s.text) match.emit({ type: 'text', fighter: this, text: s.text, cls: 'shout' });
+  }
+  updateSpin(match) {
+    const s = this.sp, sp = s.spin, o = this.held;
+    const k = this.t - s.startup;
+    if (k < sp.frames) {
+      const q = k / sp.frames;
+      this.spinAng = sp.turns * Math.PI * 2 * q * q; // acelera: começa pesado, termina girando rápido
+      o.x = Math.max(-ARENA_HALF, Math.min(ARENA_HALF, this.x + this.facing * sp.radius * Math.cos(this.spinAng)));
+      o.heldZ = sp.radius * Math.sin(this.spinAng);
+      o.y = 0; o.vx = 0; o.vy = 0;
+      return;
+    }
+    // soltou: arremesso na frente (ângulo final = N voltas completas)
+    this.releaseHeld();
+    o.x = Math.max(-ARENA_HALF, Math.min(ARENA_HALF, this.x + this.facing * sp.radius));
+    o.setState('hitstun', 'hit', 1); // volta a ter hurtbox para receber o arremesso
+    applyHit(match, this, o, { ...s, text: s.throwText, throw: true, unblockable: true, knockdown: true, heavy: true, hitstop: 16 }, this.x);
+  }
+  releaseHeld() {
+    if (this.held) { this.held.heldBy = null; this.held.heldZ = 0; }
+    this.held = null; this.spinAng = 0;
   }
 
   // ---------- ultimate ----------
@@ -292,6 +337,7 @@ export class Fighter {
     this.meter = 0; this.vx = 0;
     this.hitId = uid();
     this.ultHits = 0;
+    this.ultRes = [];
     this.setState('ultimate', 'ultimate', this.ultimateLength());
     match.startCinematic(this);
     return true;
@@ -304,21 +350,25 @@ export class Fighter {
     const d = this.distTo(o);
     this.faceOpponent();
     this.vx = this.t < hitsEnd && d > u.range * 0.7 ? 0.1 * this.facing : 0;
-    if (this.t >= start && this.t < hitsEnd && (this.t - start) % u.interval === 0 && d <= u.range) {
-      applyHit(match, this, o, {
+    // ultRes[i] = resultado REAL de cada hit (i = u.hits é o finalizador). O visual lê isso para decidir
+    // entre contato (caneta crava / tentáculo encosta) e erro (passa direto / bate no chão).
+    if (this.t >= start && this.t < hitsEnd && (this.t - start) % u.interval === 0) {
+      const i = (this.t - start) / u.interval;
+      this.ultRes[i] = d <= u.range ? applyHit(match, this, o, {
         damage: u.damage, hitstun: u.interval + 8, push: 0.02, unblockable: true, heavy: true, ultimate: true,
-      }, this.x);
+      }, this.x) : 'miss';
     }
-    if (this.t === hitsEnd + 6 && d <= u.range + 1) {
-      applyHit(match, this, o, {
+    if (this.t === hitsEnd + 6) {
+      this.ultRes[u.hits] = d <= u.range + 1 ? applyHit(match, this, o, {
         damage: u.finisher, knockdown: true, push: 0.25, unblockable: true, heavy: true, ultimate: true, text: u.text,
-      }, this.x);
+      }, this.x) : 'miss';
     }
     if (this.t >= this.ultimateLength()) this.toNeutral();
   }
 
   // ---------- física ----------
   physics() {
+    if (this.heldBy) return; // preso no Abraço: posição vem do agarrador
     const airborne = this.y > 0 || this.vy > 0;
     if (airborne) {
       this.vy -= GRAVITY;

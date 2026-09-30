@@ -3,6 +3,8 @@
 //   triggerRange  — morre ao chegar a essa distância do oponente (ex.: picanha)
 //   spawnOnEnd    — spec de outro Hitter criado onde este morreu (ex.: onda de apoiadores)
 //   hit.final     — campos que sobrescrevem o último hit de um multi-hit (ex.: knockback final)
+//   activeUntil   — último frame (t) em que ainda machuca; depois disso só o visual continua
+//   linger        — ao gastar os hits não some na hora: fica 'spent' (sem dano) até o fim da vida, pro visual terminar
 let nextId = 1;
 
 export class Hitter {
@@ -14,7 +16,7 @@ export class Hitter {
     this.id = nextId++;
     this.t = 0;
   }
-  get active() { return !this.dead && this.t > this.delay && this.cool === 0; }
+  get active() { return !this.dead && !this.spent && this.t > this.delay && this.t <= (this.activeUntil ?? Infinity) && this.cool === 0; }
   get armed() { return this.t > this.delay; }
   update() {
     this.t++;

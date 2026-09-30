@@ -142,6 +142,7 @@ export class Match {
   // Empurra corpos que se sobrepõem e limita a distância máxima (enquadramento da câmera)
   separate() {
     const [a, b] = this.fighters;
+    if (a.heldBy || b.heldBy) return; // Abraço: o agarrador posiciona o preso
     for (let pass = 0; pass < 2; pass++) {
       const minD = (a.stats.width + b.stats.width) * 0.45;
       const dx = b.x - a.x;

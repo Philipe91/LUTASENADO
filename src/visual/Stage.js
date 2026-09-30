@@ -30,18 +30,30 @@ export class Stage {
   // zoom rápido de impacto (k = fração de aproximação), decai sozinho
   punch(k) { this.punchAmt = Math.max(this.punchAmt || 0, k); }
 
+  // topo da forma de ultimate (cabeça + selo/chapéu): visual.transform.frameTop, ou altura × escala do stand-in
+  static ultTop(f) {
+    const tr = f.data.visual?.transform || {};
+    return tr.frameTop ?? f.stats.height * (tr.standInScale || 1) + 0.5;
+  }
+
   updateCamera(match, dt) {
     const c = this.cam;
     let tx, ty, tz, lookY, lookX;
     if (match?.cinematic) {
+      // close da transformação, mas enquadrando a forma inteira (antes cortava cabeça/selo do Avatar)
       const f = match.cinematic.fighter;
-      tx = f.x - f.facing * 0.2; ty = 1.0; tz = 4.2; lookX = f.x; lookY = 1.4;
+      const top = Stage.ultTop(f);
+      const halfTan = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+      tx = f.x - f.facing * 0.2; lookX = f.x; lookY = top * 0.5;
+      tz = Math.max(4.2, ((top * 0.5 + 0.4) / halfTan) * 1.3); // 1.3: folga das faixas pretas da cinemática
+      ty = lookY - 0.3;
     } else if (match) {
       const [a, b] = match.fighters;
       const mid = (a.x + b.x) / 2, sep = Math.abs(a.x - b.x);
       const halfTan = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
       const aspect = this.camera.aspect; // aspect REAL (retrato ~0.5): travar em 0.9 cortava os lutadores
-      const topY = Math.max(a.y, b.y) + 2.4;               // cabeça + salto
+      const ultF = match.fighters.find((f) => f.state === 'ultimate');
+      const topY = Math.max(Math.max(a.y, b.y) + 2.4, ultF ? Stage.ultTop(ultF) + 0.6 : 0); // cabeça + salto (ou forma de ultimate)
       const halfW = sep / 2 + 1.7;                         // corpo + margem de knockback
       const needX = halfW / (halfTan * aspect);
       const needY = (topY / 2 + 0.5) / halfTan;            // do chão até o topo, com folga
@@ -49,8 +61,7 @@ export class Stage {
       tx = mid; lookX = mid;
       lookY = Math.min(topY / 2, 1.35 + Math.max(a.y, b.y) * 0.5);
       ty = lookY + Math.min(2.2, 0.9 + (tz - 7) * 0.06); // levemente acima, sem olhar muito de cima ao afastar
-      const ult = match.fighters.find((f) => f.state === 'ultimate');
-      if (ult) tz *= 1.15;
+
     } else {
       tx = 0; ty = 1.9; tz = 12; lookX = 0; lookY = 1.3;
     }

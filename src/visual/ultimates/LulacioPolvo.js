@@ -172,7 +172,9 @@ export class LulacioPolvo {
         if (f.t < s || f.t > hitF + 5) continue;
         const q = clamp01((f.t - s) / 7);
         const up = tgt.clone().add(new THREE.Vector3(-f.facing * 1.5, 3.5, 0));
-        const aim = f.t <= hitF ? up.lerp(tgt, q * q) : tgt;
+        // errou (f.ultRes): o tentáculo passa do alvo e bate no chão, sem encostar
+        const miss = f.t > hitF && f.ultRes[h] !== 'hit';
+        const aim = f.t <= hitF ? up.lerp(tgt, q * q) : miss ? tgt.clone().setY(0.05).add(new THREE.Vector3(f.facing * 0.6, 0, 0)) : tgt;
         this.strikePose(this.tents[hitTent(h)], aim, 1 - q);
       }
       if (f.t >= fin - 8 && f.t <= fin + 8) { // finalizador: todos (menos o do microfone) batem juntos
@@ -181,7 +183,8 @@ export class LulacioPolvo {
           if (i === 1) return;
           const spread = new THREE.Vector3((i - 4) * 0.12, (i % 3) * 0.3, 0);
           const up = tgt.clone().add(new THREE.Vector3(0, 4, 0)).add(spread);
-          this.strikePose(t, f.t <= fin ? up.lerp(tgt.clone().add(spread), q * q) : tgt.clone().add(spread), 1 - q);
+          const end = f.ultRes[u.hits] === 'hit' ? tgt.clone().add(spread) : tgt.clone().setY(0.05).add(spread);
+          this.strikePose(t, f.t <= fin ? up.lerp(tgt.clone().add(spread), q * q) : end, 1 - q);
         });
       }
     }

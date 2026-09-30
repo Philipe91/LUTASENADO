@@ -20,12 +20,12 @@ export default {
     },
     forward: {
       name: 'BLOQUEADO', kind: 'zone', atOpponent: true, startup: 14, recovery: 20, cooldown: 300,
-      delay: 28, activeFrames: 6, damage: 6, hitstun: 20, lockSpecials: 240,
+      delay: 28, activeFrames: 6, linger: 16, damage: 6, hitstun: 20, lockSpecials: 240,
       box: { y: 0, w: 1.1, h: 2.0 }, visual: 'stamp', color: 0xd62828, text: 'BLOQUEADO!',
     },
     down: {
       name: 'Canetada', kind: 'zone', atOpponent: true, startup: 10, recovery: 16, cooldown: 180,
-      delay: 36, activeFrames: 10, damage: 9, knockdown: true, push: 0.12,
+      delay: 36, activeFrames: 10, linger: 18, damage: 9, knockdown: true, push: 0.12,
       box: { y: 0, w: 0.8, h: 2.2 }, visual: 'pen', color: 0x1a1a1a, text: 'CANETADA!',
     },
   },
@@ -83,7 +83,7 @@ export default {
     // robeFix DESLIGADO: nunca esteve ativo (bug de nome de osso "right…"→"ht…") e, ativo, prende as mãos ao quadril.
     // O Xandor foi aprovado sem ele (rig v5 resolveu as pernas).
     ultimateFx: 'xandorAvatar', // VFX: selo, aura, olhos, livros, canetas por hit, martelo colossal no final
-    transform: { id: 'avatar', model: 'assets/characters/xandor/ultimate.glb', height: 3.6, standInScale: 1.75, tint: 0xffb020, gold: true },
+    transform: { id: 'avatar', model: 'assets/characters/xandor/ultimate.glb', height: 3.6, standInScale: 1.75, tint: 0xffb020, gold: true, frameTop: 5.7 }, // frameTop: topo do selo
     placeholder: { skin: 0xe8b894, suit: 0x121212, accent: 0xd4af37, hair: 0x121212, headScale: 1.35, girth: 1.05, bald: true, angryBrows: true, robe: true },
   },
 };

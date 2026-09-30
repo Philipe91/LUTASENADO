@@ -3,6 +3,7 @@
 // Golpes: cada hit da ultimate é uma CANETA que sai da órbita e crava no alvo exatamente no frame do dano.
 // Finalizador: MARTELO colossal desce sobre o alvo no frame do golpe final → onda de choque → tudo se dissipa.
 // Os frames vêm dos mesmos números da lógica (Fighter.updateUltimate): hit k = 12 + k·interval; final = 12 + hits·interval + 6.
+// Contato só quando a lógica confirma (f.ultRes[k] === 'hit'): errou → caneta passa direto e cai, martelo bate no chão.
 import * as THREE from 'three';
 
 const GOLD = 0xffd36b;
@@ -152,6 +153,14 @@ export class XandorAvatar {
       if (f.t < hitF) {
         p.position.lerpVectors(from, tgt, easeIn(q));
         p.lookAt(tgt); p.rotateX(Math.PI / 2);
+      } else if (f.ultRes[i] !== 'hit') {
+        // errou (fora do alcance): segue a trajetória, passa do alvo e cai no chão — sem tinta
+        const k = (f.t - hitF) / 10;
+        const dir = tgt.clone().sub(from).normalize();
+        p.position.copy(tgt).addScaledVector(dir, k * 2.2);
+        p.position.y = Math.max(0.1, p.position.y - k * k * 1.5);
+        p.lookAt(p.position.clone().add(dir)); p.rotateX(Math.PI / 2);
+        ink.visible = false;
       } else {
         p.position.copy(tgt).add(new THREE.Vector3(-f.facing * 0.1, 0.05 * i, 0.3));
         ink.visible = true; ink.position.set(tgt.x, tgt.y, 0.45);
@@ -166,7 +175,9 @@ export class XandorAvatar {
     this.gavel.visible = gOn;
     if (gOn) {
       const q = clamp01((gt - gs) / 14);
-      const headY = o.y + o.stats.height + 0.6;
+      // acertou: para na cabeça do alvo; errou: desce até o chão (a onda de choque sai do chão)
+      const missed = gt >= fin && f.ultRes[u.hits] !== 'hit';
+      const headY = missed ? 0.6 : o.y + o.stats.height + 0.6;
       this.gavel.position.set(o.x - f.facing * 1.0, headY + (1 - easeIn(q)) * 6, 0);
       this.gavel.rotation.set(0, 0, f.facing * (-1.4 + easeIn(q) * 1.4));
       this.gavel.scale.setScalar(gt >= fin ? Math.max(0.01, 1 - (gt - fin) / 16) : 1);

@@ -26,7 +26,8 @@ export function resolveHits(match) {
     const r = applyHit(match, h.owner, o, hit, h.x - h.vx * 10);
     if (r === 'miss') continue;
     h.cool = h.rehit;
-    if (--h.hitsLeft <= 0) h.dead = true;
+    h.landed = (h.landed || 0) + 1; // o visual usa: contato confirmado (tinta no corpo) x erro (no chão)
+    if (--h.hitsLeft <= 0) { if (h.linger) h.spent = true; else h.dead = true; }
   }
 }
 
@@ -85,7 +86,7 @@ export function applyHit(match, atk, def, hit, sourceX) {
   atk.gainMeter(dmg * 2.4);
   def.gainMeter(dmg * 1.5);
 
-  if (hit.lockSpecials) { def.lockT = hit.lockSpecials; match.emit({ type: 'locked', fighter: def }); }
+  if (hit.lockSpecials) { def.lockT = def.lockMax = hit.lockSpecials; match.emit({ type: 'locked', fighter: def }); }
   if (hit.pull) def.x = atk.x + atk.facing * ((atk.stats.width + def.stats.width) / 2 + 0.35);
 
   if (def.hp <= 0) {
@@ -105,7 +106,7 @@ export function applyHit(match, atk, def, hit, sourceX) {
     def.vx = dir * (hit.push ?? 0.1);
   }
 
-  match.hitstop = Math.max(match.hitstop, hit.heavy ? 11 : 7);
+  match.hitstop = Math.max(match.hitstop, hit.hitstop ?? (hit.heavy ? 11 : 7));
   match.emit({ type: 'hit', x: fx, y: fy, dmg, heavy: !!hit.heavy, ultimate: !!hit.ultimate, text: hit.text, attacker: atk, fighter: def });
   return 'hit';
 }
