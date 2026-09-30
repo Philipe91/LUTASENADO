@@ -17,9 +17,11 @@ Teclas: F1 hitboxes · F2 liga/desliga CPU no P1 · ESC menu
 ## Status
 - **Dia 1 FEITO (29/09):** movimentação, pulo, agachar, defesa alta/baixa, soco x3 encadeado, chute, rasteira, aéreos, arremesso, hitstop, shake, hitboxes, vida, barra de ultimate, 12 especiais por dados, 4 passivas, ultimate (stand-in), rounds PRIMEIRO/SEGUNDO/TERCEIRO TURNO, KO com câmera lenta, timer, IA com perfil por personagem, HUD, seleção, resultado/revanche, arena Brasília blockout.
 - **29/09 (tarde):** Picanha do Povo (Lulácio →) e Patriota no Para-brisa (Brasa ↓) implementados; visuais de Hitter com object pooling em `visual/projectiles.js`; ganchos de GLB de prop em `assets/props/` (picanha.glb, apoiador.glb, caminhao.glb).
-- **Pipeline GLB pronto e testado** com modelo rigado real (Soldier.glb). Falta só os modelos definitivos.
+- **Pipeline GLB pronto e testado** com modelo rigado real (Soldier.glb).
+- **29/09 (noite):** Xandor 3D ✅ aprovado (rig v5). Lulácio 3D v2 (punhos fechados, estilo brigão) no jogo — ⏳ **aguardando validação do usuário**. Checkpoint git `checkpoint-lulacio-xandor`. Capitão Brasa e Dino ainda em placeholder.
+- **Canal com o GPT:** `canal_ia/` (README com protocolo, vigia.ps1, consenso.md). Decisões de design são fechadas em consenso lá antes de executar.
 
-## Pipeline 3D (preparado 29/09, aguardando referência do XANDOR)
+## Pipeline 3D (status por personagem: tabela em CHATGPT_DESIGN.md)
 - Runbook passo a passo: **PIPELINE_VISUAL.md §0**. Referências em `references/<id>/`. Registro em `CHATGPT_DESIGN.md` (tabela PIPELINE 3D).
 - Ferramentas: `node tools/inspect_glb.mjs <glb>` · `npx gltf-transform optimize ...` · `?animtest=1` (roteiro de validação) · `?glbtest=<arquivo em assets/test>&yaw=` · manifesto de animações `public/assets/animations/manifest.json`.
 - Ordem: Xandor → Lulácio → Capitão Brasa → Dino. Um por vez, mostrar ao usuário antes de seguir. Não gerar ultimate.glb sem pedido.

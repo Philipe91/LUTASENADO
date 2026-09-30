@@ -6,7 +6,7 @@ export function normBone(name) {
   return name.toLowerCase()
     .replace(/_\d+$/, '') // GLTFLoader renomeia nós duplicados para "Nome_1"
     .replace(/^mixamorig\d*[:_]?/, '')
-    .replace(/^(armature|rig|skeleton)[|_:.]?/, '')
+    .replace(/^(armature|rig|skeleton)[|_:.]/, '') // exige separador: "right…" começa com "rig"
     .replace(/[^a-z0-9]/g, '');
 }
 

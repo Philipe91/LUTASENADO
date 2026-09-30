@@ -13,7 +13,14 @@ export default {
     desc: 'Enche a barra 30% mais rápido. Abaixo de 30% de vida: +15% de dano.',
     lowHp: { below: 0.3, damage: 1.15 },
   },
-  moves: { throw: { damage: 15 } },
+  moves: {
+    throw: { damage: 15 },
+    // PISÃO (↓+chute): curto e pesado, em pé (hurtbox alta), hitbox só na frente do pé; derruba só quem está ali
+    sweep: {
+      startup: 13, active: 3, recovery: 22, crouch: false, groundFx: 1,
+      hitbox: { x: 0.2, y: 0, w: 0.55, h: 0.3 },
+    },
+  },
   specials: {
     neutral: {
       name: 'Discurso Interminável', kind: 'strike', startup: 10, active: 16, recovery: 16, rehit: 8,
@@ -25,10 +32,11 @@ export default {
       name: 'Picanha do Povo', kind: 'projectile', startup: 12, recovery: 20, cooldown: 220,
       speed: 0.15, vy: 0.11, g: 0.0065, damage: 2, hitstun: 16, life: 45, triggerRange: 1.3,
       box: { y: 1.1, w: 0.5, h: 0.35 }, visual: 'picanha', model: 'assets/props/picanha.glb',
+      // ao acertar/chegar perto/cair: civis surgem ATRÁS do Lulácio e correm até passar do alvo
       spawnOnEnd: {
-        kind: 'wave', back: 1.4, speed: 0.1, life: 50, hits: 4, rehit: 6,
+        kind: 'wave', anchor: 'owner', back: 1.8, overshoot: 2.5, maxLife: 150, speed: 0.13, hits: 4, rehit: 6,
         damage: 2.5, hitstun: 14, push: 0.05, final: { damage: 4, push: 0.28, knockdown: true, text: 'O POVO CHEGOU!' },
-        box: { y: 0, w: 1.8, h: 1.5 }, visual: 'crowdWave', color: 0xd62828, model: 'assets/props/apoiador.glb',
+        box: { y: 0, w: 1.6, h: 1.6 }, visual: 'civilCrowd', color: 0xd62828,
       },
     },
     down: {
@@ -61,6 +69,14 @@ export default {
       special2: PICANHA, // Picanha do Povo
       special3: 'Grip_and_Throw_Down', // Abraço do Palanque
       victory: 'Chest_Pound_Taunt',
+    },
+    timing: {
+      punch1: { start: 0.08, contact: 0.333, activeEnd: 0.356, end: 0.6 },
+      crouchPunch: { start: 0.08, contact: 0.333, activeEnd: 0.356, end: 0.6 },
+      punch2: { start: 0.45, contact: 0.7, activeEnd: 0.8, end: 1.0 },
+      punch3: { start: 1.1, contact: 1.4, activeEnd: 1.47, end: 1.833 }, // martelada: braços na altura do peito (não no chão)
+      kick: { start: 0.362, contact: 0.693, activeEnd: 0.756, end: 0.897 },
+      sweep: { start: 0.2, contact: 0.5, activeEnd: 0.6, end: 1.0 },
     },
     transform: { id: 'polvo', model: 'assets/characters/lulacio/ultimate.glb', height: 4.2, standInScale: 1.7, tint: 0x7a4fd6 },
     placeholder: { skin: 0xf0c8a0, suit: 0x1d3a8a, accent: 0xd62828, hair: 0xf2f2f2, headScale: 1.35, girth: 1.3, beard: true },

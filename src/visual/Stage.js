@@ -37,10 +37,15 @@ export class Stage {
       const [a, b] = match.fighters;
       const mid = (a.x + b.x) / 2, sep = Math.abs(a.x - b.x);
       const halfTan = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
-      const aspect = Math.max(this.camera.aspect, 0.9);
-      tz = THREE.MathUtils.clamp((sep + 3.6) / (2 * halfTan * aspect), 6.5, 16);
-      tx = mid; ty = 2.3 + (tz - 7) * 0.1; lookX = mid;
-      lookY = 1.35 + Math.max(a.y, b.y) * 0.3;
+      const aspect = this.camera.aspect; // aspect REAL (retrato ~0.5): travar em 0.9 cortava os lutadores
+      const topY = Math.max(a.y, b.y) + 2.4;               // cabeça + salto
+      const halfW = sep / 2 + 1.7;                         // corpo + margem de knockback
+      const needX = halfW / (halfTan * aspect);
+      const needY = (topY / 2 + 0.5) / halfTan;            // do chão até o topo, com folga
+      tz = THREE.MathUtils.clamp(Math.max(needX, needY), 6.5, 40);
+      tx = mid; lookX = mid;
+      lookY = Math.min(topY / 2, 1.35 + Math.max(a.y, b.y) * 0.5);
+      ty = lookY + Math.min(2.2, 0.9 + (tz - 7) * 0.06); // levemente acima, sem olhar muito de cima ao afastar
       const ult = match.fighters.find((f) => f.state === 'ultimate');
       if (ult) tz *= 1.15;
     } else {

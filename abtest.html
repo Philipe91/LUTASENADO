@@ -1,0 +1,103 @@
+<!doctype html>
+<!-- Bancada de diagnóstico (não faz parte do jogo). Carrega o modelo do personagem pelo MESMO GLBModel do jogo.
+  /abtest.html?char=xandor&key=idle&t=0.4&view=front|side&low=0&zoom=body|face
+  /abtest.html?char=xandor&stress=1  → window.__result com o teste de idempotência do agachar -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#d8d2c8;overflow:hidden}</style></head>
+<body><script type="module">
+import * as THREE from 'three';
+import { GLBModel } from '/src/visual/models/GLBModel.js';
+import { CHARACTERS } from '/src/data/characters/index.js';
+const p = new URLSearchParams(location.search);
+const ch = CHARACTERS.find((c) => c.id === (p.get('char') || 'xandor'));
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+r.setSize(innerWidth, innerHeight); r.setClearColor(0xd8d2c8); document.body.appendChild(r.domElement);
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x887766, 2.0));
+const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(2, 5, 6); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshStandardMaterial({ color: 0xb8ad9c }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const cam = new THREE.PerspectiveCamera(28, innerWidth / innerHeight, 0.05, 50);
+window.__ready = false;
+const vis = { ...ch.visual };
+if (p.get('fix')) vis.poseFix = JSON.parse(p.get('fix'));
+if (p.get('nofix')) delete vis.poseFix;
+if (p.get("norobe")) delete vis.robeFix;
+const m = await GLBModel.create(vis);
+scene.add(m.object); window.__m = m;
+const snap = () => {
+  const out = [];
+  for (const [n, b] of m.bones) if (/^(hips|spine\d?|neck|head|(left|right)(upleg|leg|foot|arm|forearm|shoulder))$/.test(n)) out.push(b.quaternion.toArray().concat(b.position.toArray()));
+  return out;
+};
+const diff = (a, b) => Math.max(...a.map((v, i) => Math.max(...v.map((x, j) => Math.abs(x - b[i][j])))));
+if (p.get('measure')) {
+  // mede em cada golpe: qual extremidade avança mais (em +Z, frente do modelo) e QUANDO (contato)
+  const keys = (p.get('keys') || 'punch1,punch2,punch3,kick,crouchPunch,sweep,airPunch,airKick,throw').split(',');
+  const eff = ['lefthand', 'righthand', 'leftfoot', 'rightfoot'];
+  const v = new THREE.Vector3(), hv = new THREE.Vector3();
+  const res = {};
+  for (const key of keys) {
+    const clip = m.findClip(key); if (!clip) continue;
+    m.mixer.stopAllAction(); const a = m.mixer.clipAction(clip); a.reset().play();
+    const N = 90, D = clip.duration, series = eff.map(() => []);
+    for (let i = 0; i <= N; i++) {
+      m.mixer.setTime((i / N) * D); m.object.updateMatrixWorld(true);
+      m.bones.get('hips').getWorldPosition(hv);
+      // extensão = distância da extremidade ao quadril (pega jab, gancho, uppercut e chute)
+      eff.forEach((e, j) => { m.bones.get(e).getWorldPosition(v); series[j].push(v.distanceTo(hv)); });
+    }
+    let best = 0, bestR = -1;
+    const legs = /kick|sweep/i.test(key);
+    series.forEach((sr, j) => { if ((j >= 2) !== legs) return; const r = Math.max(...sr) - Math.min(...sr); if (r > bestR) { bestR = r; best = j; } });
+    const sr = series[best], zmax = Math.max(...sr), iC = sr.indexOf(zmax), base = Math.min(...sr.slice(0, iC + 1)), rng = zmax - base;
+    let iS = iC; while (iS > 0 && sr[iS - 1] > base + rng * 0.15) iS--;
+    let iA = iC; while (iA < N && sr[iA + 1] >= zmax - rng * 0.12) iA++;
+    let iE = iA; while (iE < N && sr[iE] > base + rng * 0.25) iE++;
+    const t = (i) => +((i / N) * D).toFixed(3);
+    res[key] = { clip: clip.name, dur: +D.toFixed(3), eff: eff[best], reach: +rng.toFixed(3), start: t(iS), contact: t(iC), activeEnd: t(iA), end: t(iE) };
+  }
+  window.__result = res;
+} else if (p.get('stress')) {
+  // pose "no instante T do clip" (tira a camada procedural antes de reposicionar o mixer)
+  const T = 0.37;
+  const at = (low) => { m.undoCrouch(); m.mixer.setTime(T); m.update(0, { low, key: low ? 'crouch' : 'idle' }); return snap(); };
+  m.play('crouch', 0, true);
+  for (let i = 0; i < 120; i++) m.update(1 / 60, { low: false, key: 'idle' }); // aquece (poseFix em regime)
+  const stand0 = at(false);                                   // referência em pé
+  for (let i = 0; i < 60; i++) m.update(1 / 60, { low: true, key: 'crouch' }); // entra no agachar (lowAmt → 1)
+  const q0 = at(true);
+  for (let i = 0; i < 60; i++) m.update(0, { low: true, key: 'crouch' });     // 60 updates com dt=0 (hitstop)
+  const qDt0 = snap();
+  for (let i = 0; i < 240; i++) m.update(1 / 60, { low: true, key: 'crouch' });
+  const q300 = at(true);
+  for (let k = 0; k < 20; k++) {                               // 20 alternâncias
+    for (let i = 0; i < 20; i++) m.update(1 / 60, { low: true, key: 'crouch' });
+    for (let i = 0; i < 3; i++) m.update(0, { low: true, key: 'crouch' });
+    for (let i = 0; i < 20; i++) m.update(1 / 60, { low: false, key: 'victory' });
+    for (let i = 0; i < 40; i++) m.update(1 / 60, { low: false, key: 'idle' });
+  }
+  for (let i = 0; i < 120; i++) m.update(1 / 60, { low: false, key: 'idle' });
+  const stand1 = at(false);
+  window.__result = {
+    char: ch.id,
+    driftHitstop60: +diff(qDt0, q0).toExponential(2),        // tem que ser ~0
+    drift300: +diff(q300, q0).toExponential(2),              // ~0 (mesmo instante do clip, agachado)
+    driftAfter20Toggles: +diff(stand1, stand0).toExponential(2), // ~0 (em pé de novo)
+    hipsDropCrouch: +(stand0[0][5] - q0[0][5]).toFixed(4),
+  };
+} else {
+  const key = p.get('key') || 'idle', t = +(p.get('t') || 0.3);
+  if (p.get('bind')) { /* pose de bind: não toca clip */ } else {
+    const clip = m.findClip(key); const a = m.mixer.clipAction(clip); a.play(); m.mixer.setTime(p.get('ts') ? +p.get('ts') : t * clip.duration);
+  }
+  if (vis.poseFix?.keys.includes(key)) m.fixAmt = 1;
+  m.update(0, { low: p.get('low') === '1', key });
+  const h = ch.visual.height || 1.8, face = p.get('zoom') === 'face';
+  const side = p.get('view') === 'side';
+  const ty = face ? h * 0.9 : h * 0.5, dist = face ? 1.3 : 5.2;
+  cam.position.set(side ? dist : 0, ty, side ? 0 : dist); cam.lookAt(0, ty, 0);
+  window.__result = { clip: key };
+}
+r.render(scene, cam);
+window.__ready = true;
+</script></body></html>

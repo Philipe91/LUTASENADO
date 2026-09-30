@@ -58,8 +58,27 @@ export default {
       ultimate: GUARDA, victory: 'victory',
     },
     reverseKeys: ['walkBack'],
-    // toga longa: tecido solto segue o quadril (senão "rasga" entre as pernas)
-    robeFix: { maxDist: 0.1 },
+    // contato sincronizado: segundos do clip (tools/_measure.mjs)
+    timing: {
+      punch1: { start: 0.292, contact: 0.467, activeEnd: 0.603, end: 1.108 },
+      crouchPunch: { start: 0.292, contact: 0.467, activeEnd: 0.603, end: 1.108 },
+      punch2: { start: 0.4, contact: 0.644, activeEnd: 0.711, end: 0.956 },
+      punch3: { start: 0.622, contact: 0.894, activeEnd: 0.933, end: 1.128 },
+      kick: { start: 0.544, contact: 0.933, activeEnd: 1.037, end: 1.659 },
+      sweep: { start: 0.36, contact: 1.347, activeEnd: 1.392, end: 1.617 },
+    },
+    // correção de identidade (G-009/C-011): a guarda de IA tapava o rosto com a mão direita e afundava a cabeça.
+    // Camada idempotente por cima do clip: tira a mão do queixo (antebraço) e ergue um pouco pescoço/cabeça.
+    poseFix: {
+      keys: ['idle', 'intro', 'crouch', 'ultimate'],
+      rots: [
+        { bone: 'neck', axis: [1, 0, 0], ang: -0.12 },
+        { bone: 'head', axis: [1, 0, 0], ang: -0.08 },
+        { bone: 'rightforearm', axis: [0, 0, 1], ang: -0.6 },
+      ],
+    },
+    // robeFix DESLIGADO: nunca esteve ativo (bug de nome de osso "right…"→"ht…") e, ativo, prende as mãos ao quadril.
+    // O Xandor foi aprovado sem ele (rig v5 resolveu as pernas).
     transform: { id: 'avatar', model: 'assets/characters/xandor/ultimate.glb', height: 3.6, standInScale: 1.6, tint: 0xffd36b },
     placeholder: { skin: 0xe8b894, suit: 0x121212, accent: 0xd4af37, hair: 0x121212, headScale: 1.35, girth: 1.05, bald: true, angryBrows: true, robe: true },
   },

@@ -31,7 +31,7 @@
 | Personagem | Referência | Ferramenta | Arquivo | Tris | Status | Problemas / ajustes |
 |---|---|---|---|---|---|---|
 | Xandor ✅ | v3 A-pose do ChatGPT (ref_v3_apose.png), só frontal | Meshy 7.1 Ultra 2K → Remesh 30K → Rig **v5** → 20 anims | model.glb (2,1 MB) | 29.877 | ✅ aprovado pelo usuário | Rig: joelho logo ABAIXO da barra da toga, tornozelo EM CIMA do sapato, queixo NO queixo (não no nó da gravata). Medir ossos com tools antes de integrar (joelho/pé esquerdo × direito simétricos). Toga presa ao quadril no jogo (`robeFix`). Andar = Walking original do Meshy (ré = mesmo clip invertido). Idle = movimento de IA "guarda". |
-| Lulácio ✅ | ChatGPT: mesma imagem com PUNHOS FECHADOS em A-pose (`references/lulacio/ref_punhos_apose.png`) | Meshy 7.1 Ultra 2K → Remesh 30K → Rig (queixo/pulso/virilha/tornozelo ajustados) → 19 anims + 2 IA | model.glb (2,15 MB) | 30.786 | ✅ checkpoint | Esqueleto do Meshy NÃO tem ossos de dedo → mão fica como modelada: gerar SEMPRE com punho fechado. Limite de download: 20 animações (21 desativa o botão). Não trocar de aba durante Texto para Motion (perde o movimento e cobra). |
+| Lulácio | ChatGPT: mesma imagem com PUNHOS FECHADOS em A-pose (`references/lulacio/ref_punhos_apose.png`) | Meshy 7.1 Ultra 2K → Remesh 30K → Rig (queixo/pulso/virilha/tornozelo ajustados) → 19 anims + 2 IA | model.glb (2,15 MB) | 30.786 | ⏳ no jogo, AGUARDANDO VALIDAÇÃO DO USUÁRIO | Esqueleto do Meshy NÃO tem ossos de dedo → mão fica como modelada: gerar SEMPRE com punho fechado. Limite de download: 20 animações (21 desativa o botão). Não trocar de aba durante Texto para Motion (perde o movimento e cobra). |
 | Capitão Brasa | aguardando | Meshy | — | — | ⏳ | — |
 | Dino Supremo | aguardando | Meshy | — | — | ⏳ | — |
 
@@ -40,11 +40,11 @@
 | | Lulácio | Xandor | Capitão Brasa | Dino Supremo |
 |---|---|---|---|---|
 | Estilo | brigão de palanque, pesado, curto alcance | magistrado frio, preciso, controle à distância | (a definir) | (a definir) |
-| Parado | IA `lula_guarda` (base larga, peito estufado, punhos na barriga) | IA `guarda` (boxe) | | |
+| Parado | IA `lula_guarda2` (base larga, punhos no peito, cotovelos abertos) | IA `guarda` (boxe) | | |
 | Andar | "Andar Lutando" frente/ré | Walking original | | |
 | Socos | gancho esq., uppercut dir., martelada | jab esq., jab dir., soco duplo | | |
 | Chute / baixo | chute espartano / pisada furiosa | chute simples / chute varrido | | |
-| Especiais | IA: picanha (arremesso), palanque (discurso → povo), abraço (agarrão) | IA: intimação, bloqueado, canetada | | |
+| Especiais | discurso ("Fale com paixão"), IA `lula_picanha` (arremesso), agarrão ("Agarrar e derrubar") | IA: intimação, bloqueado, canetada | | |
 | Vitória | bate no peito | victory | | |
 
 ## Log

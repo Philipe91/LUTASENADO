@@ -62,6 +62,14 @@ export class Vfx {
       scene.add(r);
       this.rings.push({ r, life: 0 });
     }
+    // poeira no chão (pisão): discos achatados que abrem e somem — pool fixo
+    this.dusts = [];
+    for (let i = 0; i < 4; i++) {
+      const d = new THREE.Mesh(new THREE.CircleGeometry(0.5, 24), new THREE.MeshBasicMaterial({ color: 0xc9b089, transparent: true, depthWrite: false }));
+      d.rotation.x = -Math.PI / 2; d.visible = false;
+      scene.add(d);
+      this.dusts.push({ d, life: 0, max: 1 });
+    }
     this.active = new Map();   // hitter.id -> view
     this.pools = new Map();    // visual -> [views livres]
     this.created = 0;
@@ -91,6 +99,13 @@ export class Vfx {
         r.r.visible = true;
       }
     }
+  }
+
+  dust(x, size = 1) {
+    const q = this.dusts.find((o) => o.life <= 0) || this.dusts[0];
+    q.life = q.max = 0.35; q.size = size;
+    q.d.position.set(x, 0.03, 0);
+    q.d.visible = true;
   }
 
   // ---------- pool de visuais de Hitter ----------
@@ -157,6 +172,14 @@ export class Vfx {
       if (q.life <= 0) q.r.visible = false;
     }
 
+    for (const q of this.dusts) {
+      if (q.life <= 0) continue;
+      q.life -= dt;
+      const k = 1 - q.life / q.max;
+      q.d.scale.set(q.size * (0.6 + k * 1.6), q.size * (0.35 + k * 0.6), 1);
+      q.d.material.opacity = 0.7 * (1 - k);
+      if (q.life <= 0) q.d.visible = false;
+    }
     const alive = new Set();
     for (const h of match?.hitters || []) {
       alive.add(h.id);

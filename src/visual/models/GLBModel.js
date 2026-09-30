@@ -127,9 +127,13 @@ export class GLBModel {
     return names.some((n) => this.clips.has(normClip(n)));
   }
 
-  play(key, lenFrames, loop) {
+  // phases: { startup, active, recovery } (frames da lógica) — com visual.timing[key] = { start, contact, activeEnd, end }
+  // (segundos do clip) o clip é "raspado" pelo frame da lógica: preparação→contato cai no 1º frame ativo.
+  play(key, lenFrames, loop, phases) {
     const clip = this.findClip(key);
     if (!clip) return;
+    const tm = this.visual.timing?.[key];
+    this.scrub = tm && phases && !loop ? { tm, ...phases } : null;
     const action = this.mixer.clipAction(clip);
     const prev = this.current;
     action.reset();
@@ -138,13 +142,78 @@ export class GLBModel {
     action.timeScale = !loop && lenFrames ? clip.duration / (lenFrames / 60) : 1;
     // chaves tocadas de ré (ex.: andar pra trás usando o clip de andar)
     if (this.visual.reverseKeys?.includes(key)) action.timeScale *= -1;
+    if (this.scrub) { action.timeScale = 0; action.time = this.scrub.tm.start; }
     action.setEffectiveWeight(1);
     action.play();
     if (prev && prev !== action) action.crossFadeFrom(prev, 0.08, false);
     this.current = action;
   }
 
-  update(dt) { this.mixer.update(dt); }
+  // pose: { low } — agachado (hurtbox a 62%): pose procedural por cima do clip, serve para qualquer personagem
+  update(dt, pose = {}) {
+    // camada procedural IDEMPOTENTE: desfaz o delta do frame anterior antes do mixer
+    // (osso sem track volta à base; com track o mixer reescreve) e aplica de novo 1× — não acumula em hitstop/dt=0
+    this.undoCrouch();
+    if (this.scrub && pose.moveT !== undefined && this.current) this.current.time = this.scrubTime(pose.moveT);
+    this.mixer.update(dt);
+    this.lowAmt = (this.lowAmt || 0) + ((pose.low ? 1 : 0) - (this.lowAmt || 0)) * Math.min(1, dt * 14);
+    // correção de pose por chave (ex.: guarda do Xandor): visual.poseFix = { keys:[...], rots:[{bone, axis:[x,y,z], ang}] }
+    const pf = this.visual.poseFix;
+    const want = pf && pf.keys.includes(pose.key) ? 1 : 0;
+    this.fixAmt = (this.fixAmt || 0) + (want - (this.fixAmt || 0)) * Math.min(1, dt * 12);
+    const rots = [];
+    let dy = 0;
+    if (pf && this.fixAmt > 0.01) for (const r of pf.rots) this.rotBone(rots, r.bone, new THREE.Vector3(...r.axis).normalize(), r.ang * this.fixAmt);
+    if (this.lowAmt > 0.01) dy = this.applyCrouch(rots, this.lowAmt, pose.key);
+    this.crouchApplied = rots.length || dy ? { rots, hips: this.bones.get('hips'), dy } : null;
+  }
+
+  scrubTime(f) {
+    const { tm, startup: s, active: a, recovery: r } = this.scrub;
+    const lerp = (x, y, k) => x + (y - x) * Math.max(0, Math.min(1, k));
+    if (f < s) return lerp(tm.start, tm.contact, f / Math.max(1, s));
+    if (f < s + a) return lerp(tm.contact, tm.activeEnd, (f - s) / Math.max(1, a));
+    return lerp(tm.activeEnd, tm.end, (f - s - a) / Math.max(1, r));
+  }
+
+  rotBone(rots, name, axis, ang) {
+    const bone = this.bones.get(name);
+    if (!bone || !ang) return;
+    const q = new THREE.Quaternion().setFromAxisAngle(axis, ang);
+    bone.quaternion.multiply(q);
+    rots.push({ bone, q });
+  }
+
+  undoCrouch() {
+    const a = this.crouchApplied;
+    if (!a) return;
+    for (let i = a.rots.length - 1; i >= 0; i--) a.rots[i].bone.quaternion.multiply(a.rots[i].q.invert()); // ordem inversa
+    if (a.hips) a.hips.position.y += a.dy;
+    this.crouchApplied = null;
+  }
+
+  // clips que já abaixam o corpo (rasteira) recebem só um pouco da pose — não dobrar a perna duas vezes
+  static CROUCH_SCALE = { sweep: 0.25 };
+
+  applyCrouch(rots, t, key) {
+    const b = this.bones;
+    const hips = b.get('hips');
+    if (!hips) return 0;
+    if (this.hipsRest === undefined) this.hipsRest = hipsRestY(b);
+    const scale = this.visual.crouch?.scale?.[key] ?? GLBModel.CROUCH_SCALE[key] ?? 1;
+    const flex = (this.visual.crouch?.flex ?? 1.25) * t * scale; // flexão do quadril (rad)
+    const ax = new THREE.Vector3(1, 0, 0);
+    for (const s of ['left', 'right']) {
+      this.rotBone(rots, `${s}upleg`, ax, -flex);       // coxa para frente
+      this.rotBone(rots, `${s}leg`, ax, flex * 2);      // joelho dobra
+      this.rotBone(rots, `${s}foot`, ax, -flex * 0.9);  // pé volta a ficar no chão
+    }
+    this.rotBone(rots, 'spine', ax, flex * 0.25);       // tronco inclina um pouco à frente
+    const dy = this.hipsRest * (1 - Math.cos(flex)) * 0.95;
+    hips.position.y -= dy;
+    return dy;
+  }
+
 
   setFlash(on) {
     if (on === this.flashing) return;

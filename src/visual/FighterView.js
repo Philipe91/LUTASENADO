@@ -106,9 +106,10 @@ export class FighterView {
     const model = this.active;
     if (f.animSeq !== this.lastSeq) {
       this.lastSeq = f.animSeq;
-      model.play(f.animKey, f.animLen, LOOPING.has(f.animKey));
+      const mv = f.state === 'attack' ? f.move : null;
+      model.play(f.animKey, f.animLen, LOOPING.has(f.animKey), mv && { startup: mv.startup, active: mv.active, recovery: mv.recovery });
     }
-    model.update(dt);
+    model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' ? f.t : undefined });
     // GLB sem animação de queda/KO: deita o modelo proceduralmente (nunca fica em pé nocauteado)
     const lying = LYING.has(f.animKey) && model.hasClip && !model.hasClip(f.animKey === 'getup' ? 'getup' : 'ko');
     const layTarget = lying ? (f.animKey === 'getup' ? Math.max(0, 1 - f.t / 18) : 1) : 0;

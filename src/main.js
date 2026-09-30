@@ -58,7 +58,7 @@ function startMatch(cfg) {
   const controllers = animP1
     ? [animP1, new AnimTestP2(animP1)]
     : cast
-    ? [new CastController(cast), { read: () => NEUTRAL }]
+    ? (params.has('castP2') ? [{ read: () => NEUTRAL }, new CastController(cast)] : [new CastController(cast), { read: () => NEUTRAL }]) // castP2: quem solta é o P2 (lado direito)
     : cfg.mode === 'demo'
     ? [new AIController(a.ai, level), new AIController(b.ai, level)]
     : cfg.mode === '2p'
@@ -93,6 +93,7 @@ function handleEvents(events) {
         arena.excite(e.heavy ? 0.25 : 0.1);
         break;
       case 'block': vfx.burst(e.x, e.y, { blocked: true }); break;
+      case 'dust': vfx.dust(e.x, e.size); stage.shake(0.08); break;
       case 'armor': vfx.burst(e.x, e.y, { heavy: true, blocked: true }); hud.pop(e.x, e.y + 0.6, e.text, 'armor'); break;
       case 'special':
         hud.showSpecialName(e.fighter.slot, e.name);

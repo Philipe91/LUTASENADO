@@ -19,8 +19,20 @@ const STEPS = [
   [820, 980, 'K.O.', {}],
 ];
 
+// ?animtest=crouch — só a parte baixa: agachar, soco baixo, rasteira e defesa baixa (P2 ataca por baixo)
+const CROUCH_STEPS = [
+  [0, 40, 'em pé', {}],
+  [40, 110, 'agachar', { down: true }],
+  [110, 112, 'soco baixo', { down: true, punch: true }], [112, 150, 'soco baixo', { down: true }],
+  [150, 152, 'rasteira', { down: true, kick: true }], [152, 200, 'rasteira', { down: true }],
+  [200, 320, 'defesa baixa', { down: true, back: true }],
+  [320, 360, 'levantar', {}],
+];
+const MODE = new URLSearchParams(location.search).get('animtest') === 'crouch' ? 'crouch' : 'full';
+const ACTIVE = MODE === 'crouch' ? CROUCH_STEPS : STEPS;
+
 export function animTestLabel(frame) {
-  const s = [...STEPS].reverse().find(([a]) => frame >= a);
+  const s = [...ACTIVE].reverse().find(([a]) => frame >= a);
   return s ? s[2] : '';
 }
 
@@ -28,7 +40,7 @@ export class AnimTestP1 {
   constructor() { this.t = -1; }
   read(self) {
     this.t++;
-    const s = STEPS.find(([a, b]) => this.t >= a && this.t < b);
+    const s = ACTIVE.find(([a, b]) => this.t >= a && this.t < b);
     if (!s) return NEUTRAL;
     const F = self.facing > 0 ? 'right' : 'left', B = self.facing > 0 ? 'left' : 'right';
     const c = { ...NEUTRAL, ...s[3] };
@@ -45,6 +57,10 @@ export class AnimTestP2 {
     const t = this.p1.t;
     const F = self.facing > 0 ? 'right' : 'left';
     const d = Math.abs(opp.x - self.x);
+    if (MODE === 'crouch') {                                   // encosta e dá rasteiras na janela da defesa baixa
+      if (t >= 200 && t < 320 && t % 30 === 0 && d <= 1.35) return { ...NEUTRAL, down: true, kick: true };
+      return t >= 170 ? { ...NEUTRAL, [F]: d > 1.2 } : NEUTRAL;
+    }
     if (t < 440) return NEUTRAL;
     const close = d <= 1.35;
     // cada ataque tem uma janela e sai UMA vez, assim que estiver colado no P1

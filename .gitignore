@@ -5,3 +5,4 @@ public/assets/test/
 videos/_*.mp4
 *.log
 canal_ia/.lido_*
+tools/_*.mjs

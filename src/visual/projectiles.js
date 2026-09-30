@@ -3,6 +3,54 @@
 //               animate(v, h, dt) → anima conforme o estado do Hitter (entra → impacta → some)
 // Se o Hitter tiver `model` (ex.: assets/props/caminhao.glb) e o arquivo existir, o Vfx troca o placeholder pelo GLB.
 import * as THREE from 'three';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { loadGLTF } from './models/GLBModel.js';
+
+// ---- civis da Picanha do Povo: Quaternius Ultimate Modular Men/Women (CC0), clip Run ----
+// Carregados 1x; cada onda reusa (pool do Vfx) 5 clones com mixer próprio.
+const CIVIL_FILES = ['assets/props/civis/worker.glb', 'assets/props/civis/punk_f.glb'];
+// roupa de cada civil: material → cor (predomínio de vermelho, 2 tons, sem mexer em pele/cabelo/olhos)
+const CIVIL_TINT = [
+  { Worker_Vest: 0xc81e1e, Worker_Yellow: 0x7a1010 },
+  { Pink: 0xd62828 },
+  { Worker_Vest: 0xe04a3a, Worker_Yellow: 0x3a3a3a, LightBrown: 0x2d3a5c },
+  { Pink: 0xa01818, Black: 0x2b2b3a },
+  { Worker_Vest: 0xb01c1c, Worker_Yellow: 0xf2f2f2 },
+];
+const CIVIL_LAYOUT = [ // x atrás da frente (m), z (profundidade), atraso de fase (s), escala
+  { x: 0.0, z: 0.15, ph: 0.0, s: 1.0 },
+  { x: -0.7, z: -0.3, ph: 0.21, s: 0.95 },
+  { x: -1.2, z: 0.35, ph: 0.09, s: 1.04 },
+  { x: -1.8, z: -0.1, ph: 0.3, s: 0.98 },
+  { x: -2.4, z: 0.25, ph: 0.15, s: 1.02 },
+];
+let civilGltfs = null;
+const civilReady = Promise.all(CIVIL_FILES.map((f) => loadGLTF(f))).then((gs) => { civilGltfs = gs; }).catch(() => {});
+
+function fillCrowd(g) {
+  if (g.userData.civis || !civilGltfs) return;
+  const civis = CIVIL_LAYOUT.map((L, i) => {
+    const src = civilGltfs[i % 2];
+    const m = cloneSkinned(src.scene);
+    const tint = CIVIL_TINT[i];
+    m.traverse((o) => {
+      if (!o.isMesh) return;
+      o.frustumCulled = false; o.castShadow = true;
+      o.material = o.material.clone();
+      if (tint[o.material.name] !== undefined) o.material.color.setHex(tint[o.material.name]);
+    });
+    const box = new THREE.Box3().setFromObject(m);
+    m.scale.setScalar((1.62 * L.s) / (box.max.y - box.min.y));
+    const holder = new THREE.Group();
+    holder.add(m);
+    g.add(holder);
+    const mixer = new THREE.AnimationMixer(m);
+    const run = src.animations.find((a) => a.name === 'Run') || src.animations[0];
+    mixer.clipAction(run).play();
+    return { holder, mixer, L, dur: run.duration };
+  });
+  g.userData.civis = civis;
+}
 
 const std = (c, extra = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, ...extra });
 const ease = (x) => Math.max(0, Math.min(1, x));
@@ -84,6 +132,38 @@ export const PROJECTILE_VISUALS = {
         p.rotation.z = -0.12 * h.facing;
       }
       v.userData.dust.material.opacity = 0.45 * k;
+    },
+  },
+
+  // civis de verdade (3D rigado) correndo desde a retaguarda do Lulácio até passar pelo alvo
+  civilCrowd: {
+    build() {
+      const g = new THREE.Group();
+      const dust = new THREE.Mesh(new THREE.CircleGeometry(1, 20), new THREE.MeshBasicMaterial({ color: 0xc9b89a, transparent: true, opacity: 0.35, depthWrite: false }));
+      dust.rotation.x = -Math.PI / 2; dust.position.y = 0.02; dust.scale.set(1.6, 0.5, 1);
+      g.add(dust);
+      g.userData.dust = dust;
+      civilReady.then(() => fillCrowd(g));
+      return g;
+    },
+    animate(v, h, dt) {
+      fillCrowd(v);
+      const u = v.userData;
+      if (!u.civis) return;
+      if (u.lastId !== h.id) { // reuso do pool: reinicia fases e visibilidade
+        u.lastId = h.id;
+        for (const c of u.civis) c.mixer.setTime(c.L.ph);
+      }
+      // aparece rápido, some afundando no fim da vida (depois de passar pelo alvo)
+      const k = Math.min(ease(h.t / 5), ease((h.delay + h.life - h.t) / 10));
+      for (const c of u.civis) {
+        c.mixer.update(dt * 1.15);
+        c.holder.position.set(c.L.x * h.facing, (k - 1) * 0.6, c.L.z);
+        c.holder.rotation.y = h.facing > 0 ? Math.PI / 2 : -Math.PI / 2;
+        c.holder.scale.setScalar(Math.max(0.01, k));
+      }
+      u.dust.position.x = -1.2 * h.facing;
+      u.dust.material.opacity = 0.35 * k;
     },
   },
 

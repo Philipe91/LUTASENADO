@@ -151,6 +151,10 @@ export class Fighter {
     if (this.lockT > 0) this.lockT--;
     if (this.buffT > 0) this.buffT--;
     if (this.flash > 0) this.flash--;
+    // golpe com impacto no chão (pisão): poeira no 1º frame ativo, acertando ou não
+    if (this.state === 'attack' && this.move?.groundFx && this.t === this.move.startup) {
+      match.emit({ type: 'dust', x: this.x + this.facing * (this.move.hitbox.x + this.move.hitbox.w / 2), size: this.move.groundFx });
+    }
     const c = this.cmd;
     const fwd = this.facing > 0 ? c.right : c.left;
     const back = this.facing > 0 ? c.left : c.right;

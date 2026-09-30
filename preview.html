@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Prévia de GLB para revisão (não faz parte do jogo): /preview.html?files=a.glb,b.glb&clip=Run&view=front|side|back&t=0.3 -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#dcd6cc;overflow:hidden}</style></head>
+<body><script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+const p = new URLSearchParams(location.search);
+const files = (p.get('files') || '').split(',').filter(Boolean);
+const view = p.get('view') || 'front', t = +(p.get('t') || 0.3), clipName = p.get('clip') || 'Run';
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+r.setSize(innerWidth, innerHeight); document.body.appendChild(r.domElement);
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x886655, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 2); sun.position.set(3, 6, 5); scene.add(sun);
+const cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 100);
+const loader = new GLTFLoader(); const d = new DRACOLoader(); d.setDecoderPath('draco/'); loader.setDRACOLoader(d);
+const mixers = [];
+window.__ready = false;
+Promise.all(files.map((f) => loader.loadAsync(f))).then((gs) => {
+  gs.forEach((g, i) => {
+    const m = g.scene; const box = new THREE.Box3().setFromObject(m); const h = box.max.y - box.min.y;
+    m.scale.setScalar(1.75 / h); m.position.x = (i - (gs.length - 1) / 2) * 1.2;
+    scene.add(m);
+    const mx = new THREE.AnimationMixer(m); const c = g.animations.find((a) => a.name === clipName) || g.animations[0];
+    if (c) { mx.clipAction(c).play(); mx.setTime(t * c.duration); }
+    mixers.push(mx);
+  });
+  const dist = 3.2 + files.length * 0.9;
+  const pos = { front: [0, 1.1, dist], side: [dist, 1.1, 0.01], back: [0, 1.1, -dist] }[view];
+  cam.position.set(...pos); cam.lookAt(0, 0.9, 0);
+  r.render(scene, cam); window.__ready = true;
+});
+</script></body></html>

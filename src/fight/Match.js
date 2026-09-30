@@ -122,9 +122,19 @@ export class Match {
     for (const h of this.hitters) {
       if (!h.dead || !h.spawnOnEnd) continue;
       const s = h.spawnOnEnd;
-      const child = Hitter.fromSpec(h.owner, s, h.x - h.facing * (s.back ?? 0), s.box.y ?? 0, h.facing);
+      let child;
+      if (s.anchor === 'owner') {
+        // nasce ATRÁS do dono (posição dele agora, sentido do lançamento), atravessa o dono e passa do alvo
+        const start = Math.max(-ARENA_HALF - 1, Math.min(ARENA_HALF + 1, h.owner.x - h.facing * (s.back ?? 1.8)));
+        child = Hitter.fromSpec(h.owner, s, start, s.box.y ?? 0, h.facing);
+        const reach = Math.abs(h.owner.opponent.x - start) + (s.overshoot ?? 2.5);
+        child.life = Math.min(s.maxLife ?? 150, Math.ceil(reach / Math.abs(child.vx || 0.1)));
+      } else {
+        child = Hitter.fromSpec(h.owner, s, h.x - h.facing * (s.back ?? 0), s.box.y ?? 0, h.facing);
+      }
       spawned.push(child);
-      this.emit({ type: 'spawn', x: h.x, y: h.y, visual: s.visual, owner: h.owner });
+      // flash de surgimento onde a onda nasce (atrás do dono, no caso da Picanha) — não no alvo
+      this.emit({ type: 'spawn', x: child.x, y: 0.2, visual: s.visual, owner: h.owner });
     }
     this.hitters = this.hitters.filter((h) => !h.dead).concat(spawned);
   }
