@@ -21,4 +21,4 @@
 6. [~] (30/09) GAME_SPEED 0.8 (?speed= testa) + zoom-soco da câmera em golpe forte; falta mais dinamismo. Jogo rápido demais → desacelerar; mais dinamismo (impacto, câmera, slow-mo, feedback), ficar gostoso de jogar.
 
 ## Histórico de commits
-- (este) poderes: Abraço giratório, Discurso atordoa, especiais do Xandor, contato real nas ultimates, enquadramento do Avatar · 6a24ff3 feedback manhã 30/09 (Xandor pescoço+ouro, picanha visível, jogo 0.8×) · 6e8abb6 relatório da noite · 51d2bf5 poderes · 48e131f ultimates · 5a58054 combate · 837443a canal · 8b29df7 checkpoint Lulácio/Xandor
+- 2fec3f7 poderes: Abraço giratório, Discurso atordoa, especiais do Xandor, contato real nas ultimates, enquadramento do Avatar · 6a24ff3 feedback manhã 30/09 (Xandor pescoço+ouro, picanha visível, jogo 0.8×) · 6e8abb6 relatório da noite · 51d2bf5 poderes · 48e131f ultimates · 5a58054 combate · 837443a canal · 8b29df7 checkpoint Lulácio/Xandor
