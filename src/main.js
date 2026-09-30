@@ -89,6 +89,7 @@ function handleEvents(events) {
       case 'hit':
         vfx.burst(e.x, e.y, e);
         stage.shake(e.ultimate ? 0.35 : e.heavy ? 0.22 : 0.1);
+        if (e.heavy || e.ultimate) stage.punch(e.ultimate ? 0.14 : 0.08); // zoom-soco da câmera no impacto forte
         if (e.text) hud.pop(e.x, e.y + 0.5, e.text, 'big');
         else hud.pop(e.x, e.y + 0.3, Math.round(e.dmg), 'dmg');
         arena.excite(e.heavy ? 0.25 : 0.1);
@@ -132,6 +133,8 @@ addEventListener('keydown', (e) => {
 });
 
 let acc = 0, last = performance.now(), time = 0;
+// velocidade geral do jogo (1 = 60 lógicas/s). 0.8 = ritmo mais legível (feedback 30/09: "jogo muito rápido"). ?speed= testa outros.
+const GAME_SPEED = Number(params.get('speed') || 0.8);
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.1, (now - last) / 1000);
@@ -142,15 +145,15 @@ function tick(dt) {
   time += dt;
   hud.tick(dt);
   if (match) {
-    acc += dt * match.timeScale;
+    acc += dt * match.timeScale * GAME_SPEED;
     let steps = 0;
     while (acc >= STEP && steps < 6) { match.step(); acc -= STEP; steps++; }
     if (steps === 6) acc = 0;
     handleEvents(match.drainEvents());
     const frozen = match.hitstop > 0;
-    const vdt = frozen ? 0 : dt * match.timeScale;
+    const vdt = frozen ? 0 : dt * match.timeScale * GAME_SPEED;
     for (const v of views) v.update(match.cinematic && v.f !== match.cinematic.fighter ? 0 : vdt, match);
-    vfx.update(dt * match.timeScale, match);
+    vfx.update(dt * match.timeScale * GAME_SPEED, match);
     hud.update(match);
   }
   debug.update(match);

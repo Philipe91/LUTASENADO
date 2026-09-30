@@ -72,17 +72,18 @@ export default {
     // correção de identidade (G-009/C-011): a guarda de IA tapava o rosto com a mão direita e afundava a cabeça.
     // Camada idempotente por cima do clip: tira a mão do queixo (antebraço) e ergue um pouco pescoço/cabeça.
     poseFix: {
-      keys: ['idle', 'intro', 'crouch', 'ultimate'],
+      keys: ['*'], // em TODAS as animações: pescoço erguido (os clips afundam a cabeça na gola → "cara gorda")
       rots: [
-        { bone: 'neck', axis: [1, 0, 0], ang: -0.12 },
-        { bone: 'head', axis: [1, 0, 0], ang: -0.08 },
-        { bone: 'rightforearm', axis: [0, 0, 1], ang: -0.6 },
+        { bone: 'neck', axis: [1, 0, 0], ang: -0.4 },
+        { bone: 'head', axis: [1, 0, 0], ang: 0.15 },
       ],
     },
+    // guarda (IA) tapava o rosto com a mão direita: tira a mão do queixo só nas poses paradas
+    poseFixIdle: { keys: ['idle', 'intro', 'crouch', 'ultimate'], rots: [{ bone: 'rightforearm', axis: [0, 0, 1], ang: -0.6 }] },
     // robeFix DESLIGADO: nunca esteve ativo (bug de nome de osso "right…"→"ht…") e, ativo, prende as mãos ao quadril.
     // O Xandor foi aprovado sem ele (rig v5 resolveu as pernas).
     ultimateFx: 'xandorAvatar', // VFX: selo, aura, olhos, livros, canetas por hit, martelo colossal no final
-    transform: { id: 'avatar', model: 'assets/characters/xandor/ultimate.glb', height: 3.6, standInScale: 1.6, tint: 0xffd36b },
+    transform: { id: 'avatar', model: 'assets/characters/xandor/ultimate.glb', height: 3.6, standInScale: 1.75, tint: 0xffb020, gold: true },
     placeholder: { skin: 0xe8b894, suit: 0x121212, accent: 0xd4af37, hair: 0x121212, headScale: 1.35, girth: 1.05, bald: true, angryBrows: true, robe: true },
   },
 };

@@ -90,7 +90,7 @@ if (p.get('measure')) {
   if (p.get('bind')) { /* pose de bind: não toca clip */ } else {
     const clip = m.findClip(key); const a = m.mixer.clipAction(clip); a.play(); m.mixer.setTime(p.get('ts') ? +p.get('ts') : t * clip.duration);
   }
-  if (vis.poseFix?.keys.includes(key)) m.fixAmt = 1;
+  if (vis.poseFix && (vis.poseFix.keys.includes(key) || vis.poseFix.keys.includes('*'))) m.fixAmt = 1;
   m.update(0, { low: p.get('low') === '1', key });
   const h = ch.visual.height || 1.8, face = p.get('zoom') === 'face';
   const side = p.get('view') === 'side';

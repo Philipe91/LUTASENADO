@@ -129,6 +129,11 @@ export class FighterView {
     // ultimate com VFX próprio: brilho dourado FIXO (sem piscar); sem VFX: stand-in piscando (antigo)
     const ultBlink = this.form === 'ultimate' && !this.ultimateModel && !this.ultFx && Math.floor(performance.now() / 90) % 2 === 0;
     model.setFlash(f.flash > 0 || ultBlink, this.form === 'ultimate' && this.ultFx ? tr.tint : null);
+    // skin dourada na forma ultimate (visual.transform.gold)
+    if (tr.gold && model.setGold) {
+      this.goldK = (this.goldK || 0) + ((this.form === 'ultimate' ? 1 : 0) - (this.goldK || 0)) * Math.min(1, dt * 6);
+      model.setGold(this.goldK < 0.01 ? 0 : this.goldK);
+    }
     this.ultFx?.update(dt, f, match, model);
     this.spFx?.update(dt, f, model);
     if (this.ultFx) model.object.visible = !this.ultFx.hideBase; // polvo substitui o corpo

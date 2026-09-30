@@ -168,11 +168,14 @@ export class GLBModel {
     this.lowAmt = (this.lowAmt || 0) + ((pose.low ? 1 : 0) - (this.lowAmt || 0)) * Math.min(1, dt * 14);
     // correção de pose por chave (ex.: guarda do Xandor): visual.poseFix = { keys:[...], rots:[{bone, axis:[x,y,z], ang}] }
     const pf = this.visual.poseFix;
-    const want = pf && pf.keys.includes(pose.key) ? 1 : 0;
+    const want = pf && (pf.keys.includes('*') || pf.keys.includes(pose.key)) ? 1 : 0;
     this.fixAmt = (this.fixAmt || 0) + (want - (this.fixAmt || 0)) * Math.min(1, dt * 12);
     const rots = [];
     let dy = 0;
     if (pf && this.fixAmt > 0.01) for (const r of pf.rots) this.rotBone(rots, r.bone, new THREE.Vector3(...r.axis).normalize(), r.ang * this.fixAmt);
+    const pi = this.visual.poseFixIdle; // 2ª camada, só em algumas chaves (blend próprio)
+    this.fixIdle = (this.fixIdle || 0) + ((pi && pi.keys.includes(pose.key) ? 1 : 0) - (this.fixIdle || 0)) * Math.min(1, dt * 12);
+    if (pi && this.fixIdle > 0.01) for (const r of pi.rots) this.rotBone(rots, r.bone, new THREE.Vector3(...r.axis).normalize(), r.ang * this.fixIdle);
     if (this.lowAmt > 0.01) dy = this.applyCrouch(rots, this.lowAmt, pose.key);
     this.crouchApplied = rots.length || dy ? { rots, hips: this.bones.get('hips'), dy } : null;
   }
@@ -224,6 +227,21 @@ export class GLBModel {
   }
 
 
+  // skin dourada (ultimate do Xandor): k 0→1 mistura cor/metal/brilho do material para OURO (mantém a textura)
+  setGold(k) {
+    if (Math.abs((this.goldK ?? 0) - k) < 0.005) return;
+    this.goldK = k;
+    const gold = new THREE.Color(0xffc94a);
+    for (const m of this.materials) {
+      const u = m.userData;
+      if (!u.baseColor) { u.baseColor = m.color.clone(); u.baseMetal = m.metalness ?? 0; u.baseRough = m.roughness ?? 1; }
+      m.color.copy(u.baseColor).lerp(gold, k * 0.85);
+      if (m.metalness !== undefined) m.metalness = u.baseMetal + (0.95 - u.baseMetal) * k;
+      if (m.roughness !== undefined) m.roughness = u.baseRough + (0.28 - u.baseRough) * k;
+    }
+    this.flashing = null; // força reaplicar o emissive
+  }
+
   // on: flash branco de hit; glow: cor de brilho fixo (ultimate) quando não há flash
   setFlash(on, glow = null) {
     const st = on ? 'f' : glow ? 'g' + glow : '';
@@ -233,7 +251,7 @@ export class GLBModel {
       const u = m.userData;
       if (u.baseEmissive === undefined) { u.baseEmissive = m.emissive.getHex(); u.baseIntensity = m.emissiveIntensity; }
       m.emissive.setHex(on ? 0xffffff : glow ?? u.baseEmissive);
-      m.emissiveIntensity = on ? 0.6 : glow ? 0.12 : u.baseIntensity; // glow leve: não apaga o rosto
+      m.emissiveIntensity = on ? 0.6 : glow ? 0.12 + 0.35 * (this.goldK || 0) : u.baseIntensity; // brilho do ouro
     }
   }
 

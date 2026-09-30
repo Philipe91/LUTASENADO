@@ -27,6 +27,9 @@ export class Stage {
 
   shake(v) { this.shakeAmt = Math.min(0.6, Math.max(this.shakeAmt, v)); }
 
+  // zoom rápido de impacto (k = fração de aproximação), decai sozinho
+  punch(k) { this.punchAmt = Math.max(this.punchAmt || 0, k); }
+
   updateCamera(match, dt) {
     const c = this.cam;
     let tx, ty, tz, lookY, lookX;
@@ -51,6 +54,7 @@ export class Stage {
     } else {
       tx = 0; ty = 1.9; tz = 12; lookX = 0; lookY = 1.3;
     }
+    if (this.punchAmt > 0) { tz *= 1 - this.punchAmt; this.punchAmt = Math.max(0, this.punchAmt - dt * 0.6); }
     const k = Math.min(1, dt * (match?.cinematic ? 9 : 5));
     c.x += (tx - c.x) * k; c.y += (ty - c.y) * k; c.z += (tz - c.z) * k;
     c.lookY += (lookY - c.lookY) * k;

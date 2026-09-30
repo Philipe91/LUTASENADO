@@ -67,7 +67,7 @@ export class SpecialFx {
       hand.getWorldPosition(this.v);
       p.visible = true;
       p.position.copy(this.v);
-      p.scale.setScalar(0.8 * clamp01(f.t / 3));
+      p.scale.setScalar(0.5 * clamp01(f.t / 3)); // na mão: menor que o projétil em voo
       p.userData.spin && (p.userData.spin.rotation.z = 0);
     }
   }

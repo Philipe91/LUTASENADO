@@ -88,12 +88,28 @@ export const PROJECTILE_VISUALS = {
       fat.scale.set(1.02, 0.55, 0.72);
       const spin = new THREE.Group();
       spin.add(meat, fat);
+      spin.scale.setScalar(1.8); // grande o bastante pra ler na câmera do jogo
       g.add(spin);
-      g.userData.spin = spin;
+      // rastro: 6 "fantasmas" vermelhos que seguem a trajetória
+      const trail = [];
+      for (let i = 0; i < 6; i++) {
+        const t = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff6a3a, transparent: true, opacity: 0.5 - i * 0.07, depthWrite: false }));
+        t.scale.set(1, 0.55, 0.7); trail.push(t); g.add(t);
+      }
+      g.userData.spin = spin; g.userData.trail = trail; g.userData.hist = [];
       g.userData.offY = 0.18;
       return g;
     },
-    animate(v, h, dt) { v.userData.spin.rotation.z -= dt * 16 * h.facing; },
+    animate(v, h, dt) {
+      const u = v.userData;
+      u.spin.rotation.z -= dt * 12 * h.facing;
+      if (u.lastId !== h.id) { u.lastId = h.id; u.hist.length = 0; }
+      u.hist.unshift([h.x, h.y]); if (u.hist.length > 24) u.hist.pop();
+      u.trail.forEach((t, i) => { // posição relativa ao grupo (o grupo está no ponto atual)
+        const p = u.hist[Math.min(u.hist.length - 1, (i + 1) * 3)] || [h.x, h.y];
+        t.position.set(p[0] - h.x, p[1] - h.y, 0); t.visible = u.hist.length > (i + 1) * 3;
+      });
+    },
   },
 
   // onda de apoiadores: 9 silhuetas (3 fileiras) em sprites planos — barato e lê como multidão

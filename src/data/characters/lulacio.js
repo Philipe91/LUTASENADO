@@ -30,7 +30,7 @@ export default {
     // PICANHA DO POVO: picanha em arco → ao acertar / chegar perto / cair, vira uma onda de apoiadores
     forward: {
       name: 'Picanha do Povo', kind: 'projectile', startup: 12, recovery: 20, cooldown: 220,
-      speed: 0.15, vy: 0.11, g: 0.0065, damage: 2, hitstun: 16, life: 45, triggerRange: 1.3,
+      speed: 0.12, vy: 0.13, g: 0.0065, damage: 2, hitstun: 16, life: 60, triggerRange: 1.3, // arco mais alto e lento: dá pra ver voando
       box: { y: 1.1, w: 0.5, h: 0.35 }, visual: 'picanha', model: 'assets/props/picanha.glb',
       // ao acertar/chegar perto/cair: civis surgem ATRÁS do Lulácio e correm até passar do alvo
       spawnOnEnd: {
