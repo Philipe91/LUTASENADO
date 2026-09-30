@@ -1,0 +1,50 @@
+export default {
+  id: 'lulacio',
+  name: 'LULÁCIO',
+  title: 'O Companheiro de Aço',
+  archetype: 'Grappler / Brawler',
+  stats: { hp: 100, walk: 0.9, jump: 0.95, width: 0.95, height: 1.72, meterGain: 1.3 },
+  passive: {
+    name: 'Carisma de Palanque',
+    desc: 'Enche a barra 30% mais rápido. Abaixo de 30% de vida: +15% de dano.',
+    lowHp: { below: 0.3, damage: 1.15 },
+  },
+  moves: { throw: { damage: 15 } },
+  specials: {
+    neutral: {
+      name: 'Discurso Interminável', kind: 'strike', startup: 10, active: 16, recovery: 16, rehit: 8,
+      damage: 3, hitstun: 12, stun: 18, push: 0.12, cooldown: 120,
+      box: { x: 0.3, y: 0.7, w: 1.7, h: 1.0 }, text: 'BLÁ BLÁ BLÁ!',
+    },
+    // PICANHA DO POVO: picanha em arco → ao acertar / chegar perto / cair, vira uma onda de apoiadores
+    forward: {
+      name: 'Picanha do Povo', kind: 'projectile', startup: 12, recovery: 20, cooldown: 220,
+      speed: 0.15, vy: 0.11, g: 0.0065, damage: 2, hitstun: 16, life: 45, triggerRange: 1.3,
+      box: { y: 1.1, w: 0.5, h: 0.35 }, visual: 'picanha', model: 'assets/props/picanha.glb',
+      spawnOnEnd: {
+        kind: 'wave', back: 1.4, speed: 0.1, life: 50, hits: 4, rehit: 6,
+        damage: 2.5, hitstun: 14, push: 0.05, final: { damage: 4, push: 0.28, knockdown: true, text: 'O POVO CHEGOU!' },
+        box: { y: 0, w: 1.8, h: 1.5 }, visual: 'crowdWave', color: 0xd62828, model: 'assets/props/apoiador.glb',
+      },
+    },
+    down: {
+      name: 'Abraço do Palanque', kind: 'grab', startup: 7, recovery: 28, cooldown: 140,
+      range: 1.5, damage: 16, push: 0.2, text: 'ABRAÇO!',
+    },
+  },
+  ultimate: { name: 'O POLVÃO DO POVO', hits: 6, interval: 14, damage: 4, finisher: 12, range: 4.5, text: 'POLVÃO!' },
+  ai: { aggression: 0.65, keepDistance: 1.3, specialBias: 0.35, throwBias: 0.3, blockChance: 0.35 },
+  lines: {
+    intro: ['Companheiros e companheiras... hoje vai ter porrada!'],
+    win: ['Nunca antes na história desse ringue!'],
+  },
+  koTexts: ['COMPANHEIRADA!'],
+  visual: {
+    model: 'assets/characters/lulacio/model.glb',
+    height: 1.72,
+    yaw: 0,
+    clips: {},
+    transform: { id: 'polvo', model: 'assets/characters/lulacio/ultimate.glb', height: 4.2, standInScale: 1.7, tint: 0x7a4fd6 },
+    placeholder: { skin: 0xf0c8a0, suit: 0x1d3a8a, accent: 0xd62828, hair: 0xf2f2f2, headScale: 1.35, girth: 1.3, beard: true },
+  },
+};

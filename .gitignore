@@ -1,0 +1,6 @@
+node_modules/
+dist/
+references/*/meshy/
+public/assets/test/
+videos/_*.mp4
+*.log

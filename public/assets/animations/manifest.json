@@ -1,0 +1,4 @@
+{
+  "_leia": "chave do jogo -> GLB de animacao (so armature) em lib/. Baixar do Meshy (Animation Library) usando o Xandor e salvar com o nome da chave. Chaves: idle walk walkBack jump crouch punch1 punch2 punch3 kick sweep block hit knockdown getup ko victory special intro",
+  "_exemplo": { "idle": "lib/idle.glb", "punch1": "lib/punch1.glb" }
+}
