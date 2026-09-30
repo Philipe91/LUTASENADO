@@ -9,6 +9,7 @@ import { LOOPING } from './animKeys.js';
 import { JUMP_V } from '../fight/constants.js';
 import { XandorAvatar } from './ultimates/XandorAvatar.js';
 import { LulacioPolvo } from './ultimates/LulacioPolvo.js';
+import { SpecialFx } from './SpecialFx.js';
 
 const ULTIMATE_FX = { xandorAvatar: XandorAvatar, lulacioPolvo: LulacioPolvo };
 
@@ -51,6 +52,7 @@ export class FighterView {
         .then((m) => { this.swapBase(m); this.source = 'glb'; console.info(`[visual] ${fighter.data.id}: GLB carregado`); })
         .catch(() => console.info(`[visual] ${fighter.data.id}: sem GLB em ${visual.model}, usando placeholder`));
     }
+    if (visual.specialFx) this.spFx = new SpecialFx(scene, visual.specialFx);
     // VFX da ultimate (composição por personagem)
     if (visual.ultimateFx && ULTIMATE_FX[visual.ultimateFx]) this.ultFx = new ULTIMATE_FX[visual.ultimateFx](scene);
     const tr = visual.transform;
@@ -113,12 +115,12 @@ export class FighterView {
     const model = this.active;
     if (f.animSeq !== this.lastSeq) {
       this.lastSeq = f.animSeq;
-      const mv = f.state === 'attack' ? f.move : null;
+      const mv = f.state === 'attack' ? f.move : f.state === 'special' ? f.sp : null;
       model.play(f.animKey, f.animLen, LOOPING.has(f.animKey), mv && { startup: mv.startup, active: mv.active, recovery: mv.recovery });
     }
     const vy0 = JUMP_V * (f.stats.jump || 1);
     const airP = f.y > 0 ? Math.max(0, Math.min(1, (vy0 - f.vy) / (2 * vy0))) : 1;
-    model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' ? f.t : undefined, airP });
+    model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' || f.state === 'special' ? f.t : undefined, airP });
     // GLB sem animação de queda/KO: deita o modelo proceduralmente (nunca fica em pé nocauteado)
     const lying = LYING.has(f.animKey) && model.hasClip && !model.hasClip(f.animKey === 'getup' ? 'getup' : 'ko');
     const layTarget = lying ? (f.animKey === 'getup' ? Math.max(0, 1 - f.t / 18) : 1) : 0;
@@ -128,6 +130,7 @@ export class FighterView {
     const ultBlink = this.form === 'ultimate' && !this.ultimateModel && !this.ultFx && Math.floor(performance.now() / 90) % 2 === 0;
     model.setFlash(f.flash > 0 || ultBlink, this.form === 'ultimate' && this.ultFx ? tr.tint : null);
     this.ultFx?.update(dt, f, match, model);
+    this.spFx?.update(dt, f, model);
     if (this.ultFx) model.object.visible = !this.ultFx.hideBase; // polvo substitui o corpo
 
     this.blob.position.x = f.x;
@@ -154,5 +157,6 @@ export class FighterView {
     this.base.dispose();
     this.ultimateModel?.dispose();
     this.ultFx?.dispose();
+    this.spFx?.dispose();
   }
 }

@@ -170,3 +170,9 @@ Arquivo: `src/visual/ultimates/LulacioPolvo.js` + `lulacio.js` (`ultimateFx: 'lu
 - Hits: 1 tentáculo por hit sobe e chicoteia até o peito do alvo, encostando NO frame do dano (12+k·interval); finalizador: 7 tentáculos batem juntos no frame hitsEnd+6. Mecânica intacta.
 - Evidência: `canal_ia/evidencias/ultimate_lulacio/sequencia.png`, `videos/lulacio_polvao_prototipo.mp4`.
 Arte final: registrar como PENDENTE-USUÁRIO — opção A: conceito do "polvo-Lulácio" (imagem ChatGPT) → Meshy image-to-3D só da cabeça/manto (35 créditos) mantendo os tentáculos procedurais (o auto-rig do Meshy é humanoide); opção B: manter procedural e só polir materiais. Não gastei créditos.
+
+## [C-019] 2026-09-30 00:14 — FEITO — Poderes do Lulácio: picanha na mão + pulsos do Discurso
+- `src/visual/SpecialFx.js` (novo, configurado em `visual.specialFx`): `propHand` = picanha presa ao osso da mão direita do início até o frame de spawn (aí vira o projétil, sem 2º objeto); `speech` = arcos amarelos saindo da cabeça a cada 4 frames durante os frames ATIVOS do Discurso, viajando até o fim do alcance do hitbox (box.x+box.w).
+- Especiais também raspam o clip pela lógica (`timing.special1/special2`): picanha solta a mão em 0.95 s do clip = frame de spawn.
+- Evidências: `canal_ia/evidencias/poderes/picanha_mao.png`, `discurso.png`, `antes_todos.png` (estado anterior de todos os especiais). Números dos especiais inalterados.
+Não feito nesta noite: Abraço (alinhamento de corpos), polimento de Intimação/Bloqueado/Canetada, rosto de dor, créditos Meshy (0 gastos).

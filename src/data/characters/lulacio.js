@@ -79,6 +79,13 @@ export default {
       punch3: { start: 1.1, contact: 1.4, activeEnd: 1.47, end: 1.833 }, // martelada: braços na altura do peito (não no chão)
       kick: { start: 0.362, contact: 0.693, activeEnd: 0.756, end: 0.897 },
       sweep: { start: 0.2, contact: 0.5, activeEnd: 0.6, end: 1.0 },
+      special2: { start: 0.2, contact: 0.95, activeEnd: 1.05, end: 1.9 }, // picanha: solta a mão no frame de spawn
+      special1: { start: 1.0, contact: 1.6, activeEnd: 4.3, end: 5.2 },   // discurso: gesticula durante a janela ativa
+    },
+    // efeitos presos ao corpo: pulsos de voz no Discurso; picanha na mão até o arremesso
+    specialFx: {
+      neutral: { type: 'speech' },
+      forward: { type: 'propHand', visual: 'picanha', hand: 'righthand' },
     },
     ultimateFx: 'lulacioPolvo', // PROTÓTIPO procedural (não arte final): polvo com chapéu, barba, gravata e microfone
     transform: { id: 'polvo', model: 'assets/characters/lulacio/ultimate.glb', height: 4.2, standInScale: 1, tint: 0x7a4fd6 },
