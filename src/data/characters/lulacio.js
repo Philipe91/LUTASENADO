@@ -1,3 +1,7 @@
+// movimentos de IA exclusivos do Lulácio (Meshy Texto para Motion)
+const GUARDA = '01a0efe2-f57c-765f-996c-8b479826fa21'; // lula_guarda2: brigão, punhos no peito, cotovelos abertos
+const PICANHA = '01a0efe4-99e1-76ec-90af-8512dfe57528'; // lula_picanha: arremesso por cima do ombro
+
 export default {
   id: 'lulacio',
   name: 'LULÁCIO',
@@ -43,7 +47,21 @@ export default {
     model: 'assets/characters/lulacio/model.glb',
     height: 1.72,
     yaw: 0,
-    clips: {},
+    // Meshy v2 (punhos fechados na imagem de origem) — estilo BRIGÃO DE PALANQUE, diferente do Xandor
+    clips: {
+      idle: GUARDA, intro: 'Talk_Passionately', crouch: GUARDA, ultimate: 'Chest_Pound_Taunt',
+      walk: 'Walk_Fight_Forward', walkBack: 'Walk_Fight_Back', jump: 'Jump_with_Arms_Open',
+      punch1: 'Left_Hook_from_Guard', punch2: 'Right_Uppercut_from_Guard', punch3: 'Heavy_Hammer_Swing',
+      crouchPunch: 'Left_Hook_from_Guard', airPunch: 'Heavy_Hammer_Swing', throw: 'Grip_and_Throw_Down',
+      kick: 'Spartan_Kick', airKick: 'Spartan_Kick', sweep: 'Angry_Ground_Stomp',
+      block: 'Block2', crouchBlock: 'Block2',
+      hit: 'Hit_Reaction_to_Waist', dizzy: 'Hit_Reaction_to_Waist',
+      knockdown: 'Fall_Down', down: 'Dead', ko: 'Dead', getup: 'Stand_Up1',
+      special1: 'Talk_Passionately', // Discurso Interminável
+      special2: PICANHA, // Picanha do Povo
+      special3: 'Grip_and_Throw_Down', // Abraço do Palanque
+      victory: 'Chest_Pound_Taunt',
+    },
     transform: { id: 'polvo', model: 'assets/characters/lulacio/ultimate.glb', height: 4.2, standInScale: 1.7, tint: 0x7a4fd6 },
     placeholder: { skin: 0xf0c8a0, suit: 0x1d3a8a, accent: 0xd62828, hair: 0xf2f2f2, headScale: 1.35, girth: 1.3, beard: true },
   },
