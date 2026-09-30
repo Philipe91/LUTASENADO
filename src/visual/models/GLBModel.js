@@ -134,6 +134,10 @@ export class GLBModel {
     if (!clip) return;
     const tm = this.visual.timing?.[key];
     this.scrub = tm && phases && !loop ? { tm, ...phases } : null;
+    // pulo: clip raspado pelo progresso do voo (subida→ápice→descida), não em loop; volta de golpe aéreo não reinicia
+    const js = key === 'jump' && this.visual.jumpScrub;
+    this.jumpScrub = js ? { ...js, dur: clip.duration } : null;
+    if (js) loop = false;
     const action = this.mixer.clipAction(clip);
     const prev = this.current;
     action.reset();
@@ -143,6 +147,7 @@ export class GLBModel {
     // chaves tocadas de ré (ex.: andar pra trás usando o clip de andar)
     if (this.visual.reverseKeys?.includes(key)) action.timeScale *= -1;
     if (this.scrub) { action.timeScale = 0; action.time = this.scrub.tm.start; }
+    if (this.jumpScrub) { action.timeScale = 0; action.clampWhenFinished = true; }
     action.setEffectiveWeight(1);
     action.play();
     if (prev && prev !== action) action.crossFadeFrom(prev, 0.08, false);
@@ -155,6 +160,10 @@ export class GLBModel {
     // (osso sem track volta à base; com track o mixer reescreve) e aplica de novo 1× — não acumula em hitstop/dt=0
     this.undoCrouch();
     if (this.scrub && pose.moveT !== undefined && this.current) this.current.time = this.scrubTime(pose.moveT);
+    if (this.jumpScrub && pose.airP !== undefined && this.current) {
+      const j = this.jumpScrub;
+      this.current.time = (j.from + (j.to - j.from) * pose.airP) * j.dur;
+    }
     this.mixer.update(dt);
     this.lowAmt = (this.lowAmt || 0) + ((pose.low ? 1 : 0) - (this.lowAmt || 0)) * Math.min(1, dt * 14);
     // correção de pose por chave (ex.: guarda do Xandor): visual.poseFix = { keys:[...], rots:[{bone, axis:[x,y,z], ang}] }
@@ -215,14 +224,16 @@ export class GLBModel {
   }
 
 
-  setFlash(on) {
-    if (on === this.flashing) return;
-    this.flashing = on;
+  // on: flash branco de hit; glow: cor de brilho fixo (ultimate) quando não há flash
+  setFlash(on, glow = null) {
+    const st = on ? 'f' : glow ? 'g' + glow : '';
+    if (st === this.flashing) return;
+    this.flashing = st;
     for (const m of this.materials) {
       const u = m.userData;
       if (u.baseEmissive === undefined) { u.baseEmissive = m.emissive.getHex(); u.baseIntensity = m.emissiveIntensity; }
-      m.emissive.setHex(on ? 0xffffff : u.baseEmissive);
-      m.emissiveIntensity = on ? 0.6 : u.baseIntensity;
+      m.emissive.setHex(on ? 0xffffff : glow ?? u.baseEmissive);
+      m.emissiveIntensity = on ? 0.6 : glow ? 0.12 : u.baseIntensity; // glow leve: não apaga o rosto
     }
   }
 

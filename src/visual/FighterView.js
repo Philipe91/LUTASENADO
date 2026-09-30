@@ -6,6 +6,11 @@ import * as THREE from 'three';
 import { PlaceholderModel } from './models/PlaceholderModel.js';
 import { GLBModel } from './models/GLBModel.js';
 import { LOOPING } from './animKeys.js';
+import { JUMP_V } from '../fight/constants.js';
+import { XandorAvatar } from './ultimates/XandorAvatar.js';
+import { LulacioPolvo } from './ultimates/LulacioPolvo.js';
+
+const ULTIMATE_FX = { xandorAvatar: XandorAvatar, lulacioPolvo: LulacioPolvo };
 
 const LYING = new Set(['knockdown', 'down', 'ko', 'getup']);
 
@@ -46,6 +51,8 @@ export class FighterView {
         .then((m) => { this.swapBase(m); this.source = 'glb'; console.info(`[visual] ${fighter.data.id}: GLB carregado`); })
         .catch(() => console.info(`[visual] ${fighter.data.id}: sem GLB em ${visual.model}, usando placeholder`));
     }
+    // VFX da ultimate (composição por personagem)
+    if (visual.ultimateFx && ULTIMATE_FX[visual.ultimateFx]) this.ultFx = new ULTIMATE_FX[visual.ultimateFx](scene);
     const tr = visual.transform;
     if (tr?.model && !opts.placeholderOnly) {
       GLBModel.create({ ...tr, clips: tr.clips || {} })
@@ -109,13 +116,19 @@ export class FighterView {
       const mv = f.state === 'attack' ? f.move : null;
       model.play(f.animKey, f.animLen, LOOPING.has(f.animKey), mv && { startup: mv.startup, active: mv.active, recovery: mv.recovery });
     }
-    model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' ? f.t : undefined });
+    const vy0 = JUMP_V * (f.stats.jump || 1);
+    const airP = f.y > 0 ? Math.max(0, Math.min(1, (vy0 - f.vy) / (2 * vy0))) : 1;
+    model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' ? f.t : undefined, airP });
     // GLB sem animação de queda/KO: deita o modelo proceduralmente (nunca fica em pé nocauteado)
     const lying = LYING.has(f.animKey) && model.hasClip && !model.hasClip(f.animKey === 'getup' ? 'getup' : 'ko');
     const layTarget = lying ? (f.animKey === 'getup' ? Math.max(0, 1 - f.t / 18) : 1) : 0;
     this.lay += (layTarget - this.lay) * Math.min(1, dt * 12);
     model.object.rotation.x = -this.lay * Math.PI / 2;
-    model.setFlash(f.flash > 0 || (this.form === 'ultimate' && !this.ultimateModel && Math.floor(performance.now() / 90) % 2 === 0));
+    // ultimate com VFX próprio: brilho dourado FIXO (sem piscar); sem VFX: stand-in piscando (antigo)
+    const ultBlink = this.form === 'ultimate' && !this.ultimateModel && !this.ultFx && Math.floor(performance.now() / 90) % 2 === 0;
+    model.setFlash(f.flash > 0 || ultBlink, this.form === 'ultimate' && this.ultFx ? tr.tint : null);
+    this.ultFx?.update(dt, f, match, model);
+    if (this.ultFx) model.object.visible = !this.ultFx.hideBase; // polvo substitui o corpo
 
     this.blob.position.x = f.x;
     const s = Math.max(0.4, 1 - f.y * 0.25) * this.formScale;
@@ -140,5 +153,6 @@ export class FighterView {
     if (this.aura) this.scene.remove(this.aura);
     this.base.dispose();
     this.ultimateModel?.dispose();
+    this.ultFx?.dispose();
   }
 }

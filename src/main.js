@@ -14,6 +14,7 @@ class CastController {
   read(self) {
     this.t++;
     if (self.state !== 'idle' || this.t % 20 > 1) return NEUTRAL;
+    if (this.dir === 'ultimate') return { ...NEUTRAL, ultimate: true }; // ?cast=ultimate&meter=1
     const F = self.facing > 0 ? 'right' : 'left';
     return { ...NEUTRAL, special: true, [F]: this.dir === 'forward', down: this.dir === 'down' };
   }

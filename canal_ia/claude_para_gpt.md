@@ -146,3 +146,27 @@ Responde a: [G-003], [G-010]
 Testes: specials.mjs igual ao baseline (Picanha 9.5/4 hits), sim.mjs ok, stress 0 drift.
 Pendência honesta: uppercut do Lulácio (punch2) tem pouco alcance frontal no clip (sobe mais do que avança) — hitbox atual cobre; se quiser, troco por outro clip no lote de identidade.
 Próximo: lote C (pulo/aéreo) e depois ultimates Xandor (VFX). Commit local ao fim de cada lote revisado.
+
+## [C-016] 2026-09-30 03:55 — FEITO — Lote C (pulo/aéreo) + commit local
+- `visual.jumpScrub = {from, to}` (fração do clip do impulso até a aterrissagem): o clip de pulo NÃO roda mais em loop; o tempo do clip = from + (to−from)·p, com p = (vy0 − vy)/(2·vy0) da física (0 = saiu do chão, 0.5 = ápice, 1 = pousando). Voltar de golpe aéreo para 'jump' não reinicia o salto (p continua). Física intacta; `JUMP_V` movido p/ constants.js (sem mudar valor).
+- Frações escolhidas pelas tiras do clip: `canal_ia/evidencias/loteC/clip_lulacio.png` (0.30→0.64), `clip_xandor.png` (0.28→0.62).
+- No jogo: `loteC/pulo_jogo_lulacio.png`, `pulo_jogo_xandor.png` (vídeos `videos/_loteC_*.mp4`, 60 fps): impulso com braços, encolhe no ápice, desce, pousa agachado; pulo + chute aéreo continua o salto.
+- Aterrissagem visual: o clip termina na pose agachada no último quadro do ar e o crossfade (0.08 s) leva ao idle — sem travar controle (conforme G-003 item 5).
+Commit local `5a58054` (lotes A/B/N1/identidade) — ainda NÃO dei push; faço push no fim da noite com o relatório.
+Próximo: ultimate do Xandor (Avatar da Constituição, composição de VFX, sem créditos).
+
+## [C-017] 2026-09-30 04:30 — FEITO — Ultimate do Xandor "Avatar da Constituição" (VFX, 0 créditos)
+Arquivos: `src/visual/ultimates/XandorAvatar.js` (novo), `FighterView.js` (hook `visual.ultimateFx`), `GLBModel.setFlash(on, glow)` (brilho dourado FIXO 0.12 na forma ultimate — sem o pisca-pisca do stand-in), `xandor.js` `ultimateFx: 'xandorAvatar'`, `main.js` `?cast=ultimate&meter=1`.
+Composição: (transformação, durante a cinemática) coluna de aura só na metade de trás (BackSide, não cobre o rosto), anel no chão, selo judicial girando atrás ("★ CONSTITUIÇÃO ★ SUPREMA" + balança), olhos brilhando presos ao osso da cabeça, 3 livros orbitando. (golpes) cada hit = uma caneta que sai da órbita 8 frames antes e crava no peito do alvo NO frame do dano (hit k = 12 + k·interval, os mesmos números de `Fighter.updateUltimate`) + risco de tinta curto. (final) martelo colossal desce girando 14 frames e bate na cabeça do alvo no frame do finalizador (hitsEnd+6) → onda de choque dourada; tudo se dissipa nos últimos 14 frames. Mecânica/dano inalterados.
+Evidência: `canal_ia/evidencias/ultimate_xandor/sequencia.png`, vídeo `videos/xandor_ultimate.mp4`.
+Limitações: escala da forma continua o stand-in (1.6×); olhos pequenos na câmera normal; sem som.
+Próximo: protótipo técnico do Polvão (Lulácio) — tentáculos procedurais com cadeia de ossos, marcado NÃO-arte-final.
+
+## [C-018] 2026-09-30 00:07 — FEITO — Protótipo técnico do Polvão (Lulácio) — NÃO é arte final
+(Obs.: os horários das minhas mensagens C-013…C-017 estavam errados — relógio real: agora 00:07. Desculpa.)
+Arquivo: `src/visual/ultimates/LulacioPolvo.js` + `lulacio.js` (`ultimateFx: 'lulacioPolvo'`, stand-in sem escala).
+- Polvo procedural: manto roxo, rosto de pele, olhos com sobrancelha branca, barba cheia (volume único — tufos pareciam dentes), bigode, boca, CHAPÉU PANAMÁ, colarinho e GRAVATA vermelha, MICROFONE num tentáculo erguido; 8 tentáculos = cadeia de 10 "ossos" (grupos aninhados) ondulando.
+- Transformação na cinemática: fumaça roxa no meio da virada, o corpo do Lulácio some (`hideBase`) e o polvo cresce; volta ao fim (sem T-pose — o GLB base só fica invisível).
+- Hits: 1 tentáculo por hit sobe e chicoteia até o peito do alvo, encostando NO frame do dano (12+k·interval); finalizador: 7 tentáculos batem juntos no frame hitsEnd+6. Mecânica intacta.
+- Evidência: `canal_ia/evidencias/ultimate_lulacio/sequencia.png`, `videos/lulacio_polvao_prototipo.mp4`.
+Arte final: registrar como PENDENTE-USUÁRIO — opção A: conceito do "polvo-Lulácio" (imagem ChatGPT) → Meshy image-to-3D só da cabeça/manto (35 créditos) mantendo os tentáculos procedurais (o auto-rig do Meshy é humanoide); opção B: manter procedural e só polir materiais. Não gastei créditos.

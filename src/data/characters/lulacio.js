@@ -70,6 +70,8 @@ export default {
       special3: 'Grip_and_Throw_Down', // Abraço do Palanque
       victory: 'Chest_Pound_Taunt',
     },
+    // pulo: fração do clip do impulso (0.3) até a aterrissagem (0.64), guiada pela física (subida/ápice/descida)
+    jumpScrub: { from: 0.3, to: 0.64 },
     timing: {
       punch1: { start: 0.08, contact: 0.333, activeEnd: 0.356, end: 0.6 },
       crouchPunch: { start: 0.08, contact: 0.333, activeEnd: 0.356, end: 0.6 },
@@ -78,7 +80,8 @@ export default {
       kick: { start: 0.362, contact: 0.693, activeEnd: 0.756, end: 0.897 },
       sweep: { start: 0.2, contact: 0.5, activeEnd: 0.6, end: 1.0 },
     },
-    transform: { id: 'polvo', model: 'assets/characters/lulacio/ultimate.glb', height: 4.2, standInScale: 1.7, tint: 0x7a4fd6 },
+    ultimateFx: 'lulacioPolvo', // PROTÓTIPO procedural (não arte final): polvo com chapéu, barba, gravata e microfone
+    transform: { id: 'polvo', model: 'assets/characters/lulacio/ultimate.glb', height: 4.2, standInScale: 1, tint: 0x7a4fd6 },
     placeholder: { skin: 0xf0c8a0, suit: 0x1d3a8a, accent: 0xd62828, hair: 0xf2f2f2, headScale: 1.35, girth: 1.3, beard: true },
   },
 };

@@ -7,7 +7,7 @@ import { applyHit } from './Combat.js';
 
 const DEFAULT_STATS = { hp: 100, walk: 1, jump: 1, width: 0.8, height: 1.8, damage: 1, defense: 1, meterGain: 1 };
 const WALK = 0.055;
-const JUMP_V = 0.25;
+import { JUMP_V } from "./constants.js";
 const JUMP_X = 0.075;
 const INVULNERABLE = new Set(['knockdown', 'down', 'getup', 'ko', 'victory', 'intro', 'ultimate']);
 const FRICTION = new Set(['hitstun', 'blockstun', 'down', 'getup', 'ko']);

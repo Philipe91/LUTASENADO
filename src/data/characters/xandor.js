@@ -59,6 +59,8 @@ export default {
     },
     reverseKeys: ['walkBack'],
     // contato sincronizado: segundos do clip (tools/_measure.mjs)
+    // pulo: fração do clip do impulso (0.28) até a aterrissagem (0.62), guiada pela física (subida/ápice/descida)
+    jumpScrub: { from: 0.28, to: 0.62 },
     timing: {
       punch1: { start: 0.292, contact: 0.467, activeEnd: 0.603, end: 1.108 },
       crouchPunch: { start: 0.292, contact: 0.467, activeEnd: 0.603, end: 1.108 },
@@ -79,6 +81,7 @@ export default {
     },
     // robeFix DESLIGADO: nunca esteve ativo (bug de nome de osso "right…"→"ht…") e, ativo, prende as mãos ao quadril.
     // O Xandor foi aprovado sem ele (rig v5 resolveu as pernas).
+    ultimateFx: 'xandorAvatar', // VFX: selo, aura, olhos, livros, canetas por hit, martelo colossal no final
     transform: { id: 'avatar', model: 'assets/characters/xandor/ultimate.glb', height: 3.6, standInScale: 1.6, tint: 0xffd36b },
     placeholder: { skin: 0xe8b894, suit: 0x121212, accent: 0xd4af37, hair: 0x121212, headScale: 1.35, girth: 1.05, bald: true, angryBrows: true, robe: true },
   },
