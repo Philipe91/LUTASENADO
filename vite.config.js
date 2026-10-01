@@ -4,4 +4,6 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   base: './',
   build: { target: 'es2020', chunkSizeWarningLimit: 1200 },
+  // worktrees dos agentes (.claude/worktrees) não podem recarregar o servidor da pasta principal
+  server: { watch: { ignored: ['**/.claude/**', '**/videos/**'] } },
 });
