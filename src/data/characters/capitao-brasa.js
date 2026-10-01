@@ -41,7 +41,13 @@ export default {
     height: 1.85,
     yaw: 0,
     clips: {},
-    transform: { id: 'jacare', model: 'assets/characters/capitao-brasa/ultimate.glb', height: 3.4, standInScale: 1.6, tint: 0x3f7d3a },
+    ultimateFx: 'brasaJacare', // seringa → nuvem verde → jacaré de terno procedural (mordida, rabada, rolo da morte)
+    transform: { id: 'jacare', model: 'assets/characters/capitao-brasa/ultimate.glb', height: 3.4, standInScale: 1, tint: 0x3f7d3a, frameTop: 4.0 },
+    // efeitos presos ao corpo: estrelas/balões "TALKEI?" na Rajada; motos instanciadas na Motociata
+    specialFx: {
+      neutral: { type: 'rajada' },
+      forward: { type: 'motociata' },
+    },
     placeholder: { skin: 0xf1c6a5, suit: 0x2b2f36, accent: 0x1fa34a, accent2: 0xffd400, hair: 0x6b5a4a, headScale: 1.3, girth: 0.85, sidePart: true, longFace: true },
   },
 };
