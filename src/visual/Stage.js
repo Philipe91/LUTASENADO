@@ -25,6 +25,10 @@ export class Stage {
     this.camera.updateProjectionMatrix();
   }
 
+  // cenário: a arena registrada aqui recebe as reações (plateia pula no golpe forte/KO)
+  setArena(arena) { this.arena = arena; return arena; }
+  react(v) { this.arena?.react?.(v); }
+
   shake(v) { this.shakeAmt = Math.min(0.6, Math.max(this.shakeAmt, v)); }
 
   // zoom rápido de impacto (k = fração de aproximação), decai sozinho

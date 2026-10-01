@@ -1,6 +1,6 @@
 import './style.css';
 import { Stage } from './visual/Stage.js';
-import { buildBrasilia } from './visual/arena/brasilia.js';
+import { buildArena } from './visual/arena/index.js';
 import { FighterView } from './visual/FighterView.js';
 import { Vfx } from './visual/Vfx.js';
 import { DebugDraw } from './visual/DebugDraw.js';
@@ -30,7 +30,7 @@ import { setupAudio } from './audio/index.js';
 const params = new URLSearchParams(location.search);
 const ui = document.getElementById('ui');
 const stage = new Stage(document.getElementById('game'));
-const arena = buildBrasilia(stage.scene);
+const arena = stage.setArena(buildArena(stage.scene, params.get('arena'))); // ?arena=noite
 const input = new Input();
 const hud = new Hud(ui, stage);
 const vfx = new Vfx(stage.scene);
@@ -98,7 +98,7 @@ function handleEvents(events) {
         if (e.heavy || e.ultimate) stage.punch(e.ultimate ? 0.14 : 0.08); // zoom-soco da câmera no impacto forte
         if (e.text) hud.pop(e.x, e.y + 0.5, e.text, 'big');
         else hud.pop(e.x, e.y + 0.3, Math.round(e.dmg), 'dmg');
-        arena.excite(e.heavy ? 0.25 : 0.1);
+        stage.react(e.ultimate ? 0.8 : e.heavy ? 0.35 : 0.08);
         break;
       case 'block': vfx.burst(e.x, e.y, { blocked: true }); break;
       case 'dust': vfx.dust(e.x, e.size); stage.shake(0.08); break;
@@ -106,17 +106,17 @@ function handleEvents(events) {
       case 'special':
         hud.showSpecialName(e.fighter.slot, e.name);
         hud.pop(e.fighter.x, e.fighter.stats.height + 0.6, e.name.toUpperCase(), 'special');
-        arena.excite(0.3);
+        stage.react(0.3);
         break;
       case 'text': hud.pop(e.fighter.x, e.fighter.stats.height + 0.4, e.text, e.cls); break;
       case 'spawn':
         vfx.burst(e.x, Math.max(0.4, e.y), { heavy: true, color: 0xff5a4a });
-        arena.excite(0.6);
+        stage.react(0.6);
         break;
       case 'locked': break; // o cadeado 3D acima da cabeça (StatusFx) já mostra; o hit já grita BLOQUEADO!
-      case 'grab': stage.shake(0.12); stage.punch(0.05); arena.excite(0.5); break;
-      case 'ultimate': hud.ultimate(e.fighter, e.name); stage.shake(0.3); arena.excite(1); break;
-      case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); arena.excite(1); break;
+      case 'grab': stage.shake(0.12); stage.punch(0.05); stage.react(0.5); break;
+      case 'ultimate': hud.ultimate(e.fighter, e.name); stage.shake(0.3); stage.react(1); break;
+      case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); stage.react(1); break;
       case 'roundWin': break;
       case 'matchEnd':
         hud.showResult(e.winner, e.line, () => startMatch(config), toMenu);
@@ -213,4 +213,4 @@ if (params.get('p1') || params.get('mode') === 'demo') {
   for (const v of views) v.update(0.2, match);
 }
 
-window.__rk = { get match() { return match; }, views: () => views, startMatch, advance, audio };
+window.__rk = { get match() { return match; }, views: () => views, startMatch, advance, audio, stage };
