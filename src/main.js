@@ -1,6 +1,6 @@
 import './style.css';
 import { Stage } from './visual/Stage.js';
-import { buildBrasilia } from './visual/arena/brasilia.js';
+import { buildArena } from './visual/arena/index.js';
 import { FighterView } from './visual/FighterView.js';
 import { Vfx } from './visual/Vfx.js';
 import { DebugDraw } from './visual/DebugDraw.js';
@@ -24,17 +24,20 @@ import { Input, HumanController, KEYMAPS } from './core/Input.js';
 import { getCharacter } from './data/characters/index.js';
 import { Hud } from './ui/Hud.js';
 import { SelectScreen } from './ui/SelectScreen.js';
+import { gameBus } from './core/EventBus.js';
+import { setupAudio } from './audio/index.js';
 
 // URL: ?p1=lulacio&p2=xandor&mode=cpu|2p|demo&level=easy|normal|hard&debug=1&placeholder=1
 const params = new URLSearchParams(location.search);
 const ui = document.getElementById('ui');
 const stage = new Stage(document.getElementById('game'));
-const arena = buildBrasilia(stage.scene);
+const arena = stage.setArena(buildArena(stage.scene, params.get('arena'))); // ?arena=noite
 const input = new Input();
 const hud = new Hud(ui, stage);
 const vfx = new Vfx(stage.scene);
 const debug = new DebugDraw(stage.scene);
 debug.enabled = params.has('debug');
+const audio = setupAudio(gameBus, params); // som: escuta o gameBus (eventos da partida + 'frame')
 
 let match = null;
 let views = [];
@@ -69,6 +72,7 @@ function startMatch(cfg) {
   match = new Match(a, b, controllers);
   views = match.fighters.map((f) => new FighterView(stage.scene, f, { placeholderOnly: params.has('placeholder') }));
   hud.bind(match);
+  gameBus.emit('matchStart', match);
   select.hide();
   handleEvents(match.drainEvents());
 }
@@ -78,12 +82,14 @@ function toMenu() {
   views = [];
   vfx.clear();
   match = null;
+  gameBus.emit('menu');
   hud.hide();
   select.show();
 }
 
 function handleEvents(events) {
   for (const e of events) {
+    gameBus.emit(e.type, e, match);
     switch (e.type) {
       case 'roundStart': hud.showBanner(e.name, 'round', 1300); break;
       case 'banner': hud.showBanner(e.text, e.cls, 900); break;
@@ -96,7 +102,7 @@ function handleEvents(events) {
         else if (e.ko) stage.focus(e.x, e.y, 2.2, 0.12);
         if (e.text) hud.pop(e.x, e.y + 0.5, e.text, 'big');
         else hud.pop(e.x, e.y + 0.3, Math.round(e.dmg), 'dmg');
-        arena.excite(e.heavy ? 0.25 : 0.1);
+        stage.react(e.ultimate ? 0.8 : e.heavy ? 0.35 : 0.08);
         break;
       case 'block': vfx.burst(e.x, e.y, { blocked: true }); stage.shake(e.heavy ? 0.06 : 0.03, (e.dir || 0) * 0.5); break;
       case 'dash': vfx.dust(e.x - e.fighter.facing * e.dir * 0.3, 0.35); break;
@@ -110,17 +116,17 @@ function handleEvents(events) {
       case 'special':
         hud.showSpecialName(e.fighter.slot, e.name);
         hud.pop(e.fighter.x, e.fighter.stats.height + 0.6, e.name.toUpperCase(), 'special');
-        arena.excite(0.3);
+        stage.react(0.3);
         break;
       case 'text': hud.pop(e.fighter.x, e.fighter.stats.height + 0.4, e.text, e.cls); break;
       case 'spawn':
         vfx.burst(e.x, Math.max(0.4, e.y), { heavy: true, color: 0xff5a4a });
-        arena.excite(0.6);
+        stage.react(0.6);
         break;
       case 'locked': break; // o cadeado 3D acima da cabeça (StatusFx) já mostra; o hit já grita BLOQUEADO!
-      case 'grab': stage.shake(0.12); stage.punch(0.05); arena.excite(0.5); break;
-      case 'ultimate': hud.ultimate(e.fighter, e.name); stage.shake(0.3); arena.excite(1); break;
-      case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); arena.excite(1); break;
+      case 'grab': stage.shake(0.12); stage.punch(0.05); stage.react(0.5); break;
+      case 'ultimate': hud.ultimate(e.fighter, e.name); stage.shake(0.3); stage.react(1); break;
+      case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); stage.react(1); break;
       case 'roundWin': break;
       case 'matchEnd':
         hud.showResult(e.winner, e.line, () => startMatch(config), toMenu);
@@ -161,6 +167,7 @@ function tick(dt) {
     while (acc >= STEP && steps < 6) { match.step(); acc -= STEP; steps++; }
     if (steps === 6) acc = 0;
     handleEvents(match.drainEvents());
+    gameBus.emit('frame', match);
     const frozen = match.hitstop > 0;
     const vdt = frozen ? 0 : dt * match.timeScale * GAME_SPEED;
     for (const v of views) v.update(match.cinematic && v.f !== match.cinematic.fighter ? 0 : vdt, match);
@@ -218,4 +225,4 @@ if (params.get('p1') || params.get('mode') === 'demo') {
   for (const v of views) v.update(0.2, match);
 }
 
-window.__rk = { get match() { return match; }, views: () => views, startMatch, advance };
+window.__rk = { get match() { return match; }, views: () => views, startMatch, advance, audio, stage };
