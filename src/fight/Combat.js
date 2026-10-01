@@ -47,8 +47,8 @@ export function applyHit(match, atk, def, hit, sourceX) {
     def.setState('blockstun', def.cmd.down ? 'crouchBlock' : 'block', def.stun);
     def.vx = dir * (hit.push ?? 0.1) * 0.8;
     def.gainMeter(8); atk.gainMeter(3);
-    match.hitstop = 4;
-    match.emit({ type: 'block', x: fx, y: fy, fighter: def });
+    match.hitstop = hit.heavy ? 6 : 4;
+    match.emit({ type: 'block', x: fx, y: fy, fighter: def, dir, heavy: !!hit.heavy });
     return 'block';
   }
 
@@ -89,6 +89,14 @@ export function applyHit(match, atk, def, hit, sourceX) {
   if (hit.lockSpecials) { def.lockT = def.lockMax = hit.lockSpecials; match.emit({ type: 'locked', fighter: def }); }
   if (hit.pull) def.x = atk.x + atk.facing * ((atk.stats.width + def.stats.width) / 2 + 0.35);
 
+  // reação visual: zona do golpe (alta = cabeça, média = corpo, baixa = pernas) e força (dano + empurrão + pesado)
+  const hb = hit.hitbox || hit.box;
+  const yc = hb ? (hb.y ?? 0) + (hb.h ?? 1) / 2 + (hit.air ? atk.y - def.y : 0) : def.stats.height * 0.6;
+  const r = yc / def.stats.height;
+  const zone = hit.level === 'low' || r < 0.36 ? 'low' : r > 0.62 ? 'high' : 'mid';
+  const force = Math.max(0.25, Math.min(1.6, dmg / 9 + (hit.heavy ? 0.3 : 0) + (hit.push ?? 0.1) * 1.5 + (hit.knockdown ? 0.25 : 0)));
+  def.hitInfo = { seq: ++def.hitSeq, zone, force, dir, heavy: !!hit.heavy, frame: match.frame };
+
   if (def.hp <= 0) {
     def.hp = 0; def.move = null; def.sp = null;
     def.setState('ko', 'ko');
@@ -106,7 +114,10 @@ export function applyHit(match, atk, def, hit, sourceX) {
     def.vx = dir * (hit.push ?? 0.1);
   }
 
-  match.hitstop = Math.max(match.hitstop, hit.hitstop ?? (hit.heavy ? 11 : 7));
-  match.emit({ type: 'hit', x: fx, y: fy, dmg, heavy: !!hit.heavy, ultimate: !!hit.ultimate, text: hit.text, attacker: atk, fighter: def });
+  // hitstop escalado pela força: jab ≈ 7, golpe pesado ≈ 12–14. No KO a câmera lenta (0.3) já estica o congelamento
+  // ~3×, então usa metade (≈0,5s real de pose congelada antes do voo em câmera lenta)
+  const stop = hit.hitstop ?? Math.round(Math.max(6, Math.min(14, 4 + dmg * 0.75)) + (hit.heavy ? 3 : 0));
+  match.hitstop = Math.max(match.hitstop, def.hp <= 0 ? Math.max(5, Math.round(stop * 0.5)) : stop);
+  match.emit({ type: 'hit', x: fx, y: fy, dmg, heavy: !!hit.heavy, ultimate: !!hit.ultimate, text: hit.text, attacker: atk, fighter: def, dir, zone, force, ko: def.hp <= 0 });
   return 'hit';
 }

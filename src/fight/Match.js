@@ -90,7 +90,8 @@ export class Match {
         if (--this.timer <= 0) this.timeUp();
         break;
       case 'ko':
-        if (this.phaseT === 45) this.timeScale = 1;
+        // câmera lenta curta e com rampa: segura em 0.3 e volta suave a 1 (antes: 0.3 seco por 45 frames)
+        if (this.phaseT >= 16 && this.phaseT <= 36) this.timeScale = 0.3 + 0.7 * ((this.phaseT - 16) / 20);
         if (this.phaseT >= 75) {
           this.phase = 'roundEnd'; this.phaseT = 0; this.timeScale = 1;
           this.wins[this.winner.slot]++;
