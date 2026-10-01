@@ -254,8 +254,8 @@ export const PROJECTILE_VISUALS = {
       guy.position.set(2.95, 1.8, 0);
       body.add(guy);
       const honk = textSprite('FOM FOM!', { color: '#ffd400', stroke: '#111', w: 2.6, h: 0.8 }); honk.position.set(2.2, 3.6, 0.4); g.add(honk);
-      const smoke = new Puffs(g, 16, 0x5a5a5a, { lit: true, opacity: 0.7 });
-      const dust = new Puffs(g, 16, 0xcdbda0, { lit: true, opacity: 0.6 });
+      const smoke = new Puffs(g, 16, 0x5a5a5a, { opacity: 0.55 });
+      const dust = new Puffs(g, 16, 0xcdbda0, { opacity: 0.5 });
       // offX: alinha o para-choque (x local 3.5) com a borda frontal da hitbox (w 2.8 → +1.4)
       g.userData = { body, wheels, guy, armL, armR, legL, legR, flag, honk, smoke, dust, lastX: 0, offX: -2.1, offY: 0 };
       return g;
@@ -306,7 +306,7 @@ export const PROJECTILE_VISUALS = {
       const stuck = makeVadeMecum(); stuck.scale.setScalar(1.6); stuck.visible = false; stuck.rotation.set(0.4, 0, 1.1); stuck.position.set(0.1, 0.35, 0);
       const boom = new Rings(g, 2, 0xffa040);
       const fireP = new Puffs(g, 10, 0xff8a2a, { opacity: 0.9 });
-      const smoke = new Puffs(g, 10, 0x4a4a4a, { lit: true, opacity: 0.7 });
+      const smoke = new Puffs(g, 10, 0x4a4a4a, { opacity: 0.55 });
       const rocks = new Shards(g, 12, new THREE.DodecahedronGeometry(0.14, 0), std(0x6a5a48));
       const minis = [0, 1].map((i) => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), add(0xff9a3a, 0.9)); m.visible = false; g.add(m); return m; });
       g.add(shadow, lock, fire, crater, stuck);
@@ -371,7 +371,7 @@ export const PROJECTILE_VISUALS = {
       }
       const grass = new THREE.Mesh(new THREE.CircleGeometry(0.9, 20), flat(0x6b7a3a, 0.5)); grass.rotation.x = -Math.PI / 2; grass.position.y = 0.02; grass.scale.set(1.3, 0.6, 1); g.add(grass);
       const crack = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.5), flat(0x3a2a1a, 0.8)); crack.rotation.x = -Math.PI / 2; crack.position.set(-1.9, 0.021, 0); crack.scale.set(1, 0.25, 1); g.add(crack);
-      const dust = new Puffs(g, 14, 0xcdbda0, { lit: true, opacity: 0.65 });
+      const dust = new Puffs(g, 14, 0xcdbda0, { opacity: 0.55 });
       g.userData = { ridge, chunks, grass, crack, dust, offY: 0, lastX: 0 };
       return g;
     },

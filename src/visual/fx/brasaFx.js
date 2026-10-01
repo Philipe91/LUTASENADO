@@ -27,12 +27,12 @@ class RajadaFx {
       return { s, life: 0, max: 1 };
     });
     this.bubbles = Array.from({ length: 3 }, () => {
-      const b = textSprite('TALKEI?', { bubble: '#ffffff', color: '#111', stroke: '#111', font: 'bold 70px Bangers, Impact, sans-serif', w: 1.05, h: 0.35 });
+      const b = textSprite('TALKEI?', { bubble: '#ffffff', color: '#111', stroke: '#111', font: 'bold 70px Bangers, Impact, sans-serif', w: 1.5, h: 0.5 });
       b.visible = false; scene.add(b);
       return { s: b, life: 0, max: 1, born: -1 };
     });
     this.lines = Array.from({ length: 6 }, () => {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.03), add(0xfff0a0, 0));
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.05), add(0xfff0a0, 0));
       m.visible = false; scene.add(m); return m;
     });
     this.lastSpawn = -1; this.lastBubble = -1;
@@ -63,7 +63,7 @@ class RajadaFx {
       if (st.life <= 0) continue;
       st.life -= dt;
       const q = 1 - st.life / st.max;
-      const sc = 0.25 + easeOut(q) * 0.45;
+      const sc = 0.45 + easeOut(q) * 0.75;
       st.s.scale.set(sc, sc, 1); st.s.material.opacity = 1 - q * q;
       if (st.life <= 0) st.s.visible = false;
     }
@@ -72,7 +72,7 @@ class RajadaFx {
       b.life -= dt;
       const q = 1 - b.life / b.max;
       const pop = Math.min(1, q / 0.12);
-      b.s.scale.set(1.05 * pop, 0.35 * pop, 1);
+      b.s.scale.set(1.5 * pop, 0.5 * pop, 1);
       b.s.position.y += dt * 0.35;
       b.s.material.opacity = q > 0.75 ? (1 - q) / 0.25 : 1;
       if (b.life <= 0) b.s.visible = false;
@@ -131,7 +131,7 @@ class MotociataFx {
     this.bikes = new THREE.InstancedMesh(bikeGeometry(), mat, 4);
     this.riders = new THREE.InstancedMesh(riderGeometry(), mat, 3);
     for (const m of [this.bikes, this.riders]) { m.castShadow = true; m.frustumCulled = false; scene.add(m); }
-    this.smoke = new Puffs(scene, 30, 0x8fd66a, { lit: true, opacity: 0.85 });
+    this.smoke = new Puffs(scene, 30, 0x8fd66a, { opacity: 0.6 });
     this.dummy = new THREE.Object3D(); this.tilt = new THREE.Quaternion();
     this.xs = 0; this.xEnd = 0; this.lastPuff = -1;
     this.hideAll();

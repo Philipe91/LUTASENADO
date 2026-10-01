@@ -170,7 +170,7 @@ export class DinoTrex {
       if (cine > 66) { const q = clamp01((75 - cine) / 9); x = faceX + (handX - faceX) * easeOut(q); y = faceY + (handY - faceY) * easeOut(q); }
       else if (cine > 56) { x = handX; y = handY; rot = Math.sin(now * 40) * 0.35; }                 // limpa (esfrega)
       else if (cine > 50) { const q = clamp01((56 - cine) / 6); x = handX + (faceX - handX) * easeOut(q); y = handY + (faceY - handY) * easeOut(q); }
-      else { const q = clamp01((50 - cine) / 14); s = 0.55 + easeIn(q) * 3.2; rot = Math.sin(now * 50) * 0.08 * q; } // crescem tremendo
+      else { const q = clamp01((50 - cine) / 14); s = 0.55 + easeIn(q) * 2.0; rot = Math.sin(now * 50) * 0.08 * q; } // crescem tremendo
       this.bigGlasses.position.set(x, y, 0.1); this.bigGlasses.rotation.set(0, 0, rot); this.bigGlasses.scale.setScalar(s); // lente de frente pra câmera
     }
     const at = this.tmp.set(0, 1.5, 0);

@@ -18,9 +18,9 @@ export default {
     // METEORO: joga o Vade Mecum pro céu; uma SOMBRA marca onde o alvo estava e, 30 frames depois, o livro cai em
     // chamas ali (zona: dá pra sair de baixo). 1 hit forte, derruba.
     forward: {
-      name: 'Meteoro Didático', kind: 'zone', startup: 16, recovery: 22, armor: true, cooldown: 270,
+      name: 'Meteoro Didático', kind: 'zone', startup: 16, recovery: 22, armor: true, cooldown: 300,
       atOpponent: true, delay: 30, activeFrames: 6, linger: 18, hits: 1,
-      damage: 8, knockdown: true, push: 0.2, heavy: true,
+      damage: 7, knockdown: true, push: 0.2, heavy: true,
       box: { y: 0, w: 1.3, h: 1.6 }, visual: 'meteor', color: 0xff7a1a, text: 'METEORO!',
     },
     // PISÃO: pisada que treme a tela (groundFx) e solta uma onda de terra rasteira (tem que pular)

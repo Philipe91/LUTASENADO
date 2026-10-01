@@ -47,7 +47,7 @@ class RoarFx {
       light.position.z = 0.01; g.add(dark, light); g.visible = false; scene.add(g);
       return { g, dark, light, born: -1 };
     });
-    this.dust = new Puffs(scene, 12, 0xd8c8a8, { lit: true, opacity: 0.6 });
+    this.dust = new Puffs(scene, 12, 0xd8c8a8, { opacity: 0.5 });
     this.pebbles = new Shards(scene, 14, new THREE.DodecahedronGeometry(0.07, 0), std(0x8a7a60));
     this.lastWave = -1; this.open = 0;
   }
@@ -133,7 +133,7 @@ class StompFx {
   constructor(scene) {
     this.scene = scene;
     this.rings = new Rings(scene, 3, 0xd8b070, { additive: false, inner: 0.7, outer: 0.85 });
-    this.dust = new Puffs(scene, 10, 0xcdbda0, { lit: true, opacity: 0.7 });
+    this.dust = new Puffs(scene, 10, 0xcdbda0, { opacity: 0.55 });
     this.pebbles = new Shards(scene, 10, new THREE.DodecahedronGeometry(0.08, 0), std(0x8a7a60));
     this.crack = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.9), new THREE.MeshBasicMaterial({ map: crackTexture(), transparent: true, opacity: 0, depthWrite: false }));
     this.crack.rotation.x = -Math.PI / 2; this.crack.position.y = 0.02; this.crack.visible = false; scene.add(this.crack);

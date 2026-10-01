@@ -24,7 +24,7 @@ export default {
     // PATRIOTA NO PARA-BRISA: grito → caminhão nasce atrás dele e atravessa a arena. 1 hit forte, knockback grande.
     down: {
       name: 'Patriota no Para-brisa', kind: 'projectile', startup: 22, recovery: 28, cooldown: 380,
-      shout: 'SAI DA FRENTE!', fromBehind: 9, speed: 0.55, life: 40,
+      shout: 'SAI DA FRENTE!', fromBehind: 9, speed: 0.42, life: 52, linger: true, // mais lento (dá pra ver) e segue após o impacto
       damage: 11, hitstun: 24, blockstun: 18, push: 0.26, knockdown: true, heavy: true,
       box: { y: 0, w: 2.8, h: 2.3 }, visual: 'truck', model: 'assets/props/caminhao.glb', text: 'PATRIOTA NO PARA-BRISA!',
     },
