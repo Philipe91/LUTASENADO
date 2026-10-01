@@ -7,21 +7,23 @@
 ## LULÁCIO
 - **Picanha do Povo** (→ + Especial) — *substitui "Companheirada"*. Arremessa uma picanha; ao acertar/chegar perto/cair, surge uma onda de apoiadores fictícios vermelhos (silhuetas) que avança em bloco: multi-hit, knockback no último hit, some rápido. Cooldown médio. `[implementado 29/09]`
 - Discurso Interminável (neutro) e Abraço do Palanque (↓) mantidos.
-- **Ultimate: O Polvão do Povo** — polvo gigante com barba/gravata/microfone; tentáculos atacam.
+- **Ultimate: O Polvão do Povo** — polvo gigante com barba/gravata/microfone; tentáculos atacam. `[VFX 01/10: nuvem de tinta → polvo com chapéu, 8 tentáculos com ventosas no chão + 9º que esmaga no final (gag do GDD)]`
 
 ## CAPITÃO BRASA
-- **Rajada** (neutro, "Talkei Rajada" / ataque de dedo) — mantido.
-- **Motociata** (→) — mantido.
-- **Patriota no Para-brisa** (↓ + Especial) — *substitui "Live Surpresa"*. Grito curto → caminhão low-poly atravessa a arena com um apoiador fictício pendurado no para-brisa. 1 hit forte, knockback grande, startup perceptível, cooldown alto. `[implementado 29/09]`
-- **Ultimate: Efeito Colateral** — seringa entra, vira jacaré/híbrido mantendo terno/cabelo; finalizador forte e curto.
+- **Rajada** (neutro, "Talkei Rajada" / ataque de dedo) — mantido. `[VFX 01/10: estrelas de impacto, linhas de velocidade, balões "TALKEI?"]`
+- **Motociata** (→) — mantido. `[VFX 01/10: moto nasce embaixo dele empinando + 3 motos instanciadas com pilotos atravessam em faixas de profundidade, fumaça verde-amarela; somem sozinhas]`
+- **Patriota no Para-brisa** (↓ + Especial) — *substitui "Live Surpresa"*. Grito curto → caminhão low-poly atravessa a arena com um apoiador fictício pendurado no para-brisa. 1 hit forte, knockback grande, startup perceptível, cooldown alto. `[implementado 29/09; VFX 01/10: cabine/baú "FROTA DO CAPITÃO", farol, escapamento, buzina FOM FOM, apoiador se debatendo no vidro]`
+- **Ultimate: Efeito Colateral** — seringa entra, vira jacaré/híbrido mantendo terno/cabelo; finalizador forte e curto. `[VFX 01/10: seringa cai do céu → nuvem verde → jacaré de terno com faixa, cabelo de lado e celular; mordida / rabada 360° / rolo da morte com água]`
 
 ## XANDOR
 - Intimação, **Bloqueado**, **Canetada** — mantidos.
 - **Ultimate: Avatar da Constituição** — entidade divina/judicial: olhos brilhando, aura, selo/círculo atrás, livros/canetas flutuando, toga celestial; termina em martelo colossal / carimbo / canetada divina. Sem `ultimate.glb`: scale + emissive + partículas + luz + overlays.
 
 ## DINO SUPREMO
-- **Rugido**, **Meteoro**, golpes pesados/tank — mantidos (Pisão Cretáceo também).
-- **Ultimate: T-Rex de Terno** — T-Rex/híbrido com óculos/gravata; gag dos bracinhos que não alcançam os óculos; finalizador pesado e curto.
+- **Rugido** (neutro) — mantido. `[VFX 01/10: bocarra gigante (sprite) + ondas de choque duplas no cone, poeira e pedrinhas]`
+- **Meteoro Didático** (→) — *agora é ZONA*: joga o Vade Mecum pro céu; uma SOMBRA/alvo marca onde o oponente estava e, 30 frames depois, o livro cai em chamas ali (dá pra sair de baixo). 1 hit, 8 de dano, derruba, cooldown 270. Sim: Dino 41% → 52% de vitórias (antes era o mais fraco). `[01/10]`
+- **Pisão Cretáceo** (↓) — mantido; agora a pisada treme a tela (`groundFx`) e a onda é uma crista de torrões com rachadura. `[01/10]`
+- **Ultimate: T-Rex de Terno** — T-Rex/híbrido com óculos/gravata; gag dos bracinhos que não alcançam os óculos; finalizador pesado e curto. `[VFX 01/10: óculos saem/limpam/crescem, botões voam, poeira → T-Rex de paletó rasgado; mordida / rabada / pisão / ruge e METEORO cai no alvo]`
 
 ---
 ## PIPELINE 3D DOS PERSONAGENS
@@ -49,6 +51,7 @@
 
 ## Log
 - **01/10 (madrugada)** — Direção de arte: `ARTE.md` (bíblia visual: paleta, luz, VFX ENTRA→IMPACTA→SOME, tipografia, proibidos), `src/visual/Look.js` (ACES/AgX, rim fresnel nos lutadores, VSM, bloom 1/4, grading, vinheta; `?look=0`), HUD/seleção/letreiros redesenhados, `art/PROMPTS_GPT.md` (Brasa, Dino, backdrop de Brasília, retratos). Retratos: `public/assets/characters/<id>/portrait.png` entra sozinho na UI.
+- **01/10** — VFX dos poderes: Polvão refeito (tinta, tentáculos com ventosas em curvas/ossos, 9º tentáculo esmaga), Brasa (Rajada, Motociata com motos instanciadas, caminhão novo, Efeito Colateral = seringa → jacaré de terno), Dino (bocarra do Rugido, Meteoro vira zona com sombra prévia, Pisão com crista de terra, T-Rex de Terno com gag dos bracinhos e meteoro final). `frameTop` nas transformações pra câmera enquadrar. Infra: `src/visual/fx/` (Tentacle, pools de nuvens/anéis/estilhaços).
 - **30/09 (tarde)** — Abraço do Palanque = agarra, gira 3 voltas e arremessa (estado `held`). Discurso = 3 pulsos, o último atordoa (estrelinhas). Xandor: documento de Intimação, carimbo BLOQUEADO com cadeado sobre a cabeça, caneta colossal da Canetada. Ultimates só mostram contato quando a lógica confirma o hit (`ultRes`).
 - **29/09 (23h)** — Lulácio v2 com estilo próprio (brigão de palanque) e punhos fechados. Checkpoint `checkpoint-lulacio-xandor` no GitHub.
 - **29/09 (22h)** — Xandor aprovado: pernas quebradas = joelho do rig 19 cm à frente (marcador em cima da toga); gravata dobrando = queixo no nó; pé virado = tornozelo esquerdo no calcanhar. Rig refeito 2× até os ossos ficarem simétricos (rig é grátis). Commit + push no GitHub. Iniciado Lulácio (imagem LULA.png do usuário).

@@ -37,7 +37,7 @@ export class Hitter {
       vx: (s.speed ?? 0) * facing, vy: s.vy || 0, g: s.g || 0, w: s.box.w, h: s.box.h,
       life: s.life ?? 90, hitsLeft: s.hits ?? 1, rehit: s.rehit ?? 10,
       visual: s.visual, color: s.color, model: s.model,
-      triggerRange: s.triggerRange, spawnOnEnd: s.spawnOnEnd,
+      triggerRange: s.triggerRange, spawnOnEnd: s.spawnOnEnd, linger: !!s.linger, // linger: segue (sem dano) depois de acertar, pro visual terminar (caminhão)
     });
   }
 }

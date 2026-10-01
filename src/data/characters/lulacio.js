@@ -93,7 +93,7 @@ export default {
       forward: { type: 'propHand', visual: 'picanha', hand: 'righthand' },
     },
     ultimateFx: 'lulacioPolvo', // PROTÓTIPO procedural (não arte final): polvo com chapéu, barba, gravata e microfone
-    transform: { id: 'polvo', model: 'assets/characters/lulacio/ultimate.glb', height: 4.2, standInScale: 1, tint: 0x7a4fd6 },
+    transform: { id: 'polvo', model: 'assets/characters/lulacio/ultimate.glb', height: 4.2, standInScale: 1, tint: 0x7a4fd6, frameTop: 4.6 }, // frameTop: câmera enquadra o polvo inteiro (chapéu)
     placeholder: { skin: 0xf0c8a0, suit: 0x1d3a8a, accent: 0xd62828, hair: 0xf2f2f2, headScale: 1.35, girth: 1.3, beard: true },
   },
 };

@@ -157,9 +157,11 @@ export class Fighter {
     if (this.flash > 0) this.flash--;
     // agarrão interrompido (tomou golpe, KO...): solta quem estava preso
     if (this.held && this.state !== 'special') this.releaseHeld();
-    // golpe com impacto no chão (pisão): poeira no 1º frame ativo, acertando ou não
-    if (this.state === 'attack' && this.move?.groundFx && this.t === this.move.startup) {
-      match.emit({ type: 'dust', x: this.x + this.facing * (this.move.hitbox.x + this.move.hitbox.w / 2), size: this.move.groundFx });
+    // golpe com impacto no chão (pisão, Pisão Cretáceo): poeira + tremor no 1º frame ativo, acertando ou não
+    const gm = this.state === 'attack' ? this.move : this.state === 'special' ? this.sp : null;
+    if (gm?.groundFx && this.t === gm.startup) {
+      const hb = gm.hitbox || gm.box || { x: 0.2, w: 0.6 };
+      match.emit({ type: 'dust', x: this.x + this.facing * ((hb.x ?? 0.2) + hb.w / 2), size: gm.groundFx });
     }
     const c = this.cmd;
     const fwd = this.facing > 0 ? c.right : c.left;

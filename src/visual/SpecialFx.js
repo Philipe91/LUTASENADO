@@ -1,78 +1,80 @@
 // Efeitos presos ao CORPO do lutador durante especiais (o que não é Hitter solto no mundo).
-// Configurado por personagem em visual.specialFx = { <dir>: { type, ... } }:
-//   speech  — pulsos de voz (arcos) saindo da boca na direção do golpe durante os frames ativos
+// Configurado por personagem em visual.specialFx = { <dir>: { type, ... } }. Cada tipo é uma classe com
+// update(dt, f, model, sp) — `sp` é o especial ativo dessa direção ou null (aí o efeito termina de sumir).
+//   speech   — pulsos de voz (arcos) saindo da boca na direção do golpe durante os frames ativos (Lulácio)
 //   propHand — objeto na mão (ex.: picanha) do início do especial até o frame de spawn (startup), depois some
+//   rajada / motociata — Capitão Brasa (fx/brasaFx.js)
+//   roar / throwUp / stomp — Dino Supremo (fx/dinoFx.js)
 import * as THREE from 'three';
 import { PROJECTILE_VISUALS } from './projectiles.js';
+import { BRASA_FX } from './fx/brasaFx.js';
+import { DINO_FX } from './fx/dinoFx.js';
+import { bodyPoint, clamp01 } from './fx/common.js';
 
-const clamp01 = (x) => Math.max(0, Math.min(1, x));
-
-export class SpecialFx {
-  constructor(scene, cfg) {
-    this.scene = scene;
-    this.cfg = cfg || {};
-    this.v = new THREE.Vector3();
-    // pulsos de voz: 6 arcos reciclados
+class SpeechFx {
+  constructor(scene) {
+    this.scene = scene; this.v = new THREE.Vector3();
     this.arcs = Array.from({ length: 6 }, () => {
       const m = new THREE.Mesh(
         new THREE.RingGeometry(0.26, 0.4, 32, 1, -Math.PI / 3, (Math.PI * 2) / 3),
-        // arco sólido amarelo-quente (aditivo sumia no chão claro)
         new THREE.MeshBasicMaterial({ color: 0xffc93a, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }),
       );
       m.visible = false; scene.add(m);
       return m;
     });
-    this.props = {};
   }
+  update(dt, f, model, sp) {
+    for (const a of this.arcs) a.visible = false;
+    if (!sp) return;
+    bodyPoint(this.v, f, model, 'head', { y: f.stats.height * 0.88 });
+    const t0 = sp.startup, t1 = sp.startup + sp.active;
+    const reach = (sp.box?.x ?? 0.3) + (sp.box?.w ?? 1.7);
+    this.arcs.forEach((a, i) => {
+      const born = t0 + i * 4, age = f.t - born;
+      if (born >= t1 || age < 0 || age > 14) return;
+      const q = age / 14;
+      a.visible = true;
+      a.position.set(this.v.x + f.facing * (0.25 + q * reach), this.v.y - 0.05 - q * 0.35, 0.3);
+      a.rotation.set(0, 0, f.facing > 0 ? 0 : Math.PI);
+      a.scale.setScalar(0.7 + q * 1.6);
+      a.material.opacity = 0.9 * (1 - q);
+    });
+  }
+  dispose() { this.scene.remove(...this.arcs); }
+}
 
-  prop(dir, c) {
-    if (!this.props[dir]) {
-      const p = PROJECTILE_VISUALS[c.visual].build();
-      p.visible = false; this.scene.add(p);
-      this.props[dir] = p;
+class PropHandFx {
+  constructor(scene, c) {
+    this.scene = scene; this.c = c; this.v = new THREE.Vector3();
+    this.p = PROJECTILE_VISUALS[c.visual].build(); this.p.visible = false; scene.add(this.p);
+  }
+  update(dt, f, model, sp) {
+    this.p.visible = false;
+    if (!sp || f.t >= sp.startup) return; // no frame de spawn o objeto "sai" da mão (vira o projétil)
+    bodyPoint(this.v, f, model, this.c.hand || 'righthand', { dx: 0.3, y: f.stats.height * 0.6 });
+    this.p.visible = true;
+    this.p.position.copy(this.v);
+    this.p.scale.setScalar(0.5 * clamp01(f.t / 3));
+    this.p.userData.spin && (this.p.userData.spin.rotation.z = 0);
+  }
+  dispose() { this.scene.remove(this.p); }
+}
+
+const TYPES = { speech: SpeechFx, propHand: PropHandFx, ...BRASA_FX, ...DINO_FX };
+
+export class SpecialFx {
+  constructor(scene, cfg) {
+    this.scene = scene;
+    this.fx = {};
+    for (const [dir, c] of Object.entries(cfg || {})) {
+      if (TYPES[c.type]) this.fx[dir] = new TYPES[c.type](scene, c);
     }
-    return this.props[dir];
   }
 
   update(dt, f, model) {
     const sp = f.state === 'special' ? f.sp : null;
-    const c = sp ? this.cfg[sp.dir] : null;
-    for (const a of this.arcs) a.visible = false;
-    for (const p of Object.values(this.props)) p.visible = false;
-    if (!c || !model?.bones) return;
-
-    if (c.type === 'speech') {
-      const head = model.bones.get('head');
-      if (!head) return;
-      head.getWorldPosition(this.v);
-      const t0 = sp.startup, t1 = sp.startup + sp.active;
-      const reach = (sp.box?.x ?? 0.3) + (sp.box?.w ?? 1.7);
-      // um arco nasce a cada 4 frames na janela ativa e viaja até o fim do alcance do golpe
-      this.arcs.forEach((a, i) => {
-        const born = t0 + i * 4;
-        const age = f.t - born;
-        if (born >= t1 || age < 0 || age > 14) return;
-        const q = age / 14;
-        a.visible = true;
-        a.position.set(this.v.x + f.facing * (0.25 + q * reach), this.v.y - 0.05 - q * 0.35, 0.3);
-        a.rotation.set(0, 0, f.facing > 0 ? 0 : Math.PI); // arco de frente pra câmera, abrindo na direção do golpe
-        a.scale.setScalar(0.7 + q * 1.6);
-        a.material.opacity = 0.9 * (1 - q);
-      });
-    } else if (c.type === 'propHand') {
-      if (f.t >= sp.startup) return; // no frame de spawn a picanha "sai" da mão (vira o projétil)
-      const hand = model.bones.get(c.hand || 'righthand');
-      if (!hand) return;
-      const p = this.prop(sp.dir, c);
-      hand.getWorldPosition(this.v);
-      p.visible = true;
-      p.position.copy(this.v);
-      p.scale.setScalar(0.5 * clamp01(f.t / 3)); // na mão: menor que o projétil em voo
-      p.userData.spin && (p.userData.spin.rotation.z = 0);
-    }
+    for (const [dir, fx] of Object.entries(this.fx)) fx.update(dt, f, model, sp && sp.dir === dir ? sp : null);
   }
 
-  dispose() {
-    this.scene.remove(...this.arcs, ...Object.values(this.props));
-  }
+  dispose() { for (const fx of Object.values(this.fx)) fx.dispose?.(); }
 }
