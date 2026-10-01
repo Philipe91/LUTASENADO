@@ -7,12 +7,14 @@
 cd D:\projetos\GAMELUTA
 npm run dev          → http://localhost:5199 (ou a porta que o Vite mostrar; --host já expõe na rede local)
 npm run sim          → 120 partidas CPU x CPU sem navegador (balanceamento)
+node tests/audio_events.mjs [p1 p2] [--log]  → quais sons/falas/música disparariam numa partida (sem navegador)
 node tests/specials.mjs [id] [dir]  → duração/hits/dano de cada especial contra boneco parado
 node tools/record.mjs "<query>" <seg> videos/x.mp4 [w] [h] [fps]  → grava MP4 quadro a quadro (dev server ligado; ex. query "p1=lulacio&p2=xandor&cast=forward&ff=95"). Vertical: w=720 h=1280
 npm run build        → dist/ pronto pra Vercel/Netlify/itch.io
 ```
 URLs úteis: `&cast=neutral|forward|down` (P1 solta o especial em loop, P2 parado) · `&stats=1` custo de render/pool · `?p1=lulacio&p2=xandor&mode=cpu|2p|demo` · `&debug=1` hitboxes · `&meter=1` barra cheia · `&ff=600` adianta frames · `&glbtest=1` GLB de teste no P1 · `&placeholder=1` força placeholder
-Teclas: F1 hitboxes · F2 liga/desliga CPU no P1 · ESC menu
+Som: `?mute=1` começa mudo · `?music=0..1` · `?sfx=0..1` · `?sfxtest=1` painel para ouvir cada SFX
+Teclas: F1 hitboxes · F2 liga/desliga CPU no P1 · ESC menu · M mudo · N música
 
 ## Status
 - **Dia 1 FEITO (29/09):** movimentação, pulo, agachar, defesa alta/baixa, soco x3 encadeado, chute, rasteira, aéreos, arremesso, hitstop, shake, hitboxes, vida, barra de ultimate, 12 especiais por dados, 4 passivas, ultimate (stand-in), rounds PRIMEIRO/SEGUNDO/TERCEIRO TURNO, KO com câmera lenta, timer, IA com perfil por personagem, HUD, seleção, resultado/revanche, arena Brasília blockout.
@@ -31,7 +33,7 @@ Teclas: F1 hitboxes · F2 liga/desliga CPU no P1 · ESC menu
 2. Integrar cada GLB assim que chegar (yaw, altura, clips, props na mão)
 3. VFX próprios dos 12 especiais (moto, multidão, carimbo, caneta, livro, onda)
 4. Deploy de teste + testar no celular
-5. Som (ZzFX + locutor TTS genérico)
+5. ~~Som (ZzFX + locutor TTS genérico)~~ FEITO: `src/audio/` (SFX sintetizados em `sfxBank.js`, locutor speechSynthesis pt-BR, trilha procedural frevo/luta). Liga via `gameBus` (src/core/EventBus.js) — a lógica de luta não sabe que o som existe
 
 ## Arquitetura em 1 minuto
 - `src/fight/` lógica pura (sem Three.js) · `src/data/characters/` CharacterData (1 arquivo por lutador + registro em index.js)
