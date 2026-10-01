@@ -23,6 +23,8 @@ import { Input, HumanController, KEYMAPS } from './core/Input.js';
 import { getCharacter } from './data/characters/index.js';
 import { Hud } from './ui/Hud.js';
 import { SelectScreen } from './ui/SelectScreen.js';
+import { gameBus } from './core/EventBus.js';
+import { setupAudio } from './audio/index.js';
 
 // URL: ?p1=lulacio&p2=xandor&mode=cpu|2p|demo&level=easy|normal|hard&debug=1&placeholder=1
 const params = new URLSearchParams(location.search);
@@ -34,6 +36,7 @@ const hud = new Hud(ui, stage);
 const vfx = new Vfx(stage.scene);
 const debug = new DebugDraw(stage.scene);
 debug.enabled = params.has('debug');
+const audio = setupAudio(gameBus, params); // som: escuta o gameBus (eventos da partida + 'frame')
 
 let match = null;
 let views = [];
@@ -68,6 +71,7 @@ function startMatch(cfg) {
   match = new Match(a, b, controllers);
   views = match.fighters.map((f) => new FighterView(stage.scene, f, { placeholderOnly: params.has('placeholder') }));
   hud.bind(match);
+  gameBus.emit('matchStart', match);
   select.hide();
   handleEvents(match.drainEvents());
 }
@@ -77,12 +81,14 @@ function toMenu() {
   views = [];
   vfx.clear();
   match = null;
+  gameBus.emit('menu');
   hud.hide();
   select.show();
 }
 
 function handleEvents(events) {
   for (const e of events) {
+    gameBus.emit(e.type, e, match);
     switch (e.type) {
       case 'roundStart': hud.showBanner(e.name, 'round', 1300); break;
       case 'banner': hud.showBanner(e.text, e.cls, 900); break;
@@ -151,6 +157,7 @@ function tick(dt) {
     while (acc >= STEP && steps < 6) { match.step(); acc -= STEP; steps++; }
     if (steps === 6) acc = 0;
     handleEvents(match.drainEvents());
+    gameBus.emit('frame', match);
     const frozen = match.hitstop > 0;
     const vdt = frozen ? 0 : dt * match.timeScale * GAME_SPEED;
     for (const v of views) v.update(match.cinematic && v.f !== match.cinematic.fighter ? 0 : vdt, match);
@@ -206,4 +213,4 @@ if (params.get('p1') || params.get('mode') === 'demo') {
   for (const v of views) v.update(0.2, match);
 }
 
-window.__rk = { get match() { return match; }, views: () => views, startMatch, advance };
+window.__rk = { get match() { return match; }, views: () => views, startMatch, advance, audio };
