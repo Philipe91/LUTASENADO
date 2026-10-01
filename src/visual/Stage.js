@@ -45,6 +45,22 @@ export class Stage {
   // câmera lenta do KO: aproxima e centra um pouco no ponto do último golpe por `secs` (tempo real)
   focus(x, y, secs = 1.8, amt = 0.22) { this.focusP = { x, y, t: secs, dur: secs, amt }; }
 
+  // retrato: folga lateral além do centro de cada lutador (meio corpo ≈ 0,5 m + knockback)
+  static PORTRAIT_MARGIN = 0.95;
+
+  // extensão horizontal [esq, dir] do corpo de um lutador: deitado ocupa ~1,8 m para longe do oponente;
+  // voando de knockback, abre na frente do movimento (a câmera chega antes de ele sair do quadro)
+  static extent(f, m) {
+    let l = f.x - m, r = f.x + m;
+    const away = Math.sign(f.x - (f.opponent?.x ?? 0)) || 1;
+    if (f.state === 'knockdown' || f.state === 'down' || f.state === 'ko' || f.state === 'getup') {
+      if (away > 0) r += 1.1; else l -= 1.1;
+    }
+    const lead = Math.min(1, Math.abs(f.vx) * 6);
+    if (f.vx > 0.02) r += lead; else if (f.vx < -0.02) l -= lead;
+    return [l, r];
+  }
+
   // topo da forma de ultimate (cabeça + selo/chapéu): visual.transform.frameTop, ou altura × escala do stand-in
   static ultTop(f) {
     const tr = f.data.visual?.transform || {};
@@ -76,6 +92,20 @@ export class Stage {
       tx = mid; lookX = mid;
       lookY = Math.min(topY / 2, 1.35 + Math.max(a.y, b.y) * 0.5);
       ty = lookY + Math.min(2.2, 0.9 + (tz - 7) * 0.06); // levemente acima, sem olhar muito de cima ao afastar
+      if (aspect < 0.9) {
+        // RETRATO (celular): enquadramento justo. A largura da tela é o limite — então margem lateral mínima
+        // (meio corpo + folga de knockback), chão a ~20% da base (sem faixa de chão vazio), topo livre p/ o HUD (~13%).
+        // Colados: lutadores com ~1/3 da altura da tela; afastados: abre o necessário para os dois caberem.
+        const GROUND = 0.2, HUD = 0.13;
+        const [la, ra] = Stage.extent(a, Stage.PORTRAIT_MARGIN), [lb, rb] = Stage.extent(b, Stage.PORTRAIT_MARGIN);
+        const L = Math.min(la, lb), R = Math.max(ra, rb);
+        tx = lookX = (L + R) / 2;
+        const top = Math.max(a.y + a.stats.height, b.y + b.stats.height, ultF ? Stage.ultTop(ultF) : 0) + 0.3;
+        const Hv = Math.max((R - L) / aspect, top / (1 - GROUND - HUD), 3.6);
+        tz = Hv / 2 / halfTan;
+        lookY = Hv * (0.5 - GROUND);
+        ty = lookY + 0.35; // câmera baixa, quase na altura do peito: lutadores com presença
+      }
 
     } else {
       tx = 0; ty = 1.9; tz = 12; lookX = 0; lookY = 1.3;
@@ -96,7 +126,9 @@ export class Stage {
       if (match && !match.cinematic) {
         const [a, b] = match.fighters;
         const halfTan = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
-        const halfW = Math.max(Math.abs(a.x - lookX), Math.abs(b.x - lookX)) + 0.95; // corpo inteiro + folga
+        const margin = this.camera.aspect < 0.9 ? Stage.PORTRAIT_MARGIN : 0.95;
+        const [la, ra] = Stage.extent(a, margin), [lb, rb] = Stage.extent(b, margin);
+        const halfW = Math.max(lookX - Math.min(la, lb), Math.max(ra, rb) - lookX); // corpo inteiro + folga
         const top = Math.max(a.y + a.stats.height, b.y + b.stats.height) + 0.35;
         const tzMin = Math.max(halfW / (halfTan * this.camera.aspect), (Math.max(top - lookY, lookY) + 0.15) / halfTan);
         tz = Math.max(tz, tzMin);
@@ -107,9 +139,10 @@ export class Stage {
     // alguém no ar: altura e recuo seguem mais rápido (a cabeça no ápice do pulo não some atrás do HUD)
     const air = match && !match.cinematic && match.fighters.some((f) => f.y > 0.3);
     const kv = air ? Math.min(1, dt * 9) : k;
-    c.x += (tx - c.x) * k; c.y += (ty - c.y) * kv; c.z += (tz - c.z) * (air && tz > c.z ? kv : k);
+    const kx0 = match && !match.cinematic && this.camera.aspect < 0.9 ? Math.min(1, dt * 8) : k; // retrato: quadro justo, segue mais rápido
+    c.x += (tx - c.x) * kx0; c.y += (ty - c.y) * kv; c.z += (tz - c.z) * (tz > c.z ? Math.max(kv, kx0) : k); // abrir é rápido, fechar é suave
     c.lookY += (lookY - c.lookY) * kv;
-    c.lookX = (c.lookX ?? lookX) + (lookX - (c.lookX ?? lookX)) * k;
+    c.lookX = (c.lookX ?? lookX) + (lookX - (c.lookX ?? lookX)) * kx0;
     const s = this.shakeAmt;
     // molas do tranco direcional e do tilt (subpassos: estáveis com dt grande)
     for (const [m, kk, cc] of [[this.kick, 140, 13], [this.roll, 120, 12]]) {
