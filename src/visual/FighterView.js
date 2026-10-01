@@ -16,6 +16,36 @@ const ULTIMATE_FX = { xandorAvatar: XandorAvatar, lulacioPolvo: LulacioPolvo };
 
 const LYING = new Set(['knockdown', 'down', 'ko', 'getup']);
 
+// PESO / GAME FEEL por personagem (só visual: a lógica e o balanceamento não mudam).
+//   weight: inércia das molas (mais pesado = volta mais devagar) · lean: inclinação de antecipação/follow-through
+//   squash: amassa/estica no pulo e na queda · react: quanto o corpo cede ao apanhar · turn: velocidade de virar
+//   blendIn/blendOut: crossfade ao entrar num golpe / ao voltar pra guarda (s)
+const FEEL = {
+  default: { weight: 1, lean: 1, squash: 1, react: 1, turn: 16, blendIn: 0.07, blendOut: 0.18 },
+  lulacio: { weight: 1.35, lean: 1.3, squash: 1.3, react: 0.85, turn: 11, blendIn: 0.09, blendOut: 0.24 }, // brigão pesado: carrega o golpe, assenta devagar
+  xandor: { weight: 0.8, lean: 0.65, squash: 0.6, react: 1.1, turn: 22, blendIn: 0.045, blendOut: 0.12 }, // magistrado preciso: seco, contido, volta rápido
+  'dino-supremo': { weight: 1.5, lean: 1.1, squash: 1.4, react: 0.7, turn: 10, blendIn: 0.1, blendOut: 0.26 },
+  'capitao-brasa': { weight: 1, lean: 1.1, squash: 1.1, react: 1, turn: 17, blendIn: 0.06, blendOut: 0.16 },
+};
+
+// mola amortecida (subpassos fixos: estável com dt grande e parada com dt = 0 no hitstop)
+class Spring {
+  constructor(k, zeta) { this.x = 0; this.v = 0; this.k = k; this.c = 2 * zeta * Math.sqrt(k); }
+  step(target, dt) {
+    const n = Math.ceil(dt / 0.008);
+    const h = dt / Math.max(1, n);
+    for (let i = 0; i < n; i++) {
+      this.v += (this.k * (target - this.x) - this.c * this.v) * h;
+      this.x += this.v * h;
+    }
+    return this.x;
+  }
+}
+const ATTACKING = new Set(['attack', 'special', 'ultimate']);
+const REACT = new Set(['hitstun', 'blockstun', 'held']);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const model0HasFall = (m) => !!m?.hasClip?.('ko'); // GLB com clip de queda (o placeholder deita sozinho, para trás)
+
 // Animações compartilhadas pelos lutadores: public/assets/animations/manifest.json
 //   { "idle": "lib/idle.glb", "punch1": "lib/punch1.glb", ... }  (chave do jogo → GLB só com armature, do Meshy)
 // Opcional: shared.glb com vários clips já nomeados pelas chaves (caminho Mixamo/Blender).
@@ -42,6 +72,12 @@ export class FighterView {
     this.form = 'base';
     this.formScale = 1;
     this.turn = fighter.facing > 0 ? Math.PI / 2 : -Math.PI / 2;
+    const fe = this.feel = { ...FEEL.default, ...(FEEL[fighter.data.id] || {}), ...(fighter.data.visual?.feel || {}) };
+    this.lean = new Spring(170 / fe.weight, 0.42);   // inclinação frente/trás (rad)
+    this.push = new Spring(210 / fe.weight, 0.5);    // deslocamento para frente/trás (m, eixo do golpe)
+    this.hop = new Spring(230 / fe.weight, 0.55);    // pulinho do corpo (m) — arco de knockback / quique no chão
+    this.squash = new Spring(260 / fe.weight, 0.33); // amassa (<0) / estica (>0)
+    this.hitSeen = fighter.hitSeq; this.prevState = fighter.state; this.prevKey = fighter.animKey; this.wasAir = false;
 
     const visual = fighter.data.visual || {};
     this.base = new PlaceholderModel(fighter.data);
@@ -107,10 +143,14 @@ export class FighterView {
     if (other) {
       this.turn = Math.atan2(other.x - f.x, (other.heldZ || 0) - heldZ);
     } else {
-      const targetTurn = f.facing > 0 ? Math.PI / 2 : -Math.PI / 2;
+      let targetTurn = f.facing > 0 ? Math.PI / 2 : -Math.PI / 2;
+      // golpe alto/médio que derruba: o clip de queda deita com a cabeça para o lado do atacante — gira o corpo
+      // no voo para cair de costas PARA LONGE de quem bateu (rasteira mantém: as pernas é que foram varridas)
+      const fallAway = (f.state === 'knockdown' || f.state === 'down' || f.state === 'ko') && f.hitInfo && f.hitInfo.zone !== 'low';
+      if (fallAway && model0HasFall(this.base)) targetTurn += Math.PI;
       let d = targetTurn - this.turn;
       d = Math.atan2(Math.sin(d), Math.cos(d)); // volta pelo caminho curto depois do giro
-      this.turn += d * Math.min(1, dt * 18);
+      this.turn += d * Math.min(1, dt * this.feel.turn);
     }
     this.group.rotation.y = this.turn;
 
@@ -127,11 +167,15 @@ export class FighterView {
     if (f.animSeq !== this.lastSeq) {
       this.lastSeq = f.animSeq;
       const mv = f.state === 'attack' ? f.move : f.state === 'special' ? f.sp : null;
-      model.play(f.animKey, f.animLen, LOOPING.has(f.animKey), mv && { startup: mv.startup, active: mv.active, recovery: mv.recovery });
+      model.play(f.animKey, f.animLen, LOOPING.has(f.animKey), mv && { startup: mv.startup, active: mv.active, recovery: mv.recovery }, this.fadeFor(f));
+      this.prevState = f.state; this.prevKey = f.animKey;
     }
     const vy0 = JUMP_V * (f.stats.jump || 1);
     const airP = f.y > 0 ? Math.max(0, Math.min(1, (vy0 - f.vy) / (2 * vy0))) : 1;
-    model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' || f.state === 'special' ? f.t : undefined, airP });
+    // progresso de queda/levantar (frames da lógica): knockdown ≈ duração do voo, ko tomba em ~40, getup = animLen
+    const prog = f.animKey === 'knockdown' ? f.t / 24 : f.animKey === 'ko' ? f.t / 40 : f.animKey === 'down' ? 1
+      : f.animKey === 'getup' ? f.t / Math.max(1, f.animLen || 18) : undefined;
+    model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' || f.state === 'special' ? f.t : undefined, airP, prog });
     // GLB sem animação de queda/KO: deita o modelo proceduralmente (nunca fica em pé nocauteado)
     const lying = LYING.has(f.animKey) && model.hasClip && !model.hasClip(f.animKey === 'getup' ? 'getup' : 'ko');
     let layTarget = lying ? (f.animKey === 'getup' ? Math.max(0, 1 - f.t / 18) : 1) : 0;
@@ -140,7 +184,7 @@ export class FighterView {
     if (gsp) layTarget = Math.min(0.8, ((g.t - gsp.startup) / gsp.spin.frames) * 1.3);
     this.group.position.y += this.lay * 0.5 * (gsp ? 1 : 0);
     this.lay += (layTarget - this.lay) * Math.min(1, dt * 12);
-    model.object.rotation.x = -this.lay * Math.PI / 2;
+    this.updateFeel(dt, f, match, model);
     // atordoado: corpo balança de tonto (lado a lado)
     const dz = f.state === 'hitstun' && f.animKey === 'dizzy' ? Math.sin(performance.now() / 160) * 0.1 : 0;
     model.object.rotation.z += (dz - model.object.rotation.z) * Math.min(1, dt * 10);
@@ -166,7 +210,92 @@ export class FighterView {
     }
   }
 
+  // crossfade por tipo de transição: reação entra na hora, golpe entra seco, volta pra guarda assenta suave
+  fadeFor(f) {
+    const fe = this.feel, st = f.state, ps = this.prevState, k = f.animKey;
+    if (REACT.has(st)) return 0.04;
+    if (st === 'knockdown' || st === 'ko') return 0.07;
+    if (st === 'attack' || st === 'special') return ps === 'attack' ? 0.05 : ps === 'dash' ? 0.04 : fe.blendIn;
+    if (st === 'ultimate') return 0.12;
+    if (st === 'dash') return 0.05;
+    if (st === 'jump') return ps === 'attack' ? 0.12 : 0.06; // volta do golpe aéreo assenta, decolagem é seca
+    if (st === 'down') return 0.15;
+    if (st === 'getup') return 0.18;
+    if (ATTACKING.has(ps)) return fe.blendOut;
+    if (ps === 'getup') return 0.28;
+    if (ps === 'jump') return 0.1; // aterrissagem
+    if (REACT.has(ps)) return 0.16 * fe.weight;
+    if (ps === 'dash') return 0.14;
+    if (k === 'walk' || k === 'walkBack' || ps === 'walk') return 0.2 * fe.weight;
+    return 0.12;
+  }
+
+  // camada procedural de peso por cima do clip: antecipação → follow-through nos golpes, reação ao apanhar
+  // (alta = cabeça vai pra trás, média = dobra o corpo, baixa = pernas cedem), squash no pulo/queda, tremida no hitstop
+  updateFeel(dt, f, match, model) {
+    const fe = this.feel, L = fe.lean, S = fe.squash;
+    const air = f.y > 0.001;
+    let leanT = 0, pushT = 0;
+    const mv = f.state === 'attack' ? f.move : f.state === 'special' ? f.sp : null;
+    if (mv && !mv.air) {
+      const s = mv.startup, a = Math.min(mv.active || 2, 6), hm = mv.heavy || f.state === 'special' ? 1.5 : 1;
+      if (f.t < s) { const p = Math.min(1, f.t / Math.max(1, s * 0.8)); leanT = -0.06 * L * hm * p; pushT = -0.035 * L * hm * p; } // antecipação: recua o peso
+      else if (f.t < s + a + 4) { leanT = 0.1 * L * hm; pushT = 0.07 * L * hm; } // impacto: corpo entra no golpe
+      // recuperação: alvo 0 → a mola passa um pouco do ponto (follow-through) e assenta
+    } else if (f.state === 'walk') {
+      leanT = f.animKey === 'walkBack' ? -0.035 * L : 0.045 * L;
+    } else if (f.state === 'dash') {
+      const k = f.t / Math.max(1, f.animLen);
+      leanT = (f.dashDir > 0 ? 0.17 : -0.12) * L * (1 - k * k);
+    } else if (f.state === 'blockstun') {
+      leanT = -0.07;
+    }
+    // golpe recebido: pose de impacto na hora (aparece já congelada no hitstop) e a mola devolve depois
+    const hi = f.hitInfo;
+    if (hi && hi.seq !== this.hitSeen) {
+      this.hitSeen = hi.seq;
+      const R = fe.react * hi.force;
+      if (hi.zone === 'high') { this.lean.x = -0.32 * R; this.push.x = -0.12 * R; this.squash.x = 0.03 * R; }
+      else if (hi.zone === 'mid') { this.lean.x = 0.24 * R; this.push.x = -0.1 * R; this.squash.x = -0.06 * R; }
+      else { this.lean.x = 0.1 * R; this.push.x = -0.06 * R; this.squash.x = -0.13 * R; }
+      this.lean.v = this.push.v = this.squash.v = 0;
+      if (hi.heavy && f.state === 'hitstun' && !air) this.hop.v += 1.3 * R; // golpe pesado tira o pé do chão (arco curto)
+      this.hitShake = 0.035 * Math.min(1.4, hi.force) * fe.react;
+    }
+    // decolagem (estica) e aterrissagem (amassa); queda de knockdown quica
+    if (air && !this.wasAir && f.state === 'jump') { this.squash.x = 0.1 * S; this.squash.v = 0; }
+    if (!air && this.wasAir) {
+      if (f.state === 'down' || f.state === 'ko') { this.hop.v += 1.1; this.squash.x = -0.12; }
+      else { this.squash.x = -0.14 * S; this.squash.v = 0; this.lean.v += 0.6 * L; }
+    }
+    if (f.state === 'dash' && this.prevFeelState !== 'dash') { this.lean.v += (f.dashDir > 0 ? 2 : -1.6) * L; this.squash.x = -0.06 * S; }
+    this.prevFeelState = f.state;
+    this.wasAir = air;
+
+    const lean = clamp(this.lean.step(leanT, dt), -0.5, 0.5);
+    const push = clamp(this.push.step(pushT, dt), -0.3, 0.3);
+    this.hop.step(0, dt);
+    if (this.hop.x < 0) { this.hop.x = 0; this.hop.v = Math.abs(this.hop.v) * 0.3; } // não afunda no chão
+    const hop = this.hop.x;
+    const sq = clamp(this.squash.step(0, dt), -0.2, 0.2);
+    // hitstop: o corpo de quem apanhou treme no lugar enquanto tudo está congelado
+    const frozen = match && match.hitstop > 0 && hi && match.frame - hi.frame < 24;
+    const jitter = frozen ? Math.sin(performance.now() * 0.09) * (this.hitShake || 0) : 0;
+    const standing = 1 - this.lay;
+    const o = model.object;
+    o.rotation.x = -this.lay * Math.PI / 2 + lean * standing;
+    o.position.set(0, hop, push * standing + jitter);
+    const sy = 1 + sq, sxz = 1 / Math.sqrt(sy);
+    o.scale.set(sxz, sy, sxz);
+  }
+
+  resetFeel(m) {
+    if (!m) return;
+    m.object.position.set(0, 0, 0); m.object.scale.set(1, 1, 1); m.object.rotation.x = 0;
+  }
+
   setForm(form) {
+    this.resetFeel(this.base); this.resetFeel(this.ultimateModel);
     this.form = form;
     if (this.ultimateModel) {
       this.base.object.visible = form !== 'ultimate';

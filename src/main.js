@@ -8,6 +8,7 @@ import { Match } from './fight/Match.js';
 import { AIController } from './fight/AI.js';
 import { STEP, NEUTRAL } from './fight/constants.js';
 import { AnimTestP1, AnimTestP2, animTestLabel } from './dev/animtest.js';
+import { FeelTestP1, FeelTestP2 } from './dev/feeltest.js';
 
 class CastController {
   constructor(dir) { this.dir = dir; this.t = 0; }
@@ -55,9 +56,9 @@ function startMatch(cfg) {
   const level = params.get('level') || 'normal';
   // ?cast=neutral|forward|down → P1 solta esse especial em loop; P2 vira boneco parado (teste de golpe)
   const cast = params.get('cast');
-  const animP1 = params.has('animtest') ? new AnimTestP1() : null;
+  const animP1 = params.has('animtest') ? new AnimTestP1() : params.has('feeltest') ? new FeelTestP1() : null;
   const controllers = animP1
-    ? [animP1, new AnimTestP2(animP1)]
+    ? [animP1, animP1 instanceof FeelTestP1 ? new FeelTestP2(animP1) : new AnimTestP2(animP1)]
     : cast
     ? (params.has('castP2') ? [{ read: () => NEUTRAL }, new CastController(cast)] : [new CastController(cast), { read: () => NEUTRAL }]) // castP2: quem solta é o P2 (lado direito)
     : cfg.mode === 'demo'
@@ -88,13 +89,22 @@ function handleEvents(events) {
       case 'banner': hud.showBanner(e.text, e.cls, 900); break;
       case 'hit':
         vfx.burst(e.x, e.y, e);
-        stage.shake(e.ultimate ? 0.35 : e.heavy ? 0.22 : 0.1);
-        if (e.heavy || e.ultimate) stage.punch(e.ultimate ? 0.14 : 0.08); // zoom-soco da câmera no impacto forte
+        // câmera: tranco no sentido do golpe, proporcional à força; zoom-soco só nos fortes
+        stage.shake(e.ultimate ? 0.35 : e.heavy ? 0.16 + 0.06 * (e.force || 1) : 0.07 + 0.03 * (e.force || 0.5), e.dir || 0);
+        if (e.heavy || e.ultimate) stage.punch(e.ultimate ? 0.14 : Math.min(0.13, 0.06 + 0.04 * (e.force || 1))); // zoom-soco da câmera no impacto forte
+        if (e.ko && !e.ultimate) stage.focus(e.x, e.y, 2.2, 0.24); // último golpe do round: câmera lenta com close
+        else if (e.ko) stage.focus(e.x, e.y, 2.2, 0.12);
         if (e.text) hud.pop(e.x, e.y + 0.5, e.text, 'big');
         else hud.pop(e.x, e.y + 0.3, Math.round(e.dmg), 'dmg');
         arena.excite(e.heavy ? 0.25 : 0.1);
         break;
-      case 'block': vfx.burst(e.x, e.y, { blocked: true }); break;
+      case 'block': vfx.burst(e.x, e.y, { blocked: true }); stage.shake(e.heavy ? 0.06 : 0.03, (e.dir || 0) * 0.5); break;
+      case 'dash': vfx.dust(e.x - e.fighter.facing * e.dir * 0.3, 0.35); break;
+      case 'land':
+        // queda de golpe bate no chão (poeira + tranco); pulo do pesado também assenta
+        if (e.state === 'knockdown' || e.state === 'ko') { vfx.dust(e.x, 0.7); stage.shake(0.12); }
+        else if (e.v > 0.2 && e.fighter.stats.width >= 0.95) stage.shake(0.04);
+        break;
       case 'dust': vfx.dust(e.x, e.size); stage.shake(0.08); break;
       case 'armor': vfx.burst(e.x, e.y, { heavy: true, blocked: true }); hud.pop(e.x, e.y + 0.6, e.text, 'armor'); break;
       case 'special':
@@ -161,7 +171,9 @@ function tick(dt) {
   arena.update(dt, time);
   stage.updateCamera(match, dt);
   stage.render();
-  if (animLabel && match) animLabel.textContent = `TESTE DE ANIMAÇÃO — ${animTestLabel(match.controllers[0].t ?? 0)}  [${views[0]?.source ?? ''}]`;
+  if (animLabel && match) animLabel.textContent = match.controllers[0] instanceof FeelTestP1
+    ? `GAME FEEL — ${match.controllers[0].label}`
+    : `TESTE DE ANIMAÇÃO — ${animTestLabel(match.controllers[0].t ?? 0)}  [${views[0]?.source ?? ''}]`;
   if (statsEl) {
     const r = stage.renderer.info;
     statsEl.textContent = `draw ${r.render.calls} · tris ${(r.render.triangles / 1000).toFixed(1)}k · geo ${r.memory.geometries} · tex ${r.memory.textures} · views criadas ${vfx.created} · hitters ${match?.hitters.length ?? 0} · frame ${match?.frame ?? 0}`;
@@ -170,7 +182,7 @@ function tick(dt) {
 // ?stats=1 mostra custo de render e quantos visuais o pool já criou (tem que estabilizar)
 const statsEl = params.has('stats') ? Object.assign(document.createElement('div'), { className: 'stats' }) : null;
 if (statsEl) ui.appendChild(statsEl);
-const animLabel = params.has('animtest') ? Object.assign(document.createElement('div'), { className: 'animlabel' }) : null;
+const animLabel = params.has('animtest') || params.has('feeltest') ? Object.assign(document.createElement('div'), { className: 'animlabel' }) : null;
 if (animLabel) ui.appendChild(animLabel);
 
 // ?manual=1 — relógio controlado de fora (gravação de vídeo quadro a quadro: tools/record.mjs).
