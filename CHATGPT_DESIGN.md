@@ -48,6 +48,7 @@
 | Vitória | bate no peito | victory | | |
 
 ## Log
+- **01/10 (madrugada)** — Direção de arte: `ARTE.md` (bíblia visual: paleta, luz, VFX ENTRA→IMPACTA→SOME, tipografia, proibidos), `src/visual/Look.js` (ACES/AgX, rim fresnel nos lutadores, VSM, bloom 1/4, grading, vinheta; `?look=0`), HUD/seleção/letreiros redesenhados, `art/PROMPTS_GPT.md` (Brasa, Dino, backdrop de Brasília, retratos). Retratos: `public/assets/characters/<id>/portrait.png` entra sozinho na UI.
 - **30/09 (tarde)** — Abraço do Palanque = agarra, gira 3 voltas e arremessa (estado `held`). Discurso = 3 pulsos, o último atordoa (estrelinhas). Xandor: documento de Intimação, carimbo BLOQUEADO com cadeado sobre a cabeça, caneta colossal da Canetada. Ultimates só mostram contato quando a lógica confirma o hit (`ultRes`).
 - **29/09 (23h)** — Lulácio v2 com estilo próprio (brigão de palanque) e punhos fechados. Checkpoint `checkpoint-lulacio-xandor` no GitHub.
 - **29/09 (22h)** — Xandor aprovado: pernas quebradas = joelho do rig 19 cm à frente (marcador em cima da toga); gravata dobrando = queixo no nó; pé virado = tornozelo esquerdo no calcanhar. Rig refeito 2× até os ossos ficarem simétricos (rig é grátis). Commit + push no GitHub. Iniciado Lulácio (imagem LULA.png do usuário).
