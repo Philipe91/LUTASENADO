@@ -100,8 +100,11 @@ export class Stage {
       }
     }
     const k = Math.min(1, dt * (match?.cinematic ? 9 : 5));
-    c.x += (tx - c.x) * k; c.y += (ty - c.y) * k; c.z += (tz - c.z) * k;
-    c.lookY += (lookY - c.lookY) * k;
+    // alguém no ar: altura e recuo seguem mais rápido (a cabeça no ápice do pulo não some atrás do HUD)
+    const air = match && !match.cinematic && match.fighters.some((f) => f.y > 0.3);
+    const kv = air ? Math.min(1, dt * 9) : k;
+    c.x += (tx - c.x) * k; c.y += (ty - c.y) * kv; c.z += (tz - c.z) * (air && tz > c.z ? kv : k);
+    c.lookY += (lookY - c.lookY) * kv;
     c.lookX = (c.lookX ?? lookX) + (lookX - (c.lookX ?? lookX)) * k;
     const s = this.shakeAmt;
     // molas do tranco direcional e do tilt (subpassos: estáveis com dt grande)
