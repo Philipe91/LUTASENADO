@@ -1,7 +1,6 @@
 // Tela de seleção montada a partir do registro de personagens (personagem novo aparece sozinho).
 import { CHARACTERS } from '../data/characters/index.js';
-
-const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+import { portrait, hex } from './portraits.js';
 
 export class SelectScreen {
   constructor(root, onStart) {
@@ -23,27 +22,30 @@ export class SelectScreen {
       const tag = [this.p1 === c.id ? '<span class="tag t1">P1</span>' : '', this.p2 === c.id ? `<span class="tag t2">${this.mode === 'cpu' ? 'CPU' : 'P2'}</span>` : ''].join('');
       return `
         <button class="char ${this.p1 === c.id ? 'sel1' : ''} ${this.p2 === c.id ? 'sel2' : ''}" data-id="${c.id}"
-          style="--c1:${hex(P.suit ?? 0x333333)};--c2:${hex(P.accent ?? 0xcc2222)}">
+          style="--c1:${hex(P.suit)};--c2:${hex(P.accent)}">
           ${tag}
-          <div class="cname">${c.name}</div>
-          <div class="ctitle">${c.title}</div>
-          <div class="carch">${c.archetype}</div>
-          <ul>
-            <li><b>Passiva:</b> ${c.passive?.name ?? '-'}</li>
-            <li>${sp.neutral?.name ?? '-'}</li>
-            <li>→ ${sp.forward?.name ?? '-'}</li>
-            <li>↓ ${sp.down?.name ?? '-'}</li>
-            <li class="ult">★ ${c.ultimate?.name ?? '-'}</li>
-          </ul>
+          <div class="cardTop"><span class="ini">${c.name[0]}</span></div>
+          <div class="cbody">
+            <div class="cname">${c.name}</div>
+            <div class="ctitle">${c.title}</div>
+            <div class="carch">${c.archetype}</div>
+            <ul>
+              <li><b>Passiva:</b> ${c.passive?.name ?? '-'}</li>
+              <li>${sp.neutral?.name ?? '-'}</li>
+              <li>→ ${sp.forward?.name ?? '-'}</li>
+              <li>↓ ${sp.down?.name ?? '-'}</li>
+              <li class="ult">★ ${c.ultimate?.name ?? '-'}</li>
+            </ul>
+          </div>
         </button>`;
     }).join('');
     this.el.innerHTML = `
       <div class="logo">REPÚBLICA <span>KOMBAT</span></div>
-      <div class="pickhint">Escolhendo: <b>${this.picking === 1 ? 'JOGADOR 1' : this.mode === 'cpu' ? 'ADVERSÁRIO (CPU)' : 'JOGADOR 2'}</b></div>
+      <div class="pickhint ${this.picking === 2 ? 'two' : ''}">Escolhendo: <b>${this.picking === 1 ? 'JOGADOR 1' : this.mode === 'cpu' ? 'ADVERSÁRIO (CPU)' : 'JOGADOR 2'}</b></div>
       <div class="grid">${cards}</div>
       <div class="opts">
-        <button class="mode">${this.mode === 'cpu' ? '1 JOGADOR vs CPU' : '2 JOGADORES (mesmo teclado)'}</button>
-        <button class="go">LUTAR!</button>
+        <button class="mode"><span>${this.mode === 'cpu' ? '1 JOGADOR vs CPU' : '2 JOGADORES (mesmo teclado)'}</span></button>
+        <button class="go"><span>LUTAR!</span></button>
       </div>
       <div class="keys">
         <div><b>P1</b> A/D andar · W pular · S agachar · J soco · K chute · L especial (+ direção) · U ultimate · segurar pra trás = defender</div>
@@ -51,6 +53,8 @@ export class SelectScreen {
       </div>
       <div class="disclaimer">Obra de ficção e sátira. Personagens são caricaturas.</div>`;
     this.el.querySelectorAll('.char').forEach((b) => {
+      const top = b.querySelector('.cardTop');
+      portrait(b.dataset.id, (url) => { top.style.backgroundImage = `url(${url})`; top.querySelector('.ini').textContent = ''; });
       b.onclick = () => {
         if (this.picking === 1) { this.p1 = b.dataset.id; this.picking = 2; }
         else { this.p2 = b.dataset.id; this.picking = 1; }

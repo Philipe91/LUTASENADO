@@ -1,6 +1,7 @@
 import './style.css';
 import { Stage } from './visual/Stage.js';
 import { buildArena } from './visual/arena/index.js';
+import { Look } from './visual/Look.js';
 import { FighterView } from './visual/FighterView.js';
 import { Vfx } from './visual/Vfx.js';
 import { DebugDraw } from './visual/DebugDraw.js';
@@ -31,6 +32,7 @@ const params = new URLSearchParams(location.search);
 const ui = document.getElementById('ui');
 const stage = new Stage(document.getElementById('game'));
 const arena = stage.setArena(buildArena(stage.scene, params.get('arena'))); // ?arena=noite
+const look = new Look(stage, params); // ARTE.md §3 — tone mapping, rim, bloom, vinheta (?look=0 desliga)
 const input = new Input();
 const hud = new Hud(ui, stage);
 const vfx = new Vfx(stage.scene);
@@ -171,7 +173,7 @@ function tick(dt) {
   if (animLabel && match) animLabel.textContent = `TESTE DE ANIMAÇÃO — ${animTestLabel(match.controllers[0].t ?? 0)}  [${views[0]?.source ?? ''}]`;
   if (statsEl) {
     const r = stage.renderer.info;
-    statsEl.textContent = `draw ${r.render.calls} · tris ${(r.render.triangles / 1000).toFixed(1)}k · geo ${r.memory.geometries} · tex ${r.memory.textures} · views criadas ${vfx.created} · hitters ${match?.hitters.length ?? 0} · frame ${match?.frame ?? 0}`;
+    statsEl.textContent = `draw ${r.render.calls} · tris ${(r.render.triangles / 1000).toFixed(1)}k · geo ${r.memory.geometries} · tex ${r.memory.textures} · views criadas ${vfx.created} · hitters ${match?.hitters.length ?? 0} · frame ${match?.frame ?? 0} · ${look.stats}`;
   }
 }
 // ?stats=1 mostra custo de render e quantos visuais o pool já criou (tem que estabilizar)
@@ -213,4 +215,4 @@ if (params.get('p1') || params.get('mode') === 'demo') {
   for (const v of views) v.update(0.2, match);
 }
 
-window.__rk = { get match() { return match; }, views: () => views, startMatch, advance, audio, stage };
+window.__rk = { get match() { return match; }, views: () => views, startMatch, advance, audio, stage, hud };

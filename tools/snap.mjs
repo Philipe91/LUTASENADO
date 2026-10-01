@@ -19,6 +19,8 @@ await page.goto(`${BASE}?${query}&manual=1`, { waitUntil: 'networkidle0' });
 await page.evaluate(() => document.fonts.ready);
 await page.evaluate(() => { for (let i = 0; i < 10; i++) window.__rk.advance(0); });
 if (gap) await page.evaluate((g) => { const [a, b] = window.__rk.match.fighters; a.x = -g / 2; b.x = g / 2; }, Number(gap));
+// RK_PRE="window.__rk.match.fighters[1].hp = 3" → JS rodado antes do relógio andar (forçar KO, barra cheia, etc.)
+if (process.env.RK_PRE) await page.evaluate(process.env.RK_PRE);
 mkdirSync(dirname(out), { recursive: true });
 const dt = 1 / 60;
 let t = 0;

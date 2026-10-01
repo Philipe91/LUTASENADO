@@ -1,9 +1,10 @@
-// HUD estilo "plantão de telejornal": vida, barra de ultimate, urninhas de round, timer, banners e popups.
+// HUD "plantão de telejornal premium" (ARTE.md §5): vida chanfrada, retrato, urninhas de round, timer em placa,
+// barra de ultimate em 3 segmentos, banners (TURNO / LUTEM / K.O.) e popups de impacto.
 import * as THREE from 'three';
 import { METER_MAX } from '../fight/constants.js';
+import { portrait, hex } from './portraits.js';
 
 const el = (tag, cls, html = '') => { const e = document.createElement(tag); if (cls) e.className = cls; e.innerHTML = html; return e; };
-const hex = (n) => '#' + n.toString(16).padStart(6, '0');
 
 export class Hud {
   constructor(root, stage) {
@@ -13,18 +14,25 @@ export class Hud {
     this.hud = el('div', 'hud hidden');
     this.sides = [0, 1].map((i) => {
       const s = el('div', `side p${i + 1}`, `
-        <div class="nameRow"><span class="portrait"></span><span class="name"></span><span class="pips"></span></div>
-        <div class="bar"><div class="trail"></div><div class="fill"></div></div>
+        <div class="plate">
+          <div class="portrait"><span class="ini"></span></div>
+          <div class="nameTag"><span class="name"></span></div>
+          <div class="pips"></div>
+        </div>
+        <div class="bar"><div class="trail"></div><div class="fill"></div><div class="ticks"></div><div class="shine"></div></div>
         <div class="meter"><i><b></b></i><i><b></b></i><i><b></b></i><span class="ultTag">ULTIMATE!</span></div>
         <div class="lock">BLOQUEADO</div>
         <div class="spname"></div>`);
       this.hud.appendChild(s);
-      return { root: s, name: s.querySelector('.name'), portrait: s.querySelector('.portrait'), pips: s.querySelector('.pips'), fill: s.querySelector('.fill'), trail: s.querySelector('.trail'), segs: [...s.querySelectorAll('.meter b')], meter: s.querySelector('.meter'), lock: s.querySelector('.lock'), sp: s.querySelector('.spname'), trailPct: 100 };
+      return {
+        root: s, name: s.querySelector('.name'), portrait: s.querySelector('.portrait'), ini: s.querySelector('.ini'), pips: s.querySelector('.pips'),
+        bar: s.querySelector('.bar'), fill: s.querySelector('.fill'), trail: s.querySelector('.trail'), segs: [...s.querySelectorAll('.meter b')],
+        meter: s.querySelector('.meter'), lock: s.querySelector('.lock'), sp: s.querySelector('.spname'), trailPct: 100, lastPct: 100, hurtT: 0,
+      };
     });
-    this.timer = el('div', 'timer', '60');
-    this.hud.insertBefore(this.timer, this.sides[1].root);
-    this.live = el('div', 'live', '<i></i> AO VIVO');
-    this.hud.appendChild(this.live);
+    this.center = el('div', 'center', '<div class="timer">60</div><div class="live"><i></i>AO VIVO</div>');
+    this.timer = this.center.querySelector('.timer');
+    this.hud.insertBefore(this.center, this.sides[1].root);
     this.banner = el('div', 'banner');
     this.cine = el('div', 'cine');
     this.cineTitle = el('div', 'cineTitle');
@@ -45,8 +53,12 @@ export class Hud {
       const s = this.sides[i];
       s.name.textContent = f.data.name;
       const P = f.data.visual?.placeholder || {};
-      s.portrait.style.background = `linear-gradient(135deg, ${hex(P.suit ?? 0x333333)} 55%, ${hex(P.accent ?? 0xcc2222)} 55%)`;
-      s.trailPct = 100;
+      s.portrait.style.setProperty('--c1', hex(P.suit));
+      s.portrait.style.setProperty('--c2', hex(P.accent));
+      s.portrait.style.backgroundImage = '';
+      s.ini.textContent = f.data.name[0];
+      portrait(f.data.id, (url) => { s.portrait.style.backgroundImage = `url(${url})`; s.ini.textContent = ''; });
+      s.trailPct = 100; s.lastPct = 100; s.hurtT = 0;
     });
   }
 
@@ -59,6 +71,10 @@ export class Hud {
       s.fill.style.width = pct + '%';
       s.trailPct = pct < s.trailPct ? s.trailPct - 0.35 : pct;
       s.trail.style.width = s.trailPct + '%';
+      if (pct < s.lastPct - 0.01) s.hurtT = 6; // flash branco na barra ao levar dano
+      s.lastPct = pct;
+      s.bar.classList.toggle('hurt', s.hurtT-- > 0);
+      s.bar.classList.toggle('low', pct <= 30);
       s.segs.forEach((b, k) => { b.style.width = Math.max(0, Math.min(1, (f.meter - k * 100) / 100)) * 100 + '%'; });
       s.meter.classList.toggle('full', f.meter >= METER_MAX);
       s.lock.classList.toggle('on', f.lockT > 0);
@@ -66,7 +82,7 @@ export class Hud {
       s.root.classList.toggle('buff', f.buffT > 0);
       const opp = f.opponent;
       const showCombo = opp.comboTaken >= 2 && (opp.state === 'hitstun' || opp.state === 'knockdown');
-      if (showCombo) { this.combos[i].innerHTML = `<b>${opp.comboTaken}</b> HITS`; this.combos[i].classList.add('on'); }
+      if (showCombo) { this.combos[i].innerHTML = `<b>${opp.comboTaken}</b><span>HITS</span>`; this.combos[i].classList.add('on'); }
       else this.combos[i].classList.remove('on');
     });
     this.timer.textContent = Math.max(0, Math.ceil(match.timer / 60));
@@ -77,7 +93,7 @@ export class Hud {
   showBanner(text, cls = '', ms = 1300) {
     this.banner.className = 'banner';
     void this.banner.offsetWidth;
-    this.banner.textContent = text;
+    this.banner.innerHTML = `<span class="txt">${text}</span>`;
     this.banner.className = `banner on ${cls}`;
     const id = (this.bannerId = (this.bannerId || 0) + 1);
     this.later(ms, () => { if (id === this.bannerId) this.banner.className = 'banner'; });
@@ -115,10 +131,11 @@ export class Hud {
   }
 
   showResult(winner, line, onRematch, onMenu) {
+    const P = winner.data.visual?.placeholder || {};
     this.result.innerHTML = `
-      <div class="card">
+      <div class="card" style="--c1:${hex(P.suit)};--c2:${hex(P.accent)}">
+        <div class="wkicker">VENCEDOR</div>
         <div class="wname">${winner.data.name}</div>
-        <div class="wsub">VENCEU!</div>
         <div class="line">“${line}”</div>
         <div class="btns"><button class="again">REVANCHE</button><button class="menu">TROCAR LUTADOR</button></div>
       </div>`;
