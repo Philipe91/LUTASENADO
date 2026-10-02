@@ -10,6 +10,7 @@ import { AIController } from './fight/AI.js';
 import { STEP, NEUTRAL } from './fight/constants.js';
 import { AnimTestP1, AnimTestP2, animTestLabel } from './dev/animtest.js';
 import { FeelTestP1, FeelTestP2 } from './dev/feeltest.js';
+import { ParryP1, ParryP2 } from './dev/parrytest.js';
 
 class CastController {
   constructor(dir) { this.dir = dir; this.t = 0; }
@@ -62,7 +63,9 @@ function startMatch(cfg) {
   // ?cast=neutral|forward|down → P1 solta esse especial em loop; P2 vira boneco parado (teste de golpe)
   const cast = params.get('cast');
   const animP1 = params.has('animtest') ? new AnimTestP1() : params.has('feeltest') ? new FeelTestP1() : null;
-  const controllers = animP1
+  const controllers = params.has('parry')
+    ? [new ParryP1(params.get('parry') === 'late'), new ParryP2()] // ?parry=1: teste da defesa perfeita (TÁ OK)
+    : animP1
     ? [animP1, animP1 instanceof FeelTestP1 ? new FeelTestP2(animP1) : new AnimTestP2(animP1)]
     : cast
     ? (params.has('castP2') ? [{ read: () => NEUTRAL }, new CastController(cast)] : [new CastController(cast), { read: () => NEUTRAL }]) // castP2: quem solta é o P2 (lado direito)
@@ -107,6 +110,7 @@ function handleEvents(events) {
         stage.react(e.ultimate ? 0.8 : e.heavy ? 0.35 : 0.08);
         break;
       case 'block': vfx.burst(e.x, e.y, { blocked: true }); stage.shake(e.heavy ? 0.06 : 0.03, (e.dir || 0) * 0.5); break;
+      case 'perfect': vfx.burst(e.x, e.y, { heavy: true, color: 0x9af07a }); vfx.burst(e.x, e.y + 0.2, { color: 0xffd400 }); break;
       case 'dash': vfx.dust(e.x - e.fighter.facing * e.dir * 0.3, 0.35); break;
       case 'land':
         // queda de golpe bate no chão (poeira + tranco); pulo do pesado também assenta

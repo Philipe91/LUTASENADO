@@ -41,14 +41,22 @@ export function applyHit(match, atk, def, hit, sourceX) {
   const lowOk = hit.level !== 'low' || def.cmd.down;
   const highOk = hit.level !== 'high' || !def.cmd.down;
   if (!hit.unblockable && !hit.throw && BLOCK_STATES.has(def.state) && def.holdingBack && lowOk && highOk) {
-    const chip = hit.damage * 0.15 * atk.damageMult() * def.stats.defense;
+    // passiva TÁ OK (Capitão Brasa): defesa começada no último instante = perfeita (sem raspão, sai antes, buff curto)
+    const pb = def.passive.perfectBlock;
+    const perfect = !!pb && def.frameCount - (def.backAt ?? -999) <= pb.window;
+    const chip = perfect ? 0 : hit.damage * 0.15 * atk.damageMult() * def.stats.defense;
     def.hp = Math.max(1, def.hp - chip);
-    def.stun = hit.blockstun ?? 10;
+    def.stun = Math.max(2, (hit.blockstun ?? 10) - (perfect ? pb.stunCut ?? 0 : 0));
     def.setState('blockstun', def.cmd.down ? 'crouchBlock' : 'block', def.stun);
     def.vx = dir * (hit.push ?? 0.1) * 0.8;
     def.gainMeter(8); atk.gainMeter(3);
     match.hitstop = hit.heavy ? 6 : 4;
     match.emit({ type: 'block', x: fx, y: fy, fighter: def, dir, heavy: !!hit.heavy });
+    if (perfect) {
+      def.buffT = pb.frames;
+      match.emit({ type: 'perfect', x: fx, y: fy, fighter: def });
+      match.emit({ type: 'text', fighter: def, text: pb.text, cls: 'buff' });
+    }
     return 'block';
   }
 

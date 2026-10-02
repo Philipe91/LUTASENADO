@@ -1,4 +1,6 @@
 // VFX presos ao corpo do CAPITÃO BRASA (interface do SpecialFx: update(dt, f, model, sp) com sp = especial ativo ou null)
+//   arminha   — "Arminha de Energia": carga verde no dedo + clarão/anel no disparo (o tiro é o visual 'energyShot')
+//   (rajada   — antiga "Rajada do Dedo", fora do moveset; mantida só como tipo disponível)
 //   rajada    — "Talkei Rajada": metralhadora de dedo: estrelas de impacto na área do golpe, linhas de velocidade
 //               e balões "TALKEI?" saindo da boca
 //   motociata — moto low-poly nasce embaixo dele (empinando) e mais 3 motos instanciadas atravessam a arena em faixas
@@ -85,6 +87,39 @@ class RajadaFx {
     });
   }
   dispose() { this.scene.remove(...this.stars.map((s) => s.s), ...this.bubbles.map((b) => b.s), ...this.lines); }
+}
+
+// ARMINHA DE ENERGIA: o dedo carrega (brilho verde crescendo na mão) e solta um clarão em estrela + anel no disparo.
+// Ponto de saída: o mesmo do projétil na lógica (independe do GLB/ossos).
+class ArminhaFx {
+  constructor(scene) {
+    this.scene = scene; this.p = new THREE.Vector3();
+    this.charge = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 8), add(0x7be04a, 0));
+    this.flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTexture(), color: 0xeaff9a, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    this.ring = new THREE.Mesh(new THREE.RingGeometry(0.18, 0.26, 24), add(0xffd400, 0));
+    for (const m of [this.charge, this.flash, this.ring]) { m.visible = false; m.renderOrder = 7; scene.add(m); }
+  }
+  update(dt, f, model, sp) {
+    const on = !!sp;
+    if (!on) { this.charge.visible = this.flash.visible = this.ring.visible = false; return; }
+    // ponta do dedo = ponto de saída do tiro (mesmo da lógica: x + 0.6, altura da caixa) — vale pra qualquer GLB
+    const box = sp.box || { y: 1.12, h: 0.36 };
+    this.p.set(f.x + f.facing * 0.62, f.y + box.y + box.h / 2, 0.15);
+    const t = f.t, s0 = sp.startup;
+    const ch = t < s0 ? clamp01(t / s0) : 0;               // carrega até o disparo
+    this.charge.visible = ch > 0; this.charge.position.copy(this.p);
+    this.charge.scale.setScalar(0.5 + ch * 1.3 + Math.sin(t * 2) * 0.1); this.charge.material.opacity = 0.35 + ch * 0.5;
+    const q = (t - s0) / 8;                                  // clarão: 8 frames após o disparo
+    const fl = q >= 0 && q < 1;
+    this.flash.visible = this.ring.visible = fl;
+    if (fl) {
+      this.flash.position.copy(this.p); this.flash.scale.setScalar(0.5 + easeOut(q) * 0.9); this.flash.material.opacity = 1 - q;
+      this.flash.material.rotation = q * 1.5;
+      this.ring.position.copy(this.p); this.ring.rotation.set(0, Math.PI / 2, 0);
+      this.ring.scale.setScalar(0.6 + easeOut(q) * 2.2); this.ring.material.opacity = 0.9 * (1 - q);
+    }
+  }
+  dispose() { this.scene.remove(this.charge, this.flash, this.ring); }
 }
 
 // ---- moto low-poly (geometria fundida, 1 draw call para as 4 motos) ----
@@ -181,4 +216,4 @@ class MotociataFx {
 }
 const AXIS_Z = new THREE.Vector3(0, 0, 1);
 
-export const BRASA_FX = { rajada: RajadaFx, motociata: MotociataFx };
+export const BRASA_FX = { rajada: RajadaFx, arminha: ArminhaFx, motociata: MotociataFx };

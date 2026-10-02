@@ -80,6 +80,42 @@ function supporterTexture() {
 }
 
 export const PROJECTILE_VISUALS = {
+  // ---------------- CAPITÃO BRASA: ARMINHA DE ENERGIA ----------------
+  // tiro de energia ARCADE (não é bala): cápsula branca-quente + halo verde aditivo + anéis amarelos que ficam pra trás
+  energyShot: {
+    build() {
+      const g = new THREE.Group();
+      const body = new THREE.Group(); g.add(body); // +X = frente (gira 180° quando facing = -1)
+      const core = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.4, 4, 10), new THREE.MeshBasicMaterial({ color: 0xfffbd0 }));
+      core.rotation.z = Math.PI / 2;
+      const glow = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, 0.5, 4, 12), add(0x4fe04a, 0.65)); glow.rotation.z = Math.PI / 2;
+      const tip = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 8), add(0xffe44a, 0.55)); tip.position.x = 0.3;
+      body.add(glow, core, tip);
+      const ringGeo = new THREE.TorusGeometry(0.24, 0.04, 6, 20);
+      const rings = Array.from({ length: 3 }, (_, i) => {
+        const r = new THREE.Mesh(ringGeo, add(i % 2 ? 0x4fe04a : 0xffd400, 0.9)); r.rotation.y = Math.PI / 2; body.add(r); return r;
+      });
+      const trailGeo = new THREE.SphereGeometry(0.16, 8, 6);
+      const trail = Array.from({ length: 4 }, (_, i) => {
+        const t = new THREE.Mesh(trailGeo, add(i % 2 ? 0xffd400 : 0x7be04a, 0.5 - i * 0.1)); t.position.x = -0.45 - i * 0.3; t.scale.setScalar(1 - i * 0.2); body.add(t); return t;
+      });
+      g.userData = { center: true, body, glow, tip, rings, trail };
+      return g;
+    },
+    animate(v, h, dt) {
+      const u = v.userData;
+      u.body.rotation.y = h.facing > 0 ? 0 : Math.PI;
+      const pop = Math.min(1, (h.t + 1) / 3), wob = 1 + Math.sin(h.t * 1.7) * 0.12;
+      u.body.scale.setScalar(pop);
+      u.glow.scale.set(wob, wob, wob); u.tip.scale.setScalar(2 - wob);
+      u.rings.forEach((r, i) => { // anéis nascem na ponta e ficam pra trás abrindo
+        const k = ((h.t + i * 3) % 9) / 9;
+        r.position.x = 0.2 - k * 1.3; r.scale.setScalar(0.6 + k * 1.2); r.material.opacity = 0.9 * (1 - k);
+      });
+      u.trail.forEach((t, i) => { t.position.y = Math.sin(h.t * 0.9 + i) * 0.05; });
+    },
+  },
+
   // ---------------- LULÁCIO: PICANHA DO POVO ----------------
   picanha: {
     build() {
