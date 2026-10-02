@@ -41,7 +41,7 @@ export class AIController {
     if (!['idle', 'walk', 'crouch'].includes(self.state)) return;
 
     const threat = ((opp.state === 'attack' || opp.state === 'special') && d < 2.8) ||
-      match.hitters.some((h) => h.owner === opp && Math.abs(h.x - self.x) < 2.6);
+      match.hitters.some((h) => h.owner === opp && h.dangerous && Math.abs(h.x - self.x) < 2.6);
     if (threat && Math.random() < p.blockChance * this.lv.block) {
       const low = (opp.move?.level || opp.sp?.level) === 'low';
       this.hold = { ...NEUTRAL, [B]: true, down: low };

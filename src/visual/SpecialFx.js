@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { PROJECTILE_VISUALS } from './projectiles.js';
 import { BRASA_FX } from './fx/brasaFx.js';
 import { DINO_FX } from './fx/dinoFx.js';
+import { VORCARO_FX } from './fx/vorcaroFx.js';
 import { FLAVIO_FX } from './fx/flavioFx.js';
 import { DUVAL_FX } from './fx/duvalFx.js';
 import { bodyPoint, clamp01 } from './fx/common.js';
@@ -62,7 +63,7 @@ class PropHandFx {
   dispose() { this.scene.remove(this.p); }
 }
 
-const TYPES = { speech: SpeechFx, propHand: PropHandFx, ...BRASA_FX, ...DINO_FX, ...FLAVIO_FX, ...DUVAL_FX };
+const TYPES = { speech: SpeechFx, propHand: PropHandFx, ...BRASA_FX, ...DINO_FX, ...VORCARO_FX, ...FLAVIO_FX, ...DUVAL_FX };
 
 export class SpecialFx {
   constructor(scene, cfg) {
