@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { PROJECTILE_VISUALS } from './projectiles.js';
 import { XANDOR_VISUALS } from './xandorVisuals.js';
+import { VORCARO_VISUALS } from './fx/vorcaroFx.js';
 import { loadGLTF } from './models/GLBModel.js';
 
 function sparkTexture() {
@@ -43,7 +44,7 @@ function animateDrop(v, h) {
   d.position.y = v.userData.fromY - (v.userData.fromY - 0.25) * k * k;
   d.visible = k > 0.35;
 }
-const VISUALS = { ...BASIC_VISUALS, ...PROJECTILE_VISUALS, ...XANDOR_VISUALS };
+const VISUALS = { ...BASIC_VISUALS, ...PROJECTILE_VISUALS, ...XANDOR_VISUALS, ...VORCARO_VISUALS };
 
 export class Vfx {
   constructor(scene) {
@@ -112,12 +113,13 @@ export class Vfx {
   // ---------- pool de visuais de Hitter ----------
   acquire(h) {
     const key = VISUALS[h.visual] ? h.visual : 'orb';
-    const pool = this.pools.get(key) || [];
-    this.pools.set(key, pool);
+    const pk = h.variant ? `${key}:${h.variant}` : key; // variante (ex.: ajudante 'flavio') tem pool próprio
+    const pool = this.pools.get(pk) || [];
+    this.pools.set(pk, pool);
     let v = pool.pop();
     if (!v) {
       v = VISUALS[key].build(h);
-      v.userData.key = key;
+      v.userData.key = key; v.userData.pool = pk;
       this.scene.add(v);
       this.created++;
     }
@@ -129,7 +131,7 @@ export class Vfx {
 
   release(v) {
     v.visible = false;
-    this.pools.get(v.userData.key).push(v);
+    this.pools.get(v.userData.pool || v.userData.key).push(v);
   }
 
   // Gancho para assets melhores: se o GLB do prop existir, ele substitui o placeholder dentro do mesmo view

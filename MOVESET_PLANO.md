@@ -58,7 +58,7 @@
 - **Meme:** Rachadinha Sísmica.
 - Ref: `references/_novos/FLAVIO.png`
 
-## VORCARO / "VORCASH" — summoner / recursos / assist  ⏳
+## VORCARO / "VORCASH" — summoner / recursos / assist  ✅ (01/10, placeholder até o GLB)
 - **Passiva LIQUIDEZ:** dano causado enche barra extra de CAPITAL; CAPITAL fortalece especiais.
 - **E1 Maleta Voadora:** joga maleta com dinheiro; abre ao acertar; notas voam (VFX); hit médio.
 - **E2 Juros Compostos:** moeda pequena que cresce a cada quique; quanto mais longe, mais dano (só escala).
