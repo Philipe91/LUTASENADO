@@ -42,7 +42,16 @@ export class Hud {
     this.popups = el('div', 'popups');
     this.result = el('div', 'result hidden');
     this.help = el('div', 'help hidden', 'F1 hitboxes · F2 CPU x CPU · ESC menu');
-    root.append(this.cine, this.hud, this.banner, ...this.combos, this.popups, this.result, this.help);
+    this.flashEl = el('div', 'flash'); // flash de câmera (Selfie do Dano, Close Certo)
+    root.append(this.cine, this.hud, this.banner, ...this.combos, this.popups, this.result, this.flashEl, this.help);
+  }
+
+  // clarão branco na tela inteira (ms de jogo: some sozinho)
+  flash(strength = 0.7, ms = 260) {
+    this.flashEl.style.setProperty('--fs', String(strength));
+    this.flashEl.classList.remove('on'); void this.flashEl.offsetWidth; this.flashEl.classList.add('on');
+    const id = (this.flashId = (this.flashId || 0) + 1);
+    this.later(ms, () => { if (id === this.flashId) this.flashEl.classList.remove('on'); });
   }
 
   bind(match) {
@@ -83,7 +92,7 @@ export class Hud {
       if (f.resource) { s.resFill.style.width = (f.res / f.resource.max) * 100 + '%'; s.res.classList.toggle('full', f.res >= f.resource.max); }
       s.lock.classList.toggle('on', f.lockT > 0);
       s.pips.innerHTML = [0, 1].map((k) => `<em class="${match.wins[i] > k ? 'won' : ''}"></em>`).join('');
-      s.root.classList.toggle('buff', f.buffT > 0);
+      s.root.classList.toggle('buff', f.buffT > 0 || !!f.presenceOn);
       const opp = f.opponent;
       const showCombo = opp.comboTaken >= 2 && (opp.state === 'hitstun' || opp.state === 'knockdown');
       if (showCombo) { this.combos[i].innerHTML = `<b>${opp.comboTaken}</b><span>HITS</span>`; this.combos[i].classList.add('on'); }

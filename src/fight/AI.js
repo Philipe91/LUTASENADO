@@ -42,6 +42,11 @@ export class AIController {
 
     const threat = ((opp.state === 'attack' || opp.state === 'special') && d < 2.8) ||
       match.hitters.some((h) => h.owner === opp && h.dangerous && Math.abs(h.x - self.x) < 2.6);
+    if (threat) {
+      // pose de counter (Close Certo) no lugar da defesa, quando o golpe vem de perto
+      const counter = Object.entries(self.specials).find(([dir, s]) => s.kind === 'counter' && self.canSpecial(dir));
+      if (counter && d < 2.4 && Math.random() < p.blockChance * this.lv.block * 0.7) return this.special(counter[0], F);
+    }
     if (threat && Math.random() < p.blockChance * this.lv.block) {
       const low = (opp.move?.level || opp.sp?.level) === 'low';
       this.hold = { ...NEUTRAL, [B]: true, down: low };
@@ -68,7 +73,7 @@ export class AIController {
       return;
     }
     if (d > 1.7) {
-      const mids = want((s) => s.kind !== 'grab');
+      const mids = want((s) => s.kind !== 'grab' && s.kind !== 'counter');
       if (mids.length && Math.random() < p.specialBias) return this.special(pick(mids)[0], F);
       if (d < 2.3 && Math.random() < 0.35) return this.press({ kick: true });
       if (Math.random() < p.aggression) { this.hold = { ...NEUTRAL, [F]: true }; this.wait = 10; }

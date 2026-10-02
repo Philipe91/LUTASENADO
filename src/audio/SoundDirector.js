@@ -24,13 +24,19 @@ const SPECIAL_CUES = {
   'Intimação': ['paper'],
   'BLOQUEADO': ['whooshHeavy'],
   'Canetada': ['pen'],
+  'Chupeta Teleguiada': ['throwWhoosh'],
+  'Mamadeira Turbo': ['throwWhoosh'],
+  'Selfie do Dano': ['paper'],
+  'Discurso de Impacto': ['mic'],
+  'Salto Agulha': ['whooshHeavy'],
+  'Close Certo': ['buff'],
 };
 // Hitter (projétil/zona/onda) → som quando NASCE e quando fica ARMADO (zona caindo / carimbo batendo)
 const HITTER_SPAWN = { civilCrowd: 'crowd', wave: 'rumble', book: 'whoosh', maleta: 'throwWhoosh', juros: 'whoosh', malaContatos: 'poof' };
 const HITTER_ARMED = { stamp: 'stamp', pen: 'gavel', assist: 'poof' };
 // ultimate → som de cada golpe da sequência
-const ULT_HIT = { lulacio: 'tentacle', xandor: 'gavel', 'capitao-brasa': 'chomp', 'dino-supremo': 'roarHit', vorcaro: 'paper' };
-const ULT_START = { lulacio: 'tentacle', xandor: 'gavel', 'capitao-brasa': 'motos', 'dino-supremo': 'roar', vorcaro: 'bell' };
+const ULT_HIT = { lulacio: 'tentacle', xandor: 'gavel', 'capitao-brasa': 'chomp', 'dino-supremo': 'roarHit', nikolas: 'buff', erika: 'mic', vorcaro: 'paper' };
+const ULT_START = { lulacio: 'tentacle', xandor: 'gavel', 'capitao-brasa': 'motos', 'dino-supremo': 'roar', nikolas: 'cheer', erika: 'mic', vorcaro: 'bell' };
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const panOf = (x) => clamp((x ?? 0) / ARENA_HALF, -1, 1) * 0.6;
@@ -96,6 +102,8 @@ export class SoundDirector {
         else if (e.cls === 'miss') this.sfx('whoosh', { pan: panOf(e.fighter?.x) });
         break;
       case 'locked': this.sfx('denied', { vol: 0.7 }); break;
+      case 'counter': this.sfx('stamp', { pan: panOf(e.x) }); this.sfx('cheer', { vol: 0.7, delay: 0.15 }); break; // Close Certo / PERFECT SELFIE
+      case 'flash': this.sfx('paper', { vol: 0.5 }); break;
       case 'ultimate': {
         const id = e.fighter?.data?.id;
         this.sfx('ultActivate');

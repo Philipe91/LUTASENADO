@@ -5,6 +5,8 @@
 //   hit.final     — campos que sobrescrevem o último hit de um multi-hit (ex.: knockback final)
 //   activeUntil   — último frame (t) em que ainda machuca; depois disso só o visual continua
 //   linger        — ao gastar os hits não some na hora: fica 'spent' (sem dano) até o fim da vida, pro visual terminar
+//   turnAt        — bumerangue: nesse frame (após o delay) inverte o sentido e volta; morre ao passar pelo dono (chupeta)
+//   homing        — correção vertical máxima por frame em direção ao centro do alvo ("teleguiado")
 //   bounces/bounceV/grow — quica no chão N vezes (vy volta a bounceV) e cresce `grow`× a cada quique (Juros Compostos)
 //   hit.distDamage — { per, max }: dano extra proporcional à distância percorrida desde o lançamento
 //   hit.stopOnHit  — ao acertar/ser defendido PARA no lugar e some em N frames (maleta abre ali); exige linger
@@ -29,9 +31,15 @@ export class Hitter {
     this.t++;
     if (this.t <= this.delay) return;
     if (this.cool > 0) this.cool--;
+    if (this.turnAt && this.t === this.delay + this.turnAt) { this.vx = -this.vx; this.returning = true; }
+    if (this.homing) {
+      const o = this.owner.opponent, ty = o.y + o.stats.height * 0.5 - this.h / 2;
+      this.y += Math.max(-this.homing, Math.min(this.homing, ty - this.y));
+    }
     this.vy -= this.g;
     this.x += this.vx;
     this.y += this.vy;
+    if (this.returning && Math.sign(this.x - this.owner.x) === Math.sign(this.vx)) this.dead = true;
     if (this.g && this.y <= 0) {
       this.y = 0;
       if (this.bounces > 0) { // quica e cresce
@@ -62,6 +70,7 @@ export class Hitter {
       life: s.life ?? 90, hitsLeft: s.hits ?? 1, rehit: s.rehit ?? 10,
       visual: s.visual, color: s.color, model: s.model,
       triggerRange: s.triggerRange, spawnOnEnd: s.spawnOnEnd, linger: !!s.linger, // linger: segue (sem dano) depois de acertar, pro visual terminar (caminhão)
+      turnAt: s.turnAt, homing: s.homing,
       bounces: s.bounces || 0, bounceV: s.bounceV, grow: s.grow,
     });
   }

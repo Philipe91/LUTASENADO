@@ -130,6 +130,11 @@ function handleEvents(events) {
         stage.react(0.6);
         break;
       case 'locked': break; // o cadeado 3D acima da cabeça (StatusFx) já mostra; o hit já grita BLOQUEADO!
+      case 'flash': hud.flash(e.strength); break; // flash de câmera (Selfie do Dano)
+      case 'counter': // Close Certo / PERFECT SELFIE: clarão, carimbo e tranco
+        hud.flash(1); hud.pop(e.x, e.y + 0.7, e.text, 'perfect');
+        vfx.burst(e.x, e.y, { heavy: true, color: 0xffffff }); stage.shake(0.22, 0); stage.punch(0.09); stage.react(0.7);
+        break;
       case 'grab': stage.shake(0.12); stage.punch(0.05); stage.react(0.5); break;
       case 'ultimate': hud.ultimate(e.fighter, e.name); stage.shake(0.3); stage.react(1); break;
       case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); stage.react(1); break;

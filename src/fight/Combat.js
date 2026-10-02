@@ -25,6 +25,7 @@ export function resolveHits(match) {
     const hit = h.currentHit();
     const r = applyHit(match, h.owner, o, hit, h.x - h.vx * 10);
     if (r === 'miss') continue;
+    if (r === 'counter') { h.dead = true; continue; } // rebatido pela pose (Close Certo)
     h.cool = h.rehit;
     h.landed = (h.landed || 0) + 1; // o visual usa: contato confirmado (tinta no corpo) x erro (no chão)
     if (--h.hitsLeft <= 0) { if (h.linger) h.spent = true; else h.dead = true; }
@@ -32,11 +33,22 @@ export function resolveHits(match) {
   }
 }
 
-// Retorna 'hit' | 'block' | 'armor' | 'miss'
+// Retorna 'hit' | 'block' | 'armor' | 'miss' | 'counter'
 export function applyHit(match, atk, def, hit, sourceX) {
   if (!def.hurtbox()) return 'miss';
   const dir = Math.sign(def.x - sourceX) || atk.facing;
   const fx = def.x - dir * 0.25, fy = def.y + def.stats.height * 0.62;
+
+  // ---- pose de counter (Close Certo): o golpe é anulado e vira contra-ataque automático ----
+  if (def.tryCounter(match, atk, hit)) return 'counter';
+  // ---- bônus de contra-golpe (PERFECT SELFIE): acertar o inimigo no meio do golpe dele ----
+  const cb = hit.counterBonus;
+  if (cb && (def.state === 'attack' || def.state === 'special')) {
+    hit = { ...hit, ...cb.hit };
+    atk.counterInfo = { seq: ++atk.counterSeq, frame: match.frame, text: cb.text };
+    if (cb.meter) atk.gainMeter(cb.meter);
+    match.emit({ type: 'counter', fighter: atk, attacker: def, x: fx, y: fy, text: cb.text || 'COUNTER!' });
+  }
 
   // ---- defesa ----
   const lowOk = hit.level !== 'low' || def.cmd.down;
@@ -81,6 +93,7 @@ export function applyHit(match, atk, def, hit, sourceX) {
   def.hp -= dmg;
   def.flash = 8;
   def.likes = 0;
+  def.sinceHit = 0;
 
   // passiva do Capitão Brasa: likes viram buff
   const buff = atk.passive.comboBuff;

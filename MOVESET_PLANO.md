@@ -40,12 +40,12 @@
 - **Meme:** BLOQUEADO.
 
 ---
-## NIKOLAS / "NIKOLINHA" — rushdown / troll / rápido  ⏳
-- **Passiva ENGAJAMENTO:** selfie/provocação sem apanhar aumenta a barra especial.
-- **E1 Chupeta Teleguiada:** arremessa chupeta; pode quicar ou voltar; até 2 hits; projétil simples e rápido.
-- **E2 Mamadeira Turbo:** mamadeira girando; hit médio; VFX de leite ao acertar; sem física pesada.
-- **E3 Selfie do Dano:** levanta o celular; flash causa hit; perto = pequeno stun; se acertar durante ataque inimigo → **PERFECT SELFIE**; rápido e engraçado.
-- **Ultimate VIRALIZOU:** começa selfie; contadores 10K → 100K → 1M; overlays LIKE / SHARE / COMENTÁRIO / SEGUIR; parede de notificações atravessa o inimigo; dano alto; curta.
+## NIKOLAS / "NIKOLINHA" — rushdown / troll / rápido  ✅ (02/10, placeholder 3D)
+- **Passiva ENGAJAMENTO:** selfie/provocação sem apanhar aumenta a barra especial. ✅
+- **E1 Chupeta Teleguiada:** arremessa chupeta; pode quicar ou voltar; até 2 hits; projétil simples e rápido. ✅ (bumerangue + homing)
+- **E2 Mamadeira Turbo:** mamadeira girando; hit médio; VFX de leite ao acertar; sem física pesada. ✅
+- **E3 Selfie do Dano:** levanta o celular; flash causa hit; perto = pequeno stun; se acertar durante ataque inimigo → **PERFECT SELFIE**; rápido e engraçado. ✅
+- **Ultimate VIRALIZOU:** começa selfie; contadores 10K → 100K → 1M; overlays LIKE / SHARE / COMENTÁRIO / SEGUIR; parede de notificações atravessa o inimigo; dano alto; curta. ✅
 - **Meme:** Selfie do Dano.
 - Ref: `references/_novos/NIKOLAS PODER.png`
 
@@ -76,12 +76,12 @@
 - **Meme:** Pendrive Explosivo.
 - Ref: `references/_novos/DUVAL.png`
 
-## ERIKA HILTON — counter / elegante / sonic  ⏳
-- **Passiva PRESENÇA:** quanto mais tempo sem tomar hit, pequeno bônus de velocidade.
-- **E1 Discurso de Impacto:** onda sonora frontal; elegante; VFX rosa/dourado ou branco.
-- **E2 Salto Agulha:** dash curto + chute giratório; limpo e rápido.
-- **E3 Close Certo:** pose por uma fração de segundo; se o inimigo atacar → counter, flash, contra-ataque automático.
-- **Ultimate PLENÁRIO É MEU:** luz apaga; spotlight; sequência curta de ondas sonoras; grande onda final arremessa o inimigo para fora do enquadramento; curta.
+## ERIKA HILTON — counter / elegante / sonic  ✅ (02/10, placeholder 3D)
+- **Passiva PRESENÇA:** quanto mais tempo sem tomar hit, pequeno bônus de velocidade. ✅ (3 s → +18%)
+- **E1 Discurso de Impacto:** onda sonora frontal; elegante; VFX rosa/dourado ou branco. ✅
+- **E2 Salto Agulha:** dash curto + chute giratório; limpo e rápido. ✅
+- **E3 Close Certo:** pose por uma fração de segundo; se o inimigo atacar → counter, flash, contra-ataque automático. ✅ (mecânica genérica `kind: 'counter'`)
+- **Ultimate PLENÁRIO É MEU:** luz apaga; spotlight; sequência curta de ondas sonoras; grande onda final arremessa o inimigo para fora do enquadramento; curta. ✅
 - **Meme:** Close Certo.
 - Ref: `references/_novos/ERIKA HILTON.png`
 
