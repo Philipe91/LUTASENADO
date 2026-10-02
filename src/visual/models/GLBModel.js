@@ -22,6 +22,16 @@ export function loadGLTF(url) {
 // chaves em que a física controla a altura: a animação fica sem subir/descer o quadril
 const LOCK_Y_KEYS = new Set(['jump', 'airPunch', 'airKick', 'knockdown']);
 
+// QUEDA / CHÃO / LEVANTAR guiados pela lógica (segundos do clip). Os clips padrão do Meshy são longos e começam
+// em pé (Dead fica 1,8s parado antes de cair; Fall_Down leva 4,7s; Stand_Up1 8,3s), então a queda de 0,4s do jogo
+// mostrava o lutador EM PÉ no ar e "morrendo de novo" no chão. Aqui cada chave raspa só o trecho útil:
+//   knockdown: tomba no ar (progresso do voo) · ko: tomba e assenta · down: pose deitada parada · getup: só a subida
+// visual.timeline[clip][chave] = [de, até] sobrescreve.
+const POSE_TIMELINES = {
+  dead: { knockdown: [1.2, 2.1], ko: [1.2, 2.95], down: [2.95, 2.95] },
+  'stand up1': { getup: [1.85, 6.2] },
+};
+
 const normClip =(s) => s.toLowerCase().replace(/^.*\|/, '').replace(/mixamo\.com/g, '').replace(/[_-]+/g, ' ').trim();
 
 export class GLBModel {
@@ -108,6 +118,7 @@ export class GLBModel {
       seen.add(k);
       const override = this.visual.clips?.[k];
       const names = override ? [override] : (CLIP_NAMES[k] || [k]);
+      this.resolvedKey = k; // chave que realmente achou o clip (ex.: backdash → walkBack, que pode tocar de ré)
       for (const name of names) {
         const n = normClip(name);
         if (this.clips.has(n)) return this.clips.get(n);
@@ -117,7 +128,13 @@ export class GLBModel {
         for (const [cn, c] of this.clips) if (cn.includes(n)) return c;
       }
     }
+    this.resolvedKey = 'idle';
     return this.clips.get('idle') || this.clips.values().next().value || null;
+  }
+
+  timelineFor(clip, key) {
+    const n = normClip(clip.name);
+    return this.visual.timeline?.[n]?.[key] || POSE_TIMELINES[n]?.[key] || null;
   }
 
   // true se existe clip próprio para a chave (sem cair na cadeia de fallback)
@@ -129,9 +146,26 @@ export class GLBModel {
 
   // phases: { startup, active, recovery } (frames da lógica) — com visual.timing[key] = { start, contact, activeEnd, end }
   // (segundos do clip) o clip é "raspado" pelo frame da lógica: preparação→contato cai no 1º frame ativo.
-  play(key, lenFrames, loop, phases) {
-    const clip = this.findClip(key);
-    if (!clip) return;
+  // fade: duração do crossfade (s) escolhida pelo FighterView por tipo de transição (golpe entra seco, volta pra guarda suave)
+  play(key, lenFrames, loop, phases, fade = 0.1) {
+    let clip0 = this.findClip(key);
+    if (!clip0) return;
+    // knockdown usa o trecho de queda do clip de KO (Dead), se houver — o Fall_Down do Meshy é lento demais
+    if (key === 'knockdown') {
+      const dead = this.findClip('ko');
+      if (dead && this.timelineFor(dead, 'knockdown')) clip0 = dead;
+    }
+    const tl = this.timelineFor(clip0, key);
+    // mesmo clip tocando de novo (hit em sequência, jab → soco agachado): usa uma 2ª ação do mesmo clip
+    // para poder fazer crossfade entre as duas — sem isso o reset() "teleporta" a pose (pop)
+    let clip = clip0;
+    if (this.current && this.current.getClip() === clip0) {
+      this.alt ||= new Map();
+      if (!this.alt.has(clip0)) { const c = clip0.clone(); c.name = clip0.name + '#b'; this.alt.set(clip0, c); }
+      clip = this.alt.get(clip0);
+    } else if (this.current && this.alt?.get(clip0) === this.current.getClip()) {
+      clip = clip0;
+    }
     const tm = this.visual.timing?.[key];
     this.scrub = tm && phases && !loop ? { tm, ...phases } : null;
     // pulo: clip raspado pelo progresso do voo (subida→ápice→descida), não em loop; volta de golpe aéreo não reinicia
@@ -145,12 +179,18 @@ export class GLBModel {
     action.clampWhenFinished = !loop;
     action.timeScale = !loop && lenFrames ? clip.duration / (lenFrames / 60) : 1;
     // chaves tocadas de ré (ex.: andar pra trás usando o clip de andar)
-    if (this.visual.reverseKeys?.includes(key)) action.timeScale *= -1;
+    if (this.visual.reverseKeys?.includes(key) || this.visual.reverseKeys?.includes(this.resolvedKey)) {
+      action.timeScale *= -1;
+      if (!loop) action.time = clip.duration; // de ré, tocando 1×: começa do fim (senão termina na hora)
+    }
     if (this.scrub) { action.timeScale = 0; action.time = this.scrub.tm.start; }
     if (this.jumpScrub) { action.timeScale = 0; action.clampWhenFinished = true; }
+    this.timeline = tl;
+    if (tl) { action.timeScale = 0; action.clampWhenFinished = true; action.time = tl[0]; }
     action.setEffectiveWeight(1);
     action.play();
-    if (prev && prev !== action) action.crossFadeFrom(prev, 0.08, false);
+    if (prev && prev !== action && fade > 0) action.crossFadeFrom(prev, fade, false);
+    else if (prev && prev !== action) prev.stop();
     this.current = action;
   }
 
@@ -160,6 +200,10 @@ export class GLBModel {
     // (osso sem track volta à base; com track o mixer reescreve) e aplica de novo 1× — não acumula em hitstop/dt=0
     this.undoCrouch();
     if (this.scrub && pose.moveT !== undefined && this.current) this.current.time = this.scrubTime(pose.moveT);
+    if (this.timeline && pose.prog !== undefined && this.current) {
+      const [a, b] = this.timeline, p = Math.max(0, Math.min(1, pose.prog));
+      this.current.time = a + (b - a) * (1 - (1 - p) * (1 - p)); // ease-out: tomba rápido, assenta devagar
+    }
     if (this.jumpScrub && pose.airP !== undefined && this.current) {
       const j = this.jumpScrub;
       this.current.time = (j.from + (j.to - j.from) * pose.airP) * j.dur;

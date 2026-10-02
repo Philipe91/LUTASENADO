@@ -9,6 +9,13 @@ const DEFAULT_STATS = { hp: 100, walk: 1, jump: 1, width: 0.8, height: 1.8, dama
 const WALK = 0.055;
 import { JUMP_V } from "./constants.js";
 const JUMP_X = 0.075;
+// DASH (toque duplo frente/trás): impulso curto com freio (rápido no início, desacelera no fim)
+const DASH = {
+  fwd: { frames: 18, v: 0.15, cancel: 6 },   // pode emendar golpe a partir do frame 6 (corrida curta + soco)
+  back: { frames: 16, v: 0.13, cancel: 12 }, // recuo: só cancela no finalzinho (é fuga, não ataque)
+};
+const TAP_WINDOW = 14; // frames entre os dois toques
+const TAP_MAX_HOLD = 10; // o 1º toque precisa ser curto (segurar = andar, não dash)
 const INVULNERABLE = new Set(['knockdown', 'down', 'getup', 'ko', 'victory', 'intro', 'ultimate', 'held']);
 const FRICTION = new Set(['hitstun', 'blockstun', 'down', 'getup', 'ko']);
 const NOT_THROWABLE = new Set(['held', 'hitstun', 'blockstun', 'knockdown', 'down', 'getup', 'ko', 'ultimate', 'intro', 'victory']);
@@ -35,6 +42,8 @@ export class Fighter {
     this.prevCmd = NEUTRAL;
     this.pressedAt = {};
     this.pressedCmd = {};
+    this.taps = { left: { at: -999, prev: -999, rel: -999, prevHeld: 99 }, right: { at: -999, prev: -999, rel: -999, prevHeld: 99 } };
+    this.hitSeq = 0; this.hitInfo = null; // última reação de golpe (o visual lê: zona alta/média/baixa, força, direção)
     this.animSeq = 0;
     this.reset(0);
   }
@@ -59,6 +68,12 @@ export class Fighter {
     for (const b of BUTTONS) {
       if (cmd[b] && !this.prevCmd[b]) { this.pressedAt[b] = this.frameCount; this.pressedCmd[b] = cmd; }
     }
+    // toques nas direções (dash por toque duplo)
+    for (const d of ['left', 'right']) {
+      const tp = this.taps[d];
+      if (cmd[d] && !this.prevCmd[d]) { tp.prev = tp.at; tp.prevHeld = tp.rel - tp.prev; tp.at = this.frameCount; }
+      if (!cmd[d] && this.prevCmd[d]) tp.rel = this.frameCount;
+    }
   }
   // direção valendo para um botão: a segurada agora OU a do instante do aperto (aperto no hitstop não perde a direção)
   dirFor(b, fwdNow) {
@@ -68,6 +83,11 @@ export class Fighter {
   }
   buffered(b) { return this.frameCount - (this.pressedAt[b] ?? -999) <= BUFFER; }
   consume(...bs) { for (const b of bs) this.pressedAt[b] = -999; }
+  // toque duplo recente na direção absoluta d ('left'|'right')
+  doubleTap(d) {
+    const tp = this.taps[d];
+    return this.cmd[d] && this.frameCount - tp.at <= 3 && tp.at - tp.prev <= TAP_WINDOW && tp.prevHeld >= 0 && tp.prevHeld <= TAP_MAX_HOLD;
+  }
 
   // ---------- helpers ----------
   get grounded() { return this.y <= 0 && this.vy <= 0; }
@@ -177,6 +197,7 @@ export class Fighter {
         else if (!this.airAttackUsed && this.buffered('kick')) { this.consume('kick'); this.airAttackUsed = true; this.startMove('airKick'); }
         break;
       case 'attack': this.updateAttack(); break;
+      case 'dash': this.updateDash(match, fwd, back); break;
       case 'special': this.updateSpecial(match); break;
       case 'ultimate': this.updateUltimate(match); break;
       case 'hitstun': case 'blockstun': if (this.t >= this.stun && this.grounded) this.toNeutral(); break;
@@ -188,7 +209,7 @@ export class Fighter {
       case 'getup': if (this.t >= 18) this.toNeutral(); break;
       default: break; // knockdown / ko: física resolve
     }
-    this.physics();
+    this.physics(match);
   }
 
   groundControl(match, fwd, back) {
@@ -223,6 +244,9 @@ export class Fighter {
       return;
     }
     if (fwd || back) {
+      const F = this.facing > 0 ? 'right' : 'left', B = this.facing > 0 ? 'left' : 'right';
+      if (fwd && this.doubleTap(F)) return this.startDash(match, 1);
+      if (back && this.doubleTap(B)) return this.startDash(match, -1);
       const speed = WALK * this.stats.walk * this.speedMult() * (back ? 0.75 : 1);
       this.vx = (fwd ? 1 : -1) * speed * this.facing;
       if (this.state !== 'walk') this.setState('walk', fwd ? 'walk' : 'walkBack');
@@ -231,6 +255,27 @@ export class Fighter {
     }
     this.vx = 0;
     if (this.state !== 'idle') this.setState('idle', 'idle');
+  }
+
+  // ---------- dash ----------
+  startDash(match, dir) {
+    const d = dir > 0 ? DASH.fwd : DASH.back;
+    this.dashDir = dir;
+    this.taps.left.at = this.taps.right.at = -999; // consome o toque
+    this.setState('dash', dir > 0 ? 'dash' : 'backdash', d.frames);
+    this.vx = dir * d.v * this.stats.walk * this.facing * this.speedMult();
+    match.emit({ type: 'dash', fighter: this, dir, x: this.x });
+  }
+  updateDash(match, fwd, back) {
+    const d = this.dashDir > 0 ? DASH.fwd : DASH.back;
+    const k = this.t / d.frames;
+    // perfil: arranque forte, freio no final (1 - k²)
+    this.vx = this.dashDir * d.v * this.stats.walk * this.facing * this.speedMult() * Math.max(0, 1 - k * k);
+    if (this.t >= d.cancel && (this.buffered('punch') || this.buffered('kick') || this.buffered('special'))) {
+      this.setState('idle', 'idle');
+      return this.groundControl(match, fwd, back);
+    }
+    if (this.t >= d.frames) { this.vx = 0; this.toNeutral(); }
   }
 
   startMove(id) {
@@ -369,19 +414,23 @@ export class Fighter {
   }
 
   // ---------- física ----------
-  physics() {
+  physics(match) {
     if (this.heldBy) return; // preso no Abraço: posição vem do agarrador
     const airborne = this.y > 0 || this.vy > 0;
     if (airborne) {
-      this.vy -= GRAVITY;
+      // arco do pulo: flutua um pouco no ápice e cai mais firme (só pulo/golpe aéreo; queda de golpe segue a física pura)
+      const jumping = this.state === 'jump' || (this.state === 'attack' && this.move?.air);
+      const g = !jumping ? 1 : Math.abs(this.vy) < 0.05 ? 0.62 : this.vy < 0 ? 1.12 : 1;
+      this.vy -= GRAVITY * g;
       this.y += this.vy;
-      if (this.y <= 0) { this.y = 0; this.vy = 0; this.land(); }
+      if (this.y <= 0) { const vLand = this.vy; this.y = 0; this.vy = 0; this.land(match, vLand); }
     }
     this.x += this.vx;
     if (!airborne && FRICTION.has(this.state)) this.vx *= 0.82;
     this.x = Math.max(-ARENA_HALF, Math.min(ARENA_HALF, this.x));
   }
-  land() {
+  land(match, vLand = 0) {
+    match?.emit({ type: 'land', fighter: this, x: this.x, state: this.state, v: -vLand });
     if (this.state === 'jump' || (this.state === 'attack' && this.move?.air)) { this.vx = 0; this.toNeutral(); }
     else if (this.state === 'knockdown') { this.vx *= 0.5; this.setState('down', 'down'); }
     else if (this.state === 'ko') { this.vx *= 0.4; }

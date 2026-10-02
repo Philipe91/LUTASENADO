@@ -1,7 +1,7 @@
 // CONTRATO DE ANIMAÇÃO — a única ponte entre a lógica (Fighter.animKey) e o visual.
 // Qualquer modelo (placeholder, GLB do Meshy/Mixamo, transformação) só precisa saber tocar estas chaves.
 export const ANIM_KEYS = [
-  'idle', 'walk', 'walkBack', 'jump', 'crouch',
+  'idle', 'walk', 'walkBack', 'dash', 'backdash', 'jump', 'crouch',
   'punch1', 'punch2', 'punch3', 'kick', 'crouchPunch', 'sweep', 'airPunch', 'airKick', 'throw',
   'special1', 'special2', 'special3', 'ultimate',
   'block', 'crouchBlock', 'hit', 'dizzy', 'knockdown', 'down', 'getup', 'ko',
@@ -12,6 +12,7 @@ export const LOOPING = new Set(['idle', 'walk', 'walkBack', 'crouch', 'dizzy', '
 
 // Se o GLB não tiver a animação, cai na próxima da cadeia (e no fim, 'idle').
 export const ANIM_FALLBACK = {
+  dash: 'walk', backdash: 'walkBack', // dash = ciclo de andar acelerado (sem clip próprio)
   walkBack: 'walk', punch2: 'punch1', punch3: 'punch2', airPunch: 'punch1', airKick: 'kick',
   crouchPunch: 'punch1', sweep: 'kick', throw: 'punch3', crouchBlock: 'block',
   special1: 'special', special2: 'special', special3: 'special', special: 'punch3', ultimate: 'special',

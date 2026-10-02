@@ -22,7 +22,7 @@ function targetPose(key, k, time) {
   const strike = (a, b) => (k < 0.3 ? a + (a - b) * 0.25 * (k / 0.3) : k < 0.55 ? b : b + (a - b) * ((k - 0.55) / 0.45));
   switch (key) {
     case 'idle': case 'intro': T.low = Math.sin(time * 4) * 0.03; T.armR += Math.sin(time * 4) * 0.08; break;
-    case 'walk': case 'walkBack': { const s = Math.sin(time * 11) * 0.6; T.legR = s; T.legL = -s; T.low = Math.abs(s) * 0.05; break; }
+    case 'walk': case 'walkBack': case 'dash': case 'backdash': { const s = Math.sin(time * 11) * 0.6; T.legR = s; T.legL = -s; T.low = Math.abs(s) * 0.05; break; }
     case 'crouch': T.low = -0.5; T.legR = -1.1; T.legL = -1.1; T.lean = 0.3; break;
     case 'jump': T.legR = -1.0; T.legL = -0.4; T.armR = -2.3; T.armL = -2.0; break;
     case 'punch1': case 'airPunch': T.armR = strike(-0.9, -1.6); T.twist = strike(0, 0.5); T.lean = strike(0.05, 0.25); break;
