@@ -29,3 +29,11 @@
 - MESHY: gerados+remesh 30K: Brasa v2, Dino v2 (toga), Nikolas, Flávio, Vorcaro, Duval, Erika, jacaré (ultimate, falta remesh). Rig enviado: Brasa v2, Dino v2, Flávio, Nikolas. FALTA: rig Vorcaro/Duval/Erika; Texto-para-Motion (estilo próprio de cada um: guarda + 2 gestos de especial); baixar GLB (glb, Mixamo, rigged, todas, arquivo único) → otimizar → `public/assets/characters/<id>/model.glb` → mapear clips.
 - GPT: T-Rex bizarro pedido na conversa "Gerar imagem 3D" — baixar e mandar ao Meshy como ultimate do Dino.
 - Balanceamento (sim 02/10): vorcaro 63%, dino 35% — ajustar depois das integrações.
+
+## Estado (02/10 manhã) — atualizar daqui
+- Atalho: `CONTINUAR_CONVERSA.bat` na raiz (1 = retoma a conversa, 2 = conversa nova lendo este arquivo).
+- NA MAIN: 9 lutadores jogáveis (Lulácio, Xandor, Capitão Brasa, Dino, Nikolas, Erika, Flávio, Vorcaro, Duval), cada um com passiva + 3 especiais + ultimate + golpe meme (ver `MOVESET_PLANO.md`). Seleção com N lutadores.
+- MODELOS 3D: todos os 9 em `public/assets/characters/<id>/model.glb` (Meshy, rig Mixamo). Golpes ainda EMPRESTADOS dos GLBs do Xandor/Lulácio (`visual.animations` + `visual.clips`), combinação diferente por estilo.
+- FALTA: (1) Texto para Motion do Meshy travou (15 min, cobrou 10 créditos, não salvou) — tentar de novo para movimentos exclusivos; (2) jacaré 3D gerado no Meshy (falta remesh+download → `capitao-brasa/ultimate.glb`); T-Rex bizarro pedido no GPT (baixar → Meshy → `dino-supremo/ultimate.glb`); (3) retratos da seleção (tools/portraits.py) para os 7; (4) balanceamento (sim: Vorcaro 64%, Xandor 39%); (5) agentes sem relatório final: Nikolas/Erika, Flávio/Duval, Brasa/Dino — revalidar golpes.
+- VÍDEOS: `videos/noite/republica_kombat_parte01_narrada.mp4` e `parte02_narrada.mp4` (narração edge-tts pt-BR-AntonioNeural + música do jogo renderizada por `tools/_render_music.mjs` + sfx `tools/_render_sfx.mjs`; montagem `videos/noite/narr/build.py`, roteiro `narr/script.json`).
+- CUIDADO: o PC trava com 4+ agentes gravando vídeo (CPU 100%, RAM acaba) — no máximo 2 agentes quando for usar o Meshy no navegador. Meshy: 700 créditos.
