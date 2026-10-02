@@ -40,10 +40,36 @@ export default {
   },
   koTexts: ['DERRUBADO NA LIVE!'],
   visual: {
-    model: 'assets/characters/capitao-brasa/model.glb',
+    model: 'assets/characters/capitao-brasa/model.glb', // Meshy v2 (turnaround do usuário), rig 02/10
     height: 1.85,
     yaw: 0,
-    clips: {},
+    // estilo rushdown militar: guarda de boxe reta, jabs rápidos, andar marchando (Walking/Running próprios do GLB)
+    animations: ['assets/characters/xandor/model.glb', 'assets/characters/lulacio/model.glb'],
+    clips: {
+      idle: '01a0ef75-1fd9-7538-9154-0af77913ed07', intro: 'Chest_Pound_Taunt', crouch: '01a0ef75-1fd9-7538-9154-0af77913ed07',
+      walk: 'Walking', walkBack: 'Walking', jump: 'Regular_Jump',
+      punch1: 'Left_Jab_from_Guard', punch2: 'Right_Jab_from_Guard', punch3: 'Punch_Forward_with_Both_Fists',
+      crouchPunch: 'Left_Jab_from_Guard', airPunch: 'Right_Jab_from_Guard', throw: 'Punch_Forward_with_Both_Fists',
+      kick: 'Simple_Kick', airKick: 'Simple_Kick', sweep: 'Sweep_Kick',
+      block: 'Block1', crouchBlock: 'Block1',
+      hit: 'Face_Punch_Reaction', dizzy: 'Face_Punch_Reaction',
+      knockdown: 'Fall_Down', down: 'Dead', ko: 'Dead', getup: 'Stand_Up1',
+      special1: 'Right_Jab_from_Guard', // Arminha de Energia: braço estendido apontando
+      special2: 'Running', // Motociata: arrancada
+      special3: 'Talk_Passionately', // Patriota no Para-brisa: grito
+      ultimate: 'Chest_Pound_Taunt', victory: 'Chest_Pound_Taunt',
+    },
+    reverseKeys: ['walkBack'],
+    jumpScrub: { from: 0.28, to: 0.62 },
+    timing: {
+      punch1: { start: 0.292, contact: 0.467, activeEnd: 0.603, end: 1.108 },
+      crouchPunch: { start: 0.292, contact: 0.467, activeEnd: 0.603, end: 1.108 },
+      punch2: { start: 0.4, contact: 0.644, activeEnd: 0.711, end: 0.956 },
+      punch3: { start: 0.622, contact: 0.894, activeEnd: 0.933, end: 1.128 },
+      kick: { start: 0.544, contact: 0.933, activeEnd: 1.037, end: 1.659 },
+      sweep: { start: 0.36, contact: 1.347, activeEnd: 1.392, end: 1.617 },
+    },
+    poseFix: { keys: ['*'], rots: [{ bone: 'neck', axis: [1, 0, 0], ang: -0.25 }] },
     ultimateFx: 'brasaJacare', // seringa → nuvem verde → jacaré de terno procedural (mordida, rabada, rolo da morte)
     transform: { id: 'jacare', model: 'assets/characters/capitao-brasa/ultimate.glb', height: 3.4, standInScale: 1, tint: 0x3f7d3a, frameTop: 4.0 },
     // efeitos presos ao corpo: clarão no dedo na Arminha; motos instanciadas na Motociata

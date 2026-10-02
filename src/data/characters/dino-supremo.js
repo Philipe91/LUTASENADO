@@ -38,10 +38,35 @@ export default {
   },
   koTexts: ['EXTINTO!'],
   visual: {
-    model: 'assets/characters/dino-supremo/model.glb',
+    model: 'assets/characters/dino-supremo/model.glb', // Meshy v2 (de toga), rig 02/10
     height: 1.8,
     yaw: 0,
-    clips: {},
+    // estilo tank: base larga de brigão, martelada, pisão, chute frontal pesado (Walking próprio do GLB, lento)
+    animations: ['assets/characters/lulacio/model.glb', 'assets/characters/xandor/model.glb'],
+    clips: {
+      idle: '01a0efe2-f57c-765f-996c-8b479826fa21', intro: 'Chest_Pound_Taunt', crouch: '01a0efe2-f57c-765f-996c-8b479826fa21',
+      walk: 'Walking', walkBack: 'Walking', jump: 'Jump_with_Arms_Open',
+      punch1: 'Left_Hook_from_Guard', punch2: 'Right_Uppercut_from_Guard', punch3: 'Heavy_Hammer_Swing',
+      crouchPunch: 'Left_Hook_from_Guard', airPunch: 'Heavy_Hammer_Swing', throw: 'Grip_and_Throw_Down',
+      kick: 'Spartan_Kick', airKick: 'Spartan_Kick', sweep: 'Angry_Ground_Stomp',
+      block: 'Block1', crouchBlock: 'Block1',
+      hit: 'Hit_Reaction_to_Waist', dizzy: 'Hit_Reaction_to_Waist',
+      knockdown: 'Fall_Down', down: 'Dead', ko: 'Dead', getup: 'Stand_Up1',
+      special1: 'Chest_Pound_Taunt', // Rugido Togado
+      special2: '01a0efe4-99e1-76ec-90af-8512dfe57528', // Meteoro Didático: arremesso por cima do ombro
+      special3: 'Angry_Ground_Stomp', // Pisão Cretáceo
+      ultimate: 'Chest_Pound_Taunt', victory: 'Chest_Pound_Taunt',
+    },
+    reverseKeys: ['walkBack'],
+    jumpScrub: { from: 0.3, to: 0.64 },
+    timing: {
+      punch1: { start: 0.08, contact: 0.333, activeEnd: 0.356, end: 0.6 },
+      crouchPunch: { start: 0.08, contact: 0.333, activeEnd: 0.356, end: 0.6 },
+      punch2: { start: 0.45, contact: 0.7, activeEnd: 0.8, end: 1.0 },
+      punch3: { start: 1.1, contact: 1.4, activeEnd: 1.47, end: 1.833 },
+      kick: { start: 0.362, contact: 0.693, activeEnd: 0.756, end: 0.897 },
+      sweep: { start: 0.2, contact: 0.5, activeEnd: 0.6, end: 1.0 },
+    },
     // efeitos presos ao corpo: bocarra + ondas no Rugido; Vade Mecum voando pro céu no Meteoro; rachadura no Pisão
     specialFx: {
       neutral: { type: 'roar' },
