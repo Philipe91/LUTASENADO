@@ -21,13 +21,14 @@ export class Hud {
         </div>
         <div class="bar"><div class="trail"></div><div class="fill"></div><div class="ticks"></div><div class="shine"></div></div>
         <div class="meter"><i><b></b></i><i><b></b></i><i><b></b></i><span class="ultTag">ULTIMATE!</span></div>
+        <div class="res"><em>$</em><i><b></b></i></div>
         <div class="lock">BLOQUEADO</div>
         <div class="spname"></div>`);
       this.hud.appendChild(s);
       return {
         root: s, name: s.querySelector('.name'), portrait: s.querySelector('.portrait'), ini: s.querySelector('.ini'), pips: s.querySelector('.pips'),
         bar: s.querySelector('.bar'), fill: s.querySelector('.fill'), trail: s.querySelector('.trail'), segs: [...s.querySelectorAll('.meter b')],
-        meter: s.querySelector('.meter'), lock: s.querySelector('.lock'), sp: s.querySelector('.spname'), trailPct: 100, lastPct: 100, hurtT: 0,
+        meter: s.querySelector('.meter'), res: s.querySelector('.res'), resFill: s.querySelector('.res b'), lock: s.querySelector('.lock'), sp: s.querySelector('.spname'), trailPct: 100, lastPct: 100, hurtT: 0,
       };
     });
     this.center = el('div', 'center', '<div class="timer">60</div><div class="live"><i></i>AO VIVO</div>');
@@ -59,6 +60,8 @@ export class Hud {
       s.ini.textContent = f.data.name[0];
       portrait(f.data.id, (url) => { s.portrait.style.backgroundImage = `url(${url})`; s.ini.textContent = ''; });
       s.trailPct = 100; s.lastPct = 100; s.hurtT = 0;
+      s.res.classList.toggle('on', !!f.resource); // barra extra (ex.: CAPITAL do Vorcaro)
+      if (f.resource) s.res.title = f.resource.name;
     });
   }
 
@@ -77,6 +80,7 @@ export class Hud {
       s.bar.classList.toggle('low', pct <= 30);
       s.segs.forEach((b, k) => { b.style.width = Math.max(0, Math.min(1, (f.meter - k * 100) / 100)) * 100 + '%'; });
       s.meter.classList.toggle('full', f.meter >= METER_MAX);
+      if (f.resource) { s.resFill.style.width = (f.res / f.resource.max) * 100 + '%'; s.res.classList.toggle('full', f.res >= f.resource.max); }
       s.lock.classList.toggle('on', f.lockT > 0);
       s.pips.innerHTML = [0, 1].map((k) => `<em class="${match.wins[i] > k ? 'won' : ''}"></em>`).join('');
       s.root.classList.toggle('buff', f.buffT > 0);

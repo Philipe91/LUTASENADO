@@ -25,6 +25,15 @@
 - **Pisão Cretáceo** (↓) — mantido; agora a pisada treme a tela (`groundFx`) e a onda é uma crista de torrões com rachadura. `[01/10]`
 - **Ultimate: T-Rex de Terno** — T-Rex/híbrido com óculos/gravata; gag dos bracinhos que não alcançam os óculos; finalizador pesado e curto. `[VFX 01/10: óculos saem/limpam/crescem, botões voam, poeira → T-Rex de paletó rasgado; mordida / rabada / pisão / ruge e METEORO cai no alvo]`
 
+## VORCARO / "VORCASH" `[01/10 — implementado, placeholder até o GLB]`
+Summoner/recursos. Sátira absurda: a maleta é um "portal mágico de contatos" de desenho animado — nada de compra, suborno ou fato real.
+- **Passiva LIQUIDEZ** — todo dano causado enche a barra de **CAPITAL** (100; 1,6 por ponto de dano), mostrada como medidor fino com **$** sob a barra de ultimate. Especiais com `capital: { cost, damage }` gastam até `cost` e batem até **+35%** (texto "CAPITAL x1.3"). Mecânica genérica: `passive.resource` + `Fighter.boostSpecial`.
+- **Maleta Voadora** (neutro) — maleta em arco; ao acertar ou cair no chão PARA e abre, notas voam (InstancedMesh). 4,5 de dano, cd 200. Hitter genérico: `stopOnHit` / `stopOnGround`.
+- **Juros Compostos** (→) — moeda que quica 3×, crescendo 1,32× a cada quique ("JUROS²!"); dano = 2 + 1/m percorrido (máx +6). Hitter genérico: `bounces/bounceV/grow` + `hit.distDamage`.
+- **Mala de Contatos** (↓, golpe MEME) — maleta cai aberta no chão com brilho dourado; saem versões paródicas de **Flavão** (rachadura baixa), **Xandor** (BLOQUEADO, trava especiais 1,5s) e **Nikolas** (flash de SELFIE, derruba): 1 golpe cada, em sequência, e somem. Vorcaro fica livre enquanto eles batem. cd 480. Mecânica genérica **assist** (`src/fight/Assist.js`, especial `kind: 'summon'`, por dados). Visual: usa o CharacterData do elenco se existir (Xandor = GLB), senão `visual.assistLooks` (placeholder colorido) apontando `assets/characters/flavio|nikolas/model.glb` — entra sozinho quando existir.
+- **Ultimate CAPITAL INFINITO** — cinemática: ergue a maleta, ela abre e jorra moedas/luz. Maleta-portal no céu sobre o alvo; chovem moedas, cartões, maletinhas e gráficos (4 InstancedMesh); o monte dourado cresce até soterrar o inimigo; a maleta fecha e despenca → explosão dourada + painel **SALDO: 0**. 6×3 + 12.
+- Sim (12/confronto): Vorcaro 59%, todos entre 38–62%. IA: não se defende mais de Hitters que já não machucam (`Hitter.dangerous`).
+
 ---
 ## PIPELINE 3D DOS PERSONAGENS
 **Papéis:** ChatGPT cria a referência (concept) → Claude faz Meshy Image-to-3D → Remesh → Auto-Rig → GLB → integra e testa.
@@ -50,6 +59,7 @@
 | Vitória | bate no peito | victory | | |
 
 ## Log
+- **01/10** — VORCARO/VORCASH completo (placeholder): CAPITAL (barra extra genérica), Maleta Voadora, Juros Compostos (quique+crescimento), Mala de Contatos (assist genérico Flavão/Xandor/Nikolas), ultimate CAPITAL INFINITO (chuva instanciada → soterra → SALDO: 0). Vídeos em `videos/equipe/vorcaro_*.mp4`.
 - **01/10 (madrugada)** — Direção de arte: `ARTE.md` (bíblia visual: paleta, luz, VFX ENTRA→IMPACTA→SOME, tipografia, proibidos), `src/visual/Look.js` (ACES/AgX, rim fresnel nos lutadores, VSM, bloom 1/4, grading, vinheta; `?look=0`), HUD/seleção/letreiros redesenhados, `art/PROMPTS_GPT.md` (Brasa, Dino, backdrop de Brasília, retratos). Retratos: `public/assets/characters/<id>/portrait.png` entra sozinho na UI.
 - **01/10** — VFX dos poderes: Polvão refeito (tinta, tentáculos com ventosas em curvas/ossos, 9º tentáculo esmaga), Brasa (Rajada, Motociata com motos instanciadas, caminhão novo, Efeito Colateral = seringa → jacaré de terno), Dino (bocarra do Rugido, Meteoro vira zona com sombra prévia, Pisão com crista de terra, T-Rex de Terno com gag dos bracinhos e meteoro final). `frameTop` nas transformações pra câmera enquadrar. Infra: `src/visual/fx/` (Tentacle, pools de nuvens/anéis/estilhaços).
 - **30/09 (tarde)** — Abraço do Palanque = agarra, gira 3 voltas e arremessa (estado `held`). Discurso = 3 pulsos, o último atordoa (estrelinhas). Xandor: documento de Intimação, carimbo BLOQUEADO com cadeado sobre a cabeça, caneta colossal da Canetada. Ultimates só mostram contato quando a lógica confirma o hit (`ultRes`).

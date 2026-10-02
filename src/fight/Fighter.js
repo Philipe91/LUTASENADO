@@ -3,6 +3,7 @@
 import { BASE_MOVES } from '../data/baseMoves.js';
 import { GRAVITY, ARENA_HALF, METER_MAX, BUFFER, NEUTRAL } from './constants.js';
 import { Hitter } from './Hitter.js';
+import { Assist } from './Assist.js';
 import { applyHit } from './Combat.js';
 
 const DEFAULT_STATS = { hp: 100, walk: 1, jump: 1, width: 0.8, height: 1.8, damage: 1, defense: 1, meterGain: 1 };
@@ -36,6 +37,9 @@ export class Fighter {
     this.moves = {};
     for (const [id, m] of Object.entries(BASE_MOVES)) this.moves[id] = { ...m, ...(data.moves?.[id] || {}), id };
     this.meter = 0;
+    // recurso extra por dados (passive.resource = { name, max, perDamage }): ex. CAPITAL do Vorcaro. Dura a partida toda.
+    this.resource = this.passive.resource || null;
+    this.res = 0;
     this.opponent = null;
     this.frameCount = 0;
     this.cmd = NEUTRAL;
@@ -164,6 +168,17 @@ export class Fighter {
     const aura = this.opponent?.passive?.aura;
     if (aura && this.distTo(this.opponent) <= aura.radius) g *= aura.enemyMeterMult;
     this.meter = Math.min(METER_MAX, this.meter + v * g);
+  }
+  gainRes(v) { if (this.resource) this.res = Math.min(this.resource.max, this.res + v); }
+  // especial com `capital: { cost, damage }` gasta até `cost` do recurso e ganha até +damage×100% de dano
+  boostSpecial(s, match) {
+    const cap = s.capital;
+    if (!cap || !this.resource || this.res <= 0) return s;
+    const pay = Math.min(this.res, cap.cost);
+    this.res -= pay;
+    const b = 1 + (pay / cap.cost) * cap.damage;
+    if (b >= 1 + cap.damage * 0.5) match.emit({ type: 'text', fighter: this, text: `${this.resource.name} x${b.toFixed(1)}`, cls: 'buff' });
+    return { ...boostHit(s, b), boost: b };
   }
   canSpecial(dir) { return !!this.specials[dir] && this.cooldowns[dir] <= 0 && this.lockT <= 0; }
 
@@ -302,7 +317,7 @@ export class Fighter {
   // ---------- especiais (dirigidos por dados) ----------
   startSpecial(dir, match) {
     const s = this.specials[dir];
-    this.sp = { level: 'mid', startup: 10, active: 0, recovery: 15, ...s, dir };
+    this.sp = this.boostSpecial({ level: 'mid', startup: 10, active: 0, recovery: 15, ...s, dir }, match);
     this.cooldowns[dir] = s.cooldown ?? 120;
     this.hitId = uid(); this.armorUsed = false; this.vx = 0;
     const total = this.sp.startup + this.sp.active + this.sp.recovery;
@@ -329,6 +344,11 @@ export class Fighter {
           owner: this, hit: s, x: tx, y: s.box.y ?? 0, w: s.box.w, h: s.box.h, delay: s.delay ?? 30,
           life: (s.activeFrames ?? 8) + (s.linger ?? 0), activeUntil: (s.delay ?? 30) + (s.activeFrames ?? 8), linger: !!s.linger, hitsLeft: s.hits ?? 1, rehit: s.rehit ?? 10, visual: s.visual, color: s.color, facing: this.facing,
         }));
+      } else if (s.kind === 'summon') {
+        // maleta/portal (só visual, nunca machuca) + ajudantes que saem dela (src/fight/Assist.js)
+        const cx = Math.max(-ARENA_HALF, Math.min(ARENA_HALF, this.x + this.facing * (s.dist ?? 1.2)));
+        if (s.visual) match.spawn(new Hitter({ owner: this, hit: s, x: cx, y: 0, w: 0, h: 0, life: s.life ?? 100, activeUntil: -1, visual: s.visual, facing: this.facing }));
+        for (const a of s.assists || []) match.spawn(new Assist(this, a, cx));
       } else if (s.kind === 'grab') {
         if (this.distTo(o) <= s.range && o.canBeThrown()) {
           if (s.spin) this.startSpin(o, match);
@@ -435,4 +455,16 @@ export class Fighter {
     else if (this.state === 'knockdown') { this.vx *= 0.5; this.setState('down', 'down'); }
     else if (this.state === 'ko') { this.vx *= 0.4; }
   }
+}
+
+// multiplica o dano de um golpe e de tudo que ele gera (último hit, onda filha, ajudantes, dano por distância)
+function boostHit(s, b) {
+  if (!s) return s;
+  const o = { ...s };
+  if (o.damage !== undefined) o.damage *= b;
+  if (o.final?.damage !== undefined) o.final = { ...o.final, damage: o.final.damage * b };
+  if (o.distDamage) o.distDamage = { ...o.distDamage, per: o.distDamage.per * b, max: (o.distDamage.max ?? Infinity) * b };
+  if (o.spawnOnEnd) o.spawnOnEnd = boostHit(o.spawnOnEnd, b);
+  if (o.assists) o.assists = o.assists.map((a) => boostHit(a, b));
+  return o;
 }

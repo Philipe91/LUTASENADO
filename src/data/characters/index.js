@@ -5,8 +5,10 @@ import lulacio from './lulacio.js';
 import capitaoBrasa from './capitao-brasa.js';
 import xandor from './xandor.js';
 import dinoSupremo from './dino-supremo.js';
+import vorcaro from './vorcaro.js';
 
 export const CHARACTERS = [lulacio, capitaoBrasa, xandor, dinoSupremo];
+CHARACTERS.push(vorcaro);
 
 export function getCharacter(id) {
   return CHARACTERS.find((c) => c.id === id) || CHARACTERS[0];
