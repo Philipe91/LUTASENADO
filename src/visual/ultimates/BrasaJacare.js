@@ -1,96 +1,138 @@
 // ULTIMATE do Capitão Brasa — "Efeito Colateral" (procedural, sem GLB).
 // Cinemática: uma SERINGA GIGANTE cai do céu e espeta o braço dele → nuvem VERDE explode → ele incha em 3 pulsos
 // e vira um JACARÉ bípede enorme de terno, faixa verde-amarela, cabelo de lado e o celular na mão (filmando).
+// Modelagem v2 orgânica, acabamento vinil/toy como o Polvão (nada de caixas) — ver makeJacare().
 // Golpes: hits pares = MORDIDA (avança, abre a bocarra e fecha no alvo no frame do dano); ímpares = RABADA (gira 360°
 // com a cauda esticada). Finalizador curto: morde e faz o "ROLO DA MORTE" (gira em torno do próprio eixo) e bate;
 // água do espelho d'água espirra. Contato só quando a lógica confirma (f.ultRes[k] === 'hit').
 // Fim: nova nuvem verde e o Capitão volta.
 import * as THREE from 'three';
 import { Tentacle } from '../fx/Tentacle.js';
-import { Puffs, Rings, std, clamp01, smooth, easeIn, easeOut, canvasTex } from '../fx/common.js';
+import { Puffs, Rings, std, clamp01, smooth, easeIn, easeOut, mergeParts } from '../fx/common.js';
 
-const GREEN = 0x3f7d3a, BELLY = 0x9ccf6a, SUIT = 0x2b2f36, HAIR = 0x6b5a4a;
+const GREEN = 0x4a8f3c, BELLY = 0xd8e8a0, SUIT = 0x34405e, HAIR = 0x6b5a4a;
 const UP_DOWN = new THREE.Vector3(0, -1, 0);
 
-function teeth(parent, { from, to, step, z, y, dir }) {
-  const mat = std(0xffffff, { roughness: 0.3 });
-  for (let x = from; x <= to; x += step) for (const s of [-1, 1]) {
-    const t = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.18, 6), mat);
-    t.position.set(x, y, s * z); t.rotation.x = dir > 0 ? 0 : Math.PI; parent.add(t);
-  }
+// ---- modelagem "vinil/toy" (mesmo acabamento do Polvão): só formas lisas — esferas achatadas, cápsulas, torno (Lathe),
+// toros — com segmentos suficientes. Cada parte rígida é UMA malha (geometria fundida com cor por vértice, mergeParts):
+// ~20 draw calls no bicho inteiro.
+const VINYL = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.38, metalness: 0.02 });
+const solid = (parts) => { const m = new THREE.Mesh(mergeParts(parts), VINYL); m.castShadow = true; return m; };
+const S = (r, ...a) => new THREE.SphereGeometry(r, a[0] ?? 24, a[1] ?? 16, ...a.slice(2));
+const C = (r, len, rs = 16) => new THREE.CapsuleGeometry(r, len, 6, rs);
+const CONE = (r, h) => new THREE.ConeGeometry(r, h, 10);
+const lathe = (pts, phiStart = 0, phiLen = Math.PI * 2) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), 32, phiStart, phiLen);
+const HALF = Math.PI / 2;
+
+// fileira de dentes (cones) de x0 a x1 nos dois lados (z = ±z)
+function teethParts(out, { x0, x1, step, y, z, r = 0.05, h = 0.16, up = false }) {
+  for (let x = x0; x <= x1 + 1e-6; x += step) for (const s of [-1, 1]) out.push({ geo: CONE(r, h), color: 0xfffaf0, p: [x, y, s * z], r: [up ? 0 : Math.PI, 0, 0] });
 }
 
 function makeJacare() {
   const root = new THREE.Group(); // +X = frente
-  const green = std(GREEN, { roughness: 0.6 }), belly = std(BELLY, { roughness: 0.7 }), suit = std(SUIT), chrome = std(0xbbbbbb, { metalness: 0.7, roughness: 0.3 });
-  const B = (w, h, d, m) => { const x = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); x.castShadow = true; return x; };
-  // pernas + pés com garras
+  const DARK = 0x2f5f2a, SUIT_L = 0x3d4658, TIE = 0x1fa34a, YEL = 0xffd400, WHITE = 0xf6f6f2, BLACK = 0x111111;
+  // ---- pernas: coxas GROSSAS, canela curta, pé comprido com dedos ----
+  const legParts = [];
   for (const s of [-1, 1]) {
-    const leg = B(0.6, 1.5, 0.52, green); leg.position.set(-0.1, 0.78, s * 0.45); root.add(leg);
-    const foot = B(1.0, 0.26, 0.5, green); foot.position.set(0.2, 0.13, s * 0.45); root.add(foot);
-    for (let i = -1; i <= 1; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.25, 6), std(0xffffff)); c.position.set(0.75, 0.12, s * 0.45 + i * 0.15); c.rotation.z = -Math.PI / 2; root.add(c); }
+    legParts.push(
+      { geo: S(0.46), color: GREEN, p: [-0.12, 1.2, s * 0.5], s: [1.0, 1.32, 0.9] },
+      { geo: C(0.25, 0.55), color: GREEN, p: [0.0, 0.55, s * 0.52], r: [0, 0, 0.18] },
+      { geo: S(0.33), color: GREEN, p: [0.3, 0.16, s * 0.52], s: [1.65, 0.5, 1.05] },
+    );
+    for (let i = -1; i <= 1; i++) {
+      legParts.push({ geo: C(0.08, 0.14, 10), color: GREEN, p: [0.75, 0.12, s * 0.52 + i * 0.17], r: [0, 0, -HALF] });
+      legParts.push({ geo: CONE(0.06, 0.16), color: WHITE, p: [0.92, 0.11, s * 0.52 + i * 0.17], r: [0, 0, -HALF] });
+    }
   }
-  // tronco (inclinado pra frente) com paletó, barriga, camisa, gravata e faixa
+  root.add(solid(legParts));
+  // ---- tronco (inclinado pra frente): barriga clara em forma de pera + PALETÓ aberto na frente (lapelas), gravata
+  // verde-amarela, colarinho e a FAIXA presidencial em diagonal ----
   const torso = new THREE.Group(); torso.position.set(0, 1.5, 0); torso.rotation.z = -0.3; root.add(torso);
-  const jacket = B(1.15, 1.7, 1.05, suit); jacket.position.set(-0.05, 0.85, 0); torso.add(jacket);
-  const chest = B(0.5, 1.5, 0.8, belly); chest.position.set(0.42, 0.8, 0); torso.add(chest);
-  const shirt = B(0.1, 1.3, 0.45, std(0xffffff)); shirt.position.set(0.66, 0.85, 0); torso.add(shirt);
-  const tie = B(0.08, 1.0, 0.16, std(0x1fa34a)); tie.position.set(0.72, 0.7, 0); torso.add(tie);
-  const tie2 = B(0.085, 0.3, 0.17, std(0xffd400)); tie2.position.set(0.72, 0.95, 0); torso.add(tie2);
-  const sash = B(0.1, 1.5, 0.26, std(0x1fa34a)); sash.position.set(0.7, 0.9, 0); sash.rotation.x = 0.65; torso.add(sash);
-  const sash2 = B(0.105, 1.5, 0.1, std(0xffd400)); sash2.position.set(0.7, 0.9, 0); sash2.rotation.x = 0.65; torso.add(sash2);
-  // cristas nas costas
-  for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 6), std(0x2f5f2a)); c.position.set(-0.62, 0.3 + i * 0.4, 0); c.rotation.z = Math.PI / 2; torso.add(c); }
-  // braços (mangas do terno + antebraço verde + mão com garras); o da frente segura o celular no pau de selfie
+  const prof = [[0, 0], [0.42, 0.03], [0.66, 0.28], [0.75, 0.72], [0.68, 1.22], [0.52, 1.62], [0.34, 1.9], [0, 2.0]];
+  const jacketProf = prof.slice(1, 7).map(([r, y]) => [r * 1.06 + 0.02, y]);
+  const gap = 0.62; // meia-abertura do paletó na frente (+X = phi π/2)
+  const tp = [
+    { geo: lathe(prof), color: BELLY, s: [1, 1, 0.86] },
+    { geo: lathe(jacketProf, HALF + gap, Math.PI * 2 - gap * 2), color: SUIT, s: [1, 1, 0.86] },
+    { geo: S(0.22), color: SUIT, p: [0.18, 1.55, 0.52] }, { geo: S(0.22), color: SUIT, p: [0.18, 1.55, -0.52] }, // ombreiras
+    { geo: C(0.035, 0.55, 8), color: 0x86b85a, p: [0.74, 0.62, 0], r: [HALF, 0, 0] }, // escamas da barriga
+    { geo: C(0.035, 0.6, 8), color: 0x86b85a, p: [0.76, 0.42, 0], r: [HALF, 0, 0] },
+    { geo: C(0.035, 0.5, 8), color: 0x86b85a, p: [0.7, 0.2, 0], r: [HALF, 0, 0] },
+    { geo: new THREE.TorusGeometry(0.34, 0.07, 10, 28), color: WHITE, p: [0.2, 1.86, 0], r: [HALF, 0.35, 0] }, // colarinho
+    { geo: S(0.1), color: TIE, p: [0.5, 1.72, 0], s: [0.8, 1, 1] },                                             // nó
+    { geo: new THREE.ConeGeometry(0.15, 0.95, 4), color: TIE, p: [0.74, 1.2, 0], r: [Math.PI, Math.PI / 4, 0.3], s: [0.55, 1, 0.55] },
+    { geo: new THREE.ConeGeometry(0.1, 0.3, 4), color: YEL, p: [0.67, 1.45, 0], r: [Math.PI, Math.PI / 4, 0.3], s: [0.55, 1, 0.55] },
+    { geo: new THREE.TorusGeometry(0.84, 0.085, 10, 48), color: TIE, p: [0, 0.98, 0], r: [HALF, 0.62, 0], s: [1, 0.88, 1] }, // faixa
+    { geo: new THREE.TorusGeometry(0.87, 0.05, 8, 48), color: YEL, p: [0, 0.98, 0], r: [HALF, 0.62, 0], s: [1, 0.88, 1] },
+    { geo: C(0.33, 0.5), color: GREEN, p: [0.36, 1.95, 0], r: [0, 0, -0.7] },                                    // pescoço
+  ];
+  for (const s of [-1, 1]) tp.push({ geo: C(0.09, 0.75, 10), color: SUIT_L, p: [0.66, 1.3, s * 0.36], r: [s * 0.28, 0, -0.22], s: [0.45, 1, 1] }); // lapelas
+  for (let i = 0; i < 4; i++) tp.push({ geo: CONE(0.11, 0.26), color: DARK, p: [-0.8 + i * 0.05, 0.45 + i * 0.38, 0], r: [0, 0, HALF] }); // cristas
+  torso.add(solid(tp));
+  // ---- braços (manga do terno + punho branco + mão verde com garras); o da frente segura o celular ----
   const arms = [];
   for (const s of [-1, 1]) {
     const arm = new THREE.Group(); arm.position.set(0.25, 1.5, s * 0.68); torso.add(arm);
-    const upper = B(0.32, 0.8, 0.32, suit); upper.position.y = -0.4; arm.add(upper);
+    arm.add(solid([{ geo: C(0.18, 0.45), color: SUIT, p: [0, -0.38, 0] }]));
     const fore = new THREE.Group(); fore.position.y = -0.8; arm.add(fore);
-    const lower = B(0.27, 0.62, 0.27, green); lower.position.y = -0.3; fore.add(lower);
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), green); hand.position.y = -0.66; fore.add(hand);
-    for (let i = -1; i <= 1; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.2, 6), std(0xffffff)); c.position.set(0.08, -0.8, i * 0.1); c.rotation.z = Math.PI; fore.add(c); }
+    const fp = [
+      { geo: C(0.14, 0.36), color: GREEN, p: [0, -0.3, 0] },
+      { geo: new THREE.TorusGeometry(0.15, 0.05, 8, 18), color: WHITE, p: [0, -0.06, 0], r: [HALF, 0, 0] },
+      { geo: S(0.18), color: GREEN, p: [0, -0.66, 0], s: [1, 0.9, 1.1] },
+    ];
+    for (let i = -1; i <= 1; i++) fp.push({ geo: CONE(0.045, 0.18), color: WHITE, p: [0.06, -0.84, i * 0.1], r: [0, 0, Math.PI] });
+    fore.add(solid(fp));
     arms.push({ arm, fore, s });
   }
-  // celular no pau de selfie (braço da frente, lado da câmera)
+  const chrome = std(0xbbbbbb, { metalness: 0.7, roughness: 0.3 });
   const selfie = new THREE.Group();
   const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.2, 8), chrome); stick.position.y = 0.6; selfie.add(stick);
-  const phone = B(0.3, 0.52, 0.05, std(0x111111)); phone.position.set(0, 1.25, 0); selfie.add(phone);
+  const phone = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.52, 0.05), std(0x111111)); phone.position.set(0, 1.25, 0); selfie.add(phone);
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.46), new THREE.MeshStandardMaterial({ color: 0x9ad0ff, emissive: 0x4a90e2, emissiveIntensity: 1.2 }));
   screen.position.set(-0.03, 1.25, 0); screen.rotation.y = -Math.PI / 2; selfie.add(screen);
-  const rec = new THREE.Mesh(new THREE.CircleGeometry(0.04, 8), new THREE.MeshBasicMaterial({ color: 0xff2020 })); rec.position.set(-0.031, 1.44, 0.07); rec.rotation.y = -Math.PI / 2; selfie.add(rec);
   selfie.position.y = -0.7; selfie.rotation.z = -1.1; arms[1].fore.add(selfie);
-  // pescoço + cabeça
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.46, 0.7, 10), green); neck.position.set(0.6, 1.8, 0); neck.rotation.z = -0.7; torso.add(neck);
+  // ---- cabeça: crânio arredondado, focinho COMPRIDO e redondo, OLHOS grandes (pálpebra de cara de "tá ok"),
+  // cabelo penteado de lado com risca ----
   const head = new THREE.Group(); head.position.set(0.95, 2.1, 0); torso.add(head);
-  const skull = B(0.95, 0.68, 0.82, green); skull.position.set(0, 0.1, 0); head.add(skull);
-  const upper = B(1.55, 0.3, 0.72, green); upper.position.set(1.05, -0.05, 0); head.add(upper);
-  const snout = B(0.3, 0.2, 0.5, green); snout.position.set(1.75, 0.08, 0); head.add(snout);
-  teeth(head, { from: 0.55, to: 1.75, step: 0.24, z: 0.33, y: -0.25, dir: -1 });
-  for (const s of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), std(0xffffff, { roughness: 0.3 })); eye.position.set(0.15, 0.5, s * 0.32); head.add(eye);
-    const pupil = B(0.05, 0.22, 0.07, std(0x111111)); pupil.position.set(0.32, 0.5, s * 0.32); head.add(pupil);
-    const nostril = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), std(0x1e3a1a)); nostril.position.set(1.85, 0.2, s * 0.14); head.add(nostril);
-  }
-  // cabelo penteado de lado (marca registrada)
-  const hair = B(0.8, 0.22, 0.78, std(HAIR)); hair.position.set(-0.1, 0.52, 0); hair.rotation.x = 0.18; head.add(hair);
-  const part = B(0.72, 0.03, 0.05, std(0xa08a70)); part.position.set(-0.1, 0.64, 0.22); part.rotation.x = 0.18; head.add(part);
-  const fringe = B(0.3, 0.2, 0.7, std(HAIR)); fringe.position.set(0.3, 0.46, 0); fringe.rotation.z = 0.5; head.add(fringe);
-  // mandíbula inferior articulada
-  const jaw = new THREE.Group(); jaw.position.set(0.3, -0.2, 0); head.add(jaw);
-  const lower = B(1.5, 0.22, 0.66, green); lower.position.set(0.72, -0.08, 0); jaw.add(lower);
-  const tongue = B(0.9, 0.06, 0.4, std(0xd0607a)); tongue.position.set(0.75, 0.06, 0); jaw.add(tongue);
-  const chin = B(0.5, 0.2, 0.6, belly); chin.position.set(0.3, -0.2, 0); jaw.add(chin);
-  teeth(jaw, { from: 0.35, to: 1.4, step: 0.24, z: 0.3, y: 0.08, dir: 1 });
-  // cauda (cadeia de ossos, sem ventosas) com cristas
-  const tail = new Tentacle({ length: 3.4, radius: 0.42, tipRadius: 0.06, segments: 8, suckers: false, color: GREEN, under: BELLY, roughness: 0.6 });
+  const hp = [
+    { geo: S(0.5), color: GREEN, p: [0, 0.12, 0], s: [1.15, 0.82, 0.95] },
+    { geo: C(0.27, 1.2), color: GREEN, p: [1.0, 0.0, 0], r: [0, 0, HALF], s: [0.72, 1, 1.25] },     // focinho
+    { geo: S(0.28), color: GREEN, p: [1.68, 0.04, 0], s: [1, 0.72, 1.3] },                          // ponta do focinho
+    { geo: S(0.52, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), color: HAIR, p: [-0.1, 0.3, 0], s: [1.12, 0.78, 1.0] }, // cabelo
+    { geo: S(0.3), color: HAIR, p: [0.3, 0.58, -0.1], r: [0.3, 0, -0.4], s: [1.35, 0.5, 1.15] },   // topete jogado de lado
+    { geo: C(0.022, 0.55, 6), color: 0xc9b79a, p: [-0.08, 0.66, 0.26], r: [0.25, 0, HALF] },      // risca
+  ];
+  for (const s of [-1, 1]) hp.push(
+    { geo: S(0.08), color: DARK, p: [1.84, 0.18, s * 0.13] },                                     // narinas
+    { geo: S(0.28), color: GREEN, p: [0.12, 0.42, s * 0.27] },                                    // órbita
+    { geo: S(0.24), color: WHITE, p: [0.2, 0.47, s * 0.35] },                                     // olho
+    { geo: S(0.11), color: BLACK, p: [0.34, 0.46, s * 0.52] },                                    // pupila
+    { geo: S(0.04, 10, 8), color: 0xffffff, p: [0.37, 0.52, s * 0.62] },                          // brilho
+    { geo: S(0.25, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.45), color: GREEN, p: [0.2, 0.5, s * 0.36], r: [s * 0.35, 0, -0.35] }, // pálpebra
+  );
+  teethParts(hp, { x0: 0.55, x1: 1.75, step: 0.2, y: -0.2, z: 0.28 });
+  head.add(solid(hp));
+  // mandíbula articulada
+  const jaw = new THREE.Group(); jaw.position.set(0.3, -0.22, 0); head.add(jaw);
+  const jp = [
+    { geo: C(0.22, 1.1), color: GREEN, p: [0.74, -0.05, 0], r: [0, 0, HALF], s: [0.68, 1, 1.18] },
+    { geo: S(0.32), color: BELLY, p: [0.1, -0.08, 0], s: [1.3, 0.7, 1] },
+    { geo: C(0.15, 0.95), color: BELLY, p: [0.72, -0.13, 0], r: [0, 0, HALF], s: [0.5, 1, 1.35] },
+    { geo: S(0.2), color: 0xd0607a, p: [0.65, 0.07, 0], s: [2.2, 0.3, 1] },
+  ];
+  teethParts(jp, { x0: 0.4, x1: 1.3, step: 0.2, y: 0.12, z: 0.22, up: true });
+  jaw.add(solid(jp));
+  // cauda (cadeia de ossos) afinando, com cristas
+  const tail = new Tentacle({ length: 3.4, radius: 0.44, tipRadius: 0.05, segments: 10, radial: 16, suckers: false, color: GREEN, under: BELLY, roughness: 0.38 });
   tail.curve = new THREE.CatmullRomCurve3(Array.from({ length: 5 }, () => new THREE.Vector3()));
   root.add(tail.object);
-  for (let k = 1; k < 7; k++) {
-    const c = new THREE.Mesh(new THREE.ConeGeometry(0.1 * (1 - k / 9), 0.26 * (1 - k / 9), 6), std(0x2f5f2a));
-    c.position.set(0, tail.segLen * 0.5, -(0.42 * (1 - k / 8)) - 0.02); c.rotation.x = -Math.PI / 2; tail.bones[k].add(c);
+  const crest = std(DARK, { roughness: 0.4 });
+  for (let k = 1; k < 8; k += 1) {
+    const c = new THREE.Mesh(new THREE.ConeGeometry(0.1 * (1 - k / 11), 0.24 * (1 - k / 11), 8), crest);
+    c.position.set(0, tail.segLen * 0.5, -(0.44 * (1 - k / 10)) - 0.02); c.rotation.x = -Math.PI / 2; tail.bones[k].add(c);
   }
-  return { root, torso, head, jaw, arms, tail, hair };
+  return { root, torso, head, jaw, arms, tail };
 }
 
 function makeSyringe() {

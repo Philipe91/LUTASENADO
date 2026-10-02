@@ -287,15 +287,15 @@ export class GLBModel {
   }
 
   // on: flash branco de hit; glow: cor de brilho fixo (ultimate) quando não há flash
-  setFlash(on, glow = null) {
-    const st = on ? 'f' : glow ? 'g' + glow : '';
+  setFlash(on, glow = null, gi = null) {
+    const st = on ? 'f' : glow ? 'g' + glow + gi : '';
     if (st === this.flashing) return;
     this.flashing = st;
     for (const m of this.materials) {
       const u = m.userData;
       if (u.baseEmissive === undefined) { u.baseEmissive = m.emissive.getHex(); u.baseIntensity = m.emissiveIntensity; }
       m.emissive.setHex(on ? 0xffffff : glow ?? u.baseEmissive);
-      m.emissiveIntensity = on ? 0.6 : glow ? 0.12 + 0.35 * (this.goldK || 0) : u.baseIntensity; // brilho do ouro
+      m.emissiveIntensity = on ? 0.6 : glow ? gi ?? 0.12 + 0.35 * (this.goldK || 0) : u.baseIntensity; // brilho do ouro
     }
   }
 

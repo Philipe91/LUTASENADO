@@ -155,12 +155,13 @@ export class Fighter {
   }
 
   // ---------- passiva / recursos ----------
-  speedMult() { return this.buffT > 0 ? (this.passive.comboBuff?.speed ?? 1) : 1; }
+  get buffSpec() { return this.passive.comboBuff || this.passive.perfectBlock; }
+  speedMult() { return this.buffT > 0 ? (this.buffSpec?.speed ?? 1) : 1; }
   damageMult() {
     let m = this.stats.damage;
     const low = this.passive.lowHp;
     if (low && this.hp / this.maxHp <= low.below) m *= low.damage;
-    if (this.buffT > 0) m *= this.passive.comboBuff?.damage ?? 1;
+    if (this.buffT > 0) m *= this.buffSpec?.damage ?? 1;
     return m;
   }
   gainMeter(v) {
@@ -201,7 +202,9 @@ export class Fighter {
     const c = this.cmd;
     const fwd = this.facing > 0 ? c.right : c.left;
     const back = this.facing > 0 ? c.left : c.right;
-    this.holdingBack = back && !fwd;
+    const hb = back && !fwd;
+    if (hb && !this.holdingBack) this.backAt = this.frameCount; // início da defesa (passiva TÁ OK: defesa perfeita)
+    this.holdingBack = hb;
     this.prevX = this.x;
 
     switch (this.state) {
