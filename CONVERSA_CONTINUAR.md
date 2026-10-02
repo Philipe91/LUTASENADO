@@ -22,3 +22,10 @@
 
 ## Histórico de commits
 - 2fec3f7 poderes: Abraço giratório, Discurso atordoa, especiais do Xandor, contato real nas ultimates, enquadramento do Avatar · 6a24ff3 feedback manhã 30/09 (Xandor pescoço+ouro, picanha visível, jogo 0.8×) · 6e8abb6 relatório da noite · 51d2bf5 poderes · 48e131f ultimates · 5a58054 combate · 837443a canal · 8b29df7 checkpoint Lulácio/Xandor
+
+## Estado (02/10 madrugada) — limite de uso atingido, retomar daqui
+- NA MAIN: som, cenário (backdrop GPT + arena noite), arte (Look/HUD), poderes v1, movimento/câmera retrato, **Vorcaro completo** (placeholder), plano `MOVESET_PLANO.md`, brief `EQUIPE_BRIEF.md`, logo `art/ui/logo.png`, ref. jacaré `references/capitao-brasa/ultimate/jacare_ref.png`.
+- BRANCHES DE AGENTES AINDA NÃO INTEGRADAS (verificar `git log main..<branch>` e fazer merge): `worktree-agent-a958a26cb3e85a09e` (moveset Brasa/Dino + jacaré/T-Rex orgânicos), `worktree-agent-ae8aade9189a42f6a` (Nikolas + Erika + seleção 9 lutadores), `worktree-agent-a1d3137cd7e1385dd` (Flávio + Duval). Avisados do bug do vite (corrigido em 26fff7e) — revalidar vídeos.
+- MESHY: gerados+remesh 30K: Brasa v2, Dino v2 (toga), Nikolas, Flávio, Vorcaro, Duval, Erika, jacaré (ultimate, falta remesh). Rig enviado: Brasa v2, Dino v2, Flávio, Nikolas. FALTA: rig Vorcaro/Duval/Erika; Texto-para-Motion (estilo próprio de cada um: guarda + 2 gestos de especial); baixar GLB (glb, Mixamo, rigged, todas, arquivo único) → otimizar → `public/assets/characters/<id>/model.glb` → mapear clips.
+- GPT: T-Rex bizarro pedido na conversa "Gerar imagem 3D" — baixar e mandar ao Meshy como ultimate do Dino.
+- Balanceamento (sim 02/10): vorcaro 63%, dino 35% — ajustar depois das integrações.
