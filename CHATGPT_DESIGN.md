@@ -25,6 +25,20 @@
 - **Pisão Cretáceo** (↓) — mantido; agora a pisada treme a tela (`groundFx`) e a onda é uma crista de torrões com rachadura. `[01/10]`
 - **Ultimate: T-Rex de Terno** — T-Rex/híbrido com óculos/gravata; gag dos bracinhos que não alcançam os óculos; finalizador pesado e curto. `[VFX 01/10: óculos saem/limpam/crescem, botões voam, poeira → T-Rex de paletó rasgado; mordida / rabada / pisão / ruge e METEORO cai no alvo]`
 
+## FLAVÃO (`flavio`) — bruiser / impacto `[02/10]`
+- **Passiva CLÃ:** abaixo de 30% de vida toma 20% menos dano (`passive.lowHp.defense`, genérico; aviso "CLÃ!" uma vez).
+- **Rachadinha Sísmica** (neutro, MEME) — pisão (treme a tela) → rachadura corre pelo chão a 0,24 m/frame (caixa enterrada: passa por baixo de projéteis, não machuca) → a 0,9 m do alvo morre e nasce a **erupção** (`spawnOnEnd`): 1 hit de 7, knock-UP (`hit.launch`, genérico), pedras sobem em coluna, rachadura até o dono some em 12 frames. Cooldown 240.
+- **Zero Um** (→) — soco + **clone holográfico** 2 m à frente que repete o soco 7 frames depois (alcance ≈3,4 m). Mecânica genérica `special.clone = { at, offset, delay, life, anim, box, hit }` em `Fighter.updateSpecial` → Hitter com `visual: 'clone'` (fantasma = PlaceholderModel do dono com material de holograma; funciona para qualquer lutador). Cooldown 180.
+- **Senador Express** (↓) — cadeira institucional com rodinhas nasce embaixo dele, ele senta e ATRAVESSA o inimigo (`passThrough` + `dash: { from, to, v, past }`: velocidade calculada para parar 1,8 m depois do alvo). 1 hit de 7, derruba. A cadeira segue sozinha, tomba e some. Cooldown 230.
+- **Ultimate DINASTIA** — 3 sombras fictícias da "família" (fantasmas verde-escuro com brilho dourado) sobem do chão atrás dele na cinemática; a cada hit ele e as sombras repetem o mesmo golpe (escalonado 2 frames); finaliza com pisão coletivo → **Rachadinha ampliada** (rachadura larga até o alvo, 5 colunas de pedra em sequência, explosão final). Corpo base visível (sem ultimate.glb), `tint` verde.
+
+## AGENTE DUVALL (`duval`) — trap / técnico `[02/10]`
+- **Passiva ARQUIVO CONFIDENCIAL:** bloquear um ESPECIAL (`hit.kind`) enche +24 de barra de Ultimate (`passive.blockSpecialMeter`, genérico; "CONFIDENCIAL!").
+- **Pendrive Explosivo** (neutro, MEME) — pendrive em arco baixo; ao acertar: 4 de dano + **tonto 26 frames** (estrelinhas), explode em cubos ciano onde acertou (`linger + stopOnSpent + spentLife`, genéricos no Hitter) e sobe o letreiro glitchado **ARQUIVO CORROMPIDO**. Cooldown 190.
+- **Vazamento de Dados** (→) — zona no alvo: alvo ciano no chão, pasta CONFIDENCIAL desce e abre a 3,2 m, 10 arquivos caem em sequência (um a cada 4 frames): 5 hits leves (1,4) + final 2,5 com empurrão. Dá pra sair de baixo (delay 20). Cooldown 270.
+- **Operação Tática** (↓) — dash curto que ATRAVESSA e para 0,9 m atrás do inimigo (`passThrough` + `dash.past`), vira (`faceAtActive`) e termina em **rasteira** (golpe baixo, 6, derruba). Rastro de 3 sombras azuis. Cooldown 220.
+- **Ultimate BACKUP COMPLETO** — pendrive gigante desce e CONECTA numa porta no chão atrás dele (anel + faíscas); painel holográfico acima da cabeça **COPIANDO... 0% → 37 → 62 → 84 → 99%**; cada hit é uma rajada de 6 arquivos do pendrive ao alvo (viram pixels ao acertar; passam direto se errou); finalizador **BACKUP COMPLETO 100%** = explosão de 26 documentos + onda; pendrive ejetado para cima no fim. Corpo base visível, `tint` ciano.
+
 ---
 ## PIPELINE 3D DOS PERSONAGENS
 **Papéis:** ChatGPT cria a referência (concept) → Claude faz Meshy Image-to-3D → Remesh → Auto-Rig → GLB → integra e testa.
@@ -50,6 +64,7 @@
 | Vitória | bate no peito | victory | | |
 
 ## Log
+- **02/10** — Flavão e Agente Duvall jogáveis (placeholder + clips emprestados de Lulácio/Xandor). Mecânicas genéricas novas em `src/fight/`: `hit.launch` (knock-up), `passive.lowHp.defense`, `passive.blockSpecialMeter`, `special.dash {from,to,v,past}` + `passThrough` (atravessa o oponente) + `faceAtActive`, `special.clone` (eco/holograma → Hitter `clone`), Hitter `spend()` com `stopOnSpent`/`spentLife`/`activeUntil` via spec. VFX: `fx/cloneFx.js` (fantasma genérico), `fx/flavioFx.js`, `fx/duvalFx.js`, `ultimates/FlavioDinastia.js`, `ultimates/DuvalBackup.js`. Sim 6 lutadores: Flavão ≈47%, Duval ≈52%.
 - **01/10 (madrugada)** — Direção de arte: `ARTE.md` (bíblia visual: paleta, luz, VFX ENTRA→IMPACTA→SOME, tipografia, proibidos), `src/visual/Look.js` (ACES/AgX, rim fresnel nos lutadores, VSM, bloom 1/4, grading, vinheta; `?look=0`), HUD/seleção/letreiros redesenhados, `art/PROMPTS_GPT.md` (Brasa, Dino, backdrop de Brasília, retratos). Retratos: `public/assets/characters/<id>/portrait.png` entra sozinho na UI.
 - **01/10** — VFX dos poderes: Polvão refeito (tinta, tentáculos com ventosas em curvas/ossos, 9º tentáculo esmaga), Brasa (Rajada, Motociata com motos instanciadas, caminhão novo, Efeito Colateral = seringa → jacaré de terno), Dino (bocarra do Rugido, Meteoro vira zona com sombra prévia, Pisão com crista de terra, T-Rex de Terno com gag dos bracinhos e meteoro final). `frameTop` nas transformações pra câmera enquadrar. Infra: `src/visual/fx/` (Tentacle, pools de nuvens/anéis/estilhaços).
 - **30/09 (tarde)** — Abraço do Palanque = agarra, gira 3 voltas e arremessa (estado `held`). Discurso = 3 pulsos, o último atordoa (estrelinhas). Xandor: documento de Intimação, carimbo BLOQUEADO com cadeado sobre a cabeça, caneta colossal da Canetada. Ultimates só mostram contato quando a lógica confirma o hit (`ultRes`).

@@ -5,6 +5,9 @@
 //   hit.final     — campos que sobrescrevem o último hit de um multi-hit (ex.: knockback final)
 //   activeUntil   — último frame (t) em que ainda machuca; depois disso só o visual continua
 //   linger        — ao gastar os hits não some na hora: fica 'spent' (sem dano) até o fim da vida, pro visual terminar
+//   stopOnSpent   — (com linger) para de se mover ao gastar os hits (explode onde acertou: pendrive)
+//   spentLife     — (com linger) quantos frames ainda vive depois de gastar os hits
+//   clone         — { data, anim, x } cópia translúcida do dono repetindo um golpe (visual 'clone')
 let nextId = 1;
 
 export class Hitter {
@@ -29,6 +32,13 @@ export class Hitter {
     if (this.t > this.delay + this.life || Math.abs(this.x) > 24) this.dead = true;
   }
   box() { return { x: this.x - this.w / 2, y: this.y, w: this.w, h: this.h }; }
+  // gastou os hits: some (ou, com linger, segue sem dano até o visual terminar)
+  spend() {
+    if (!this.linger) { this.dead = true; return; }
+    this.spent = true;
+    if (this.stopOnSpent) { this.vx = 0; this.vy = 0; this.g = 0; }
+    if (this.spentLife != null) this.life = Math.min(this.life, this.t - this.delay + this.spentLife);
+  }
 
   // Cria um projétil a partir de uma spec de especial (CharacterData)
   static fromSpec(owner, s, x, y, facing) {
@@ -38,6 +48,7 @@ export class Hitter {
       life: s.life ?? 90, hitsLeft: s.hits ?? 1, rehit: s.rehit ?? 10,
       visual: s.visual, color: s.color, model: s.model,
       triggerRange: s.triggerRange, spawnOnEnd: s.spawnOnEnd, linger: !!s.linger, // linger: segue (sem dano) depois de acertar, pro visual terminar (caminhão)
+      stopOnSpent: !!s.stopOnSpent, spentLife: s.spentLife, activeUntil: s.activeUntil,
     });
   }
 }
