@@ -22,13 +22,14 @@ export function resolveHits(match) {
     const o = h.owner.opponent;
     const hurt = o.hurtbox();
     if (!hurt || !overlap(h.box(), hurt)) continue;
-    const hit = h.hitsLeft === 1 && h.hit.final ? { ...h.hit, ...h.hit.final } : h.hit;
+    const hit = h.currentHit();
     const r = applyHit(match, h.owner, o, hit, h.x - h.vx * 10);
     if (r === 'miss') continue;
     if (r === 'counter') { h.dead = true; continue; } // rebatido pela pose (Close Certo)
     h.cool = h.rehit;
     h.landed = (h.landed || 0) + 1; // o visual usa: contato confirmado (tinta no corpo) x erro (no chão)
     if (--h.hitsLeft <= 0) { if (h.linger) h.spent = true; else h.dead = true; }
+    if (h.hit.stopOnHit) h.stop(h.hit.stopOnHit);
   }
 }
 
@@ -96,6 +97,8 @@ export function applyHit(match, atk, def, hit, sourceX) {
     }
   }
 
+  // recurso extra por dano causado (passiva LIQUIDEZ do Vorcaro: barra de CAPITAL)
+  if (atk.resource) atk.gainRes(dmg * (atk.resource.perDamage ?? 1));
   atk.gainMeter(dmg * 2.4);
   def.gainMeter(dmg * 1.5);
 

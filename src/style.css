@@ -273,3 +273,13 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #140d24; col
   .btns button, .opts button { font-size: 20px; padding: 8px 14px 6px; }
   .keys { font-size: 11px; line-height: 1.5; }
 }
+
+/* barra extra de recurso (CAPITAL do Vorcaro): medidor fino com cifrão sob a barra de ultimate */
+.res { display: none; align-items: center; gap: 4px; margin-top: 4px; width: 40%; }
+.res.on { display: flex; }
+.side.p2 .res { margin-left: auto; flex-direction: row-reverse; }
+.res em { font: 900 13px/1 var(--display); font-style: normal; color: #3ddc6a; -webkit-text-stroke: 2px #000; paint-order: stroke fill; }
+.res i { flex: 1; height: 6px; background: #0b0b12cc; border: 2px solid #000; border-radius: 2px; overflow: hidden; transform: skewX(var(--skew)); }
+.res b { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1f8a3a, #8ff0a0); transition: width .15s; }
+.side.p2 .res b { margin-left: auto; }
+.res.full b { background: linear-gradient(90deg, #d4af37, #fff2a0); box-shadow: 0 0 8px #ffd84a; }

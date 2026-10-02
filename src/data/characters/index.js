@@ -7,8 +7,12 @@ import xandor from './xandor.js';
 import dinoSupremo from './dino-supremo.js';
 import nikolas from './nikolas.js';
 import erika from './erika.js';
+import vorcaro from './vorcaro.js';
 
-export const CHARACTERS = [lulacio, capitaoBrasa, xandor, dinoSupremo, nikolas, erika];
+export const CHARACTERS = [lulacio, capitaoBrasa, xandor, dinoSupremo];
+CHARACTERS.push(nikolas);
+CHARACTERS.push(vorcaro);
+CHARACTERS.push(erika);
 
 export function getCharacter(id) {
   return CHARACTERS.find((c) => c.id === id) || CHARACTERS[0];

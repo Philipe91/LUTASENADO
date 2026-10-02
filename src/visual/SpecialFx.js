@@ -11,6 +11,7 @@ import { BRASA_FX } from './fx/brasaFx.js';
 import { DINO_FX } from './fx/dinoFx.js';
 import { NIKOLAS_FX } from './fx/nikolasFx.js';
 import { ERIKA_FX } from './fx/erikaFx.js';
+import { VORCARO_FX } from './fx/vorcaroFx.js';
 import { bodyPoint, clamp01 } from './fx/common.js';
 
 class SpeechFx {
@@ -62,7 +63,7 @@ class PropHandFx {
   dispose() { this.scene.remove(this.p); }
 }
 
-const TYPES = { speech: SpeechFx, propHand: PropHandFx, ...BRASA_FX, ...DINO_FX, ...NIKOLAS_FX, ...ERIKA_FX };
+const TYPES = { speech: SpeechFx, propHand: PropHandFx, ...BRASA_FX, ...DINO_FX, ...NIKOLAS_FX, ...ERIKA_FX, ...VORCARO_FX };
 
 export class SpecialFx {
   constructor(scene, cfg) {

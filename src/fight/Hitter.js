@@ -7,6 +7,10 @@
 //   linger        — ao gastar os hits não some na hora: fica 'spent' (sem dano) até o fim da vida, pro visual terminar
 //   turnAt        — bumerangue: nesse frame (após o delay) inverte o sentido e volta; morre ao passar pelo dono (chupeta)
 //   homing        — correção vertical máxima por frame em direção ao centro do alvo ("teleguiado")
+//   bounces/bounceV/grow — quica no chão N vezes (vy volta a bounceV) e cresce `grow`× a cada quique (Juros Compostos)
+//   hit.distDamage — { per, max }: dano extra proporcional à distância percorrida desde o lançamento
+//   hit.stopOnHit  — ao acertar/ser defendido PARA no lugar e some em N frames (maleta abre ali); exige linger
+//   hit.stopOnGround — ao tocar o chão sem acertar também para (sem dano) por N frames, em vez de sumir
 let nextId = 1;
 
 export class Hitter {
@@ -17,8 +21,11 @@ export class Hitter {
     }, o);
     this.id = nextId++;
     this.t = 0;
+    this.x0 = this.x; this.scale = 1; this.bounced = 0;
   }
   get active() { return !this.dead && !this.spent && this.t > this.delay && this.t <= (this.activeUntil ?? Infinity) && this.cool === 0; }
+  // ainda pode machucar (a IA só se defende disso; maleta aberta / portal decorativo não assustam)
+  get dangerous() { return !this.dead && !this.spent && this.t <= (this.activeUntil ?? Infinity); }
   get armed() { return this.t > this.delay; }
   update() {
     this.t++;
@@ -32,11 +39,28 @@ export class Hitter {
     this.vy -= this.g;
     this.x += this.vx;
     this.y += this.vy;
-    if (this.g && this.y <= 0) { this.y = 0; this.dead = true; }
     if (this.returning && Math.sign(this.x - this.owner.x) === Math.sign(this.vx)) this.dead = true;
+    if (this.g && this.y <= 0) {
+      this.y = 0;
+      if (this.bounces > 0) { // quica e cresce
+        this.bounces--; this.bounced++;
+        this.vy = this.bounceV ?? -this.vy * 0.7;
+        const k = this.grow || 1; this.scale *= k; this.w *= k; this.h *= k;
+      } else if (this.hit?.stopOnGround && !this.spent) { this.spent = true; this.stop(this.hit.stopOnGround); }
+      else this.dead = true;
+    }
     if (this.t > this.delay + this.life || Math.abs(this.x) > 24) this.dead = true;
   }
   box() { return { x: this.x - this.w / 2, y: this.y, w: this.w, h: this.h }; }
+  // para no lugar (sem gravidade) e morre em n frames — o visual termina ali (maleta abrindo)
+  stop(n) { this.vx = 0; this.vy = 0; this.g = 0; this.life = Math.min(this.life, this.t - this.delay + n); }
+  // golpe efetivo deste frame: último hit com `final`, dano por distância percorrida
+  currentHit() {
+    let hit = this.hitsLeft === 1 && this.hit.final ? { ...this.hit, ...this.hit.final } : this.hit;
+    const dd = hit.distDamage;
+    if (dd) hit = { ...hit, damage: hit.damage + Math.min(dd.max ?? Infinity, Math.abs(this.x - this.x0) * dd.per) };
+    return hit;
+  }
 
   // Cria um projétil a partir de uma spec de especial (CharacterData)
   static fromSpec(owner, s, x, y, facing) {
@@ -47,6 +71,7 @@ export class Hitter {
       visual: s.visual, color: s.color, model: s.model,
       triggerRange: s.triggerRange, spawnOnEnd: s.spawnOnEnd, linger: !!s.linger, // linger: segue (sem dano) depois de acertar, pro visual terminar (caminhão)
       turnAt: s.turnAt, homing: s.homing,
+      bounces: s.bounces || 0, bounceV: s.bounceV, grow: s.grow,
     });
   }
 }

@@ -13,10 +13,11 @@ import { BrasaJacare } from './ultimates/BrasaJacare.js';
 import { DinoTrex } from './ultimates/DinoTrex.js';
 import { NikolasViral } from './ultimates/NikolasViral.js';
 import { ErikaPlenario } from './ultimates/ErikaPlenario.js';
+import { VorcaroCapital } from './ultimates/VorcaroCapital.js';
 import { SpecialFx } from './SpecialFx.js';
 import { StatusFx } from './StatusFx.js';
 
-const ULTIMATE_FX = { xandorAvatar: XandorAvatar, lulacioPolvo: LulacioPolvo, brasaJacare: BrasaJacare, dinoTrex: DinoTrex, nikolasViral: NikolasViral, erikaPlenario: ErikaPlenario };
+const ULTIMATE_FX = { xandorAvatar: XandorAvatar, lulacioPolvo: LulacioPolvo, brasaJacare: BrasaJacare, dinoTrex: DinoTrex, nikolasViral: NikolasViral, erikaPlenario: ErikaPlenario, vorcaroCapital: VorcaroCapital };
 
 const LYING = new Set(['knockdown', 'down', 'ko', 'getup']);
 
