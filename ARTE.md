@@ -34,6 +34,8 @@ Regra: **gold e red são do sistema.** Nenhum personagem usa `#ffd400` puro como
 | **Capitão Brasa** | grafite `#2b2f36` | verde `#1fa34a` | amarelo `#ffd400` (faixa) | `#f1c6a5` | topete rígido de lado `#6b5a4a` + corpo-tábua + faixa diagonal |
 | **Xandor** | preto `#121212` | dourado `#d4af37` | branco (colarinho), vermelho de detalhe `#c0122b` | `#e8b894` | careca-ovo brilhante + sobrancelhas em V + toga |
 | **Dino Supremo** | cinza `#55595f` | verde-musgo `#4f6b3a` | âmbar `#e3a233` | `#e6b58e` | óculos retangulares grossos + cabelo grisalho pra trás + largura |
+| **Flavão** | amarelo-camisa `#f0c419` | verde `#1f8a3c` | calça grafite-azulada `#2b3340` | `#e8b48f` | camisa de seleção + corpo largo de bruiser; VFX terra/âmbar `#d9a441` e holograma verde `#8cff9a` |
+| **Agente Duvall** | preto-colete `#16181d` | cinza-tático `#9aa3ad` | calça azul `#1f3a7a` | `#e3b08c` | colete tático + barba + sobrancelha fechada; VFX digital ciano `#35c4ff` |
 
 - VFX de cada um usa **o acento dele** (Lulácio vermelho, Brasa verde/amarelo, Xandor dourado, Dino âmbar/musgo). Energia = aditivo; objeto (picanha, caminhão, caneta) = opaco com a paleta do dono.
 - Ultimates ganham **uma cor extra que nunca aparece no resto do jogo**: Polvão roxo-azul `#5b4bd6`, Jacaré verde-pântano `#2f7d4a`, Avatar branco-dourado emissivo, T-Rex âmbar queimado `#b8651e`.

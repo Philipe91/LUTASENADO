@@ -8,11 +8,14 @@ import dinoSupremo from './dino-supremo.js';
 import nikolas from './nikolas.js';
 import erika from './erika.js';
 import vorcaro from './vorcaro.js';
+import flavio from './flavio.js';
+import duval from './duval.js';
 
 export const CHARACTERS = [lulacio, capitaoBrasa, xandor, dinoSupremo];
 CHARACTERS.push(nikolas);
 CHARACTERS.push(vorcaro);
 CHARACTERS.push(erika);
+CHARACTERS.push(flavio, duval);
 
 export function getCharacter(id) {
   return CHARACTERS.find((c) => c.id === id) || CHARACTERS[0];

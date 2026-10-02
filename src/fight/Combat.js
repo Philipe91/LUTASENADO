@@ -28,7 +28,7 @@ export function resolveHits(match) {
     if (r === 'counter') { h.dead = true; continue; } // rebatido pela pose (Close Certo)
     h.cool = h.rehit;
     h.landed = (h.landed || 0) + 1; // o visual usa: contato confirmado (tinta no corpo) x erro (no chão)
-    if (--h.hitsLeft <= 0) { if (h.linger) h.spent = true; else h.dead = true; }
+    if (--h.hitsLeft <= 0) h.spend();
     if (h.hit.stopOnHit) h.stop(h.hit.stopOnHit);
   }
 }
@@ -57,12 +57,15 @@ export function applyHit(match, atk, def, hit, sourceX) {
     // passiva TÁ OK (Capitão Brasa): defesa começada no último instante = perfeita (sem raspão, sai antes, buff curto)
     const pb = def.passive.perfectBlock;
     const perfect = !!pb && def.frameCount - (def.backAt ?? -999) <= pb.window;
-    const chip = perfect ? 0 : hit.damage * 0.15 * atk.damageMult() * def.stats.defense;
+    const chip = perfect ? 0 : hit.damage * 0.15 * atk.damageMult() * def.stats.defense * def.defenseMult();
     def.hp = Math.max(1, def.hp - chip);
     def.stun = Math.max(2, (hit.blockstun ?? 10) - (perfect ? pb.stunCut ?? 0 : 0));
     def.setState('blockstun', def.cmd.down ? 'crouchBlock' : 'block', def.stun);
     def.vx = dir * (hit.push ?? 0.1) * 0.8;
     def.gainMeter(8); atk.gainMeter(3);
+    // passiva: bloquear um ESPECIAL (hit.kind) enche mais a barra de ultimate (ARQUIVO CONFIDENCIAL do Duval)
+    const bm = def.passive.blockSpecialMeter;
+    if (bm && hit.kind) { def.gainMeter(bm.gain ?? 30); if (bm.text) match.emit({ type: 'text', fighter: def, text: bm.text, cls: 'buff' }); }
     match.hitstop = hit.heavy ? 6 : 4;
     match.emit({ type: 'block', x: fx, y: fy, fighter: def, dir, heavy: !!hit.heavy });
     if (perfect) {
@@ -75,7 +78,7 @@ export function applyHit(match, atk, def, hit, sourceX) {
 
   // ---- dano ----
   const scaling = hit.ultimate ? 1 : Math.max(0.5, 1 - 0.1 * def.comboTaken);
-  const dmg = hit.damage * atk.damageMult() * def.stats.defense * scaling;
+  const dmg = hit.damage * atk.damageMult() * def.stats.defense * def.defenseMult() * scaling;
 
   // ---- super armor (Dino) ----
   if (!hit.throw && !hit.ultimate && def.hasArmor()) {
@@ -129,7 +132,7 @@ export function applyHit(match, atk, def, hit, sourceX) {
   } else if (hit.knockdown || !def.grounded) {
     def.move = null; def.sp = null;
     def.setState('knockdown', 'knockdown');
-    def.vy = Math.max(def.vy, 0.17); def.y = Math.max(def.y, 0.001);
+    def.vy = Math.max(def.vy, hit.launch ?? 0.17); def.y = Math.max(def.y, 0.001); // launch: knock-UP (voa alto)
     def.vx = dir * (hit.push ?? 0.12) * 1.2;
   } else {
     def.move = null; def.sp = null;

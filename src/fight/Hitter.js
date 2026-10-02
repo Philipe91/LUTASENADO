@@ -7,6 +7,9 @@
 //   linger        — ao gastar os hits não some na hora: fica 'spent' (sem dano) até o fim da vida, pro visual terminar
 //   turnAt        — bumerangue: nesse frame (após o delay) inverte o sentido e volta; morre ao passar pelo dono (chupeta)
 //   homing        — correção vertical máxima por frame em direção ao centro do alvo ("teleguiado")
+//   stopOnSpent   — (com linger) para de se mover ao gastar os hits (explode onde acertou: pendrive)
+//   spentLife     — (com linger) quantos frames ainda vive depois de gastar os hits
+//   clone         — { data, anim, x } cópia translúcida do dono repetindo um golpe (visual 'clone')
 //   bounces/bounceV/grow — quica no chão N vezes (vy volta a bounceV) e cresce `grow`× a cada quique (Juros Compostos)
 //   hit.distDamage — { per, max }: dano extra proporcional à distância percorrida desde o lançamento
 //   hit.stopOnHit  — ao acertar/ser defendido PARA no lugar e some em N frames (maleta abre ali); exige linger
@@ -52,6 +55,13 @@ export class Hitter {
     if (this.t > this.delay + this.life || Math.abs(this.x) > 24) this.dead = true;
   }
   box() { return { x: this.x - this.w / 2, y: this.y, w: this.w, h: this.h }; }
+  // gastou os hits: some (ou, com linger, segue sem dano até o visual terminar)
+  spend() {
+    if (!this.linger) { this.dead = true; return; }
+    this.spent = true;
+    if (this.stopOnSpent) { this.vx = 0; this.vy = 0; this.g = 0; }
+    if (this.spentLife != null) this.life = Math.min(this.life, this.t - this.delay + this.spentLife);
+  }
   // para no lugar (sem gravidade) e morre em n frames — o visual termina ali (maleta abrindo)
   stop(n) { this.vx = 0; this.vy = 0; this.g = 0; this.life = Math.min(this.life, this.t - this.delay + n); }
   // golpe efetivo deste frame: último hit com `final`, dano por distância percorrida
@@ -71,6 +81,7 @@ export class Hitter {
       visual: s.visual, color: s.color, model: s.model,
       triggerRange: s.triggerRange, spawnOnEnd: s.spawnOnEnd, linger: !!s.linger, // linger: segue (sem dano) depois de acertar, pro visual terminar (caminhão)
       turnAt: s.turnAt, homing: s.homing,
+      stopOnSpent: !!s.stopOnSpent, spentLife: s.spentLife, activeUntil: s.activeUntil,
       bounces: s.bounces || 0, bounceV: s.bounceV, grow: s.grow,
     });
   }

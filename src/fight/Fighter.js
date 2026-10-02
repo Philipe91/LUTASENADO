@@ -63,6 +63,7 @@ export class Fighter {
     this.held = null; this.heldBy = null; this.heldZ = 0; this.spinAng = 0; // Abraço giratório
     this.sinceHit = 0; // frames sem tomar golpe (passiva Presença)
     this.counterSeq = 0; this.counterInfo = null; // último contra-golpe (Close Certo / PERFECT SELFIE): o visual lê
+    this.lowHpShown = false; this.dashV = 0;
     this.ultRes = []; // resultado de cada hit da ultimate ('hit'|'miss'): o visual só mostra contato quando acertou
     this.setState('intro', 'intro');
   }
@@ -164,13 +165,21 @@ export class Fighter {
   // Presença (Erika): N frames sem apanhar → bônus de velocidade até tomar o próximo golpe
   get presenceOn() { const p = this.passive.presence; return !!p && this.sinceHit >= p.after; }
   speedMult() { return (this.buffT > 0 ? (this.buffSpec?.speed ?? 1) : 1) * (this.presenceOn ? this.passive.presence.speed : 1); }
+  get lowHpOn() { const low = this.passive.lowHp; return !!low && this.hp / this.maxHp <= low.below; }
   damageMult() {
     let m = this.stats.damage;
     const low = this.passive.lowHp;
-    if (low && this.hp / this.maxHp <= low.below) m *= low.damage;
+    if (low?.damage && this.lowHpOn) m *= low.damage;
     if (this.buffT > 0) m *= this.buffSpec?.damage ?? 1;
     return m;
   }
+  // multiplicador de dano RECEBIDO (<1 = aguenta mais): passiva de vida baixa com `defense` (ex.: CLÃ do Flavão)
+  defenseMult() {
+    const low = this.passive.lowHp;
+    return low?.defense && this.lowHpOn ? low.defense : 1;
+  }
+  // está "fantasma": especial que atravessa o oponente (cadeira do Senador Express, Operação Tática) — separate() não empurra
+  get ghost() { return this.state === 'special' && !!this.sp?.passThrough; }
   gainMeter(v) {
     let g = this.stats.meterGain;
     const aura = this.opponent?.passive?.aura;
@@ -199,6 +208,9 @@ export class Fighter {
     if (this.buffT > 0) this.buffT--;
     if (this.flash > 0) this.flash--;
     this.sinceHit++;
+    // passiva de vida baixa com aviso: avisa UMA vez ao cruzar o limite (ex.: CLÃ!)
+    const low = this.passive.lowHp;
+    if (low?.text && !this.lowHpShown && this.lowHpOn && this.hp > 0) { this.lowHpShown = true; match.emit({ type: 'text', fighter: this, text: low.text, cls: 'buff' }); }
     // agarrão interrompido (tomou golpe, KO...): solta quem estava preso
     if (this.held && this.state !== 'special') this.releaseHeld();
     // golpe com impacto no chão (pisão, Pisão Cretáceo): poeira + tremor no 1º frame ativo, acertando ou não
@@ -343,6 +355,27 @@ export class Fighter {
     if (s.kind === 'strike') {
       const active = this.t >= s.startup && this.t < s.startup + s.active;
       this.vx = active ? (s.lunge || 0) * this.facing * this.speedMult() : this.vx * 0.7;
+    }
+    // dash dentro do especial: { from, to, v, past } — anda `v` m/frame entre os frames from..to;
+    // com `past`, a velocidade é calculada para parar `past` m DEPOIS do oponente (atravessa, com passThrough)
+    if (s.dash) {
+      const d = s.dash;
+      if (this.t === d.from) this.dashV = d.past != null ? Math.min(d.v, (this.distTo(o) + d.past) / Math.max(1, d.to - d.from)) : d.v;
+      if (this.t >= d.from && this.t < d.to) this.vx = this.dashV * this.facing * this.speedMult();
+      else if (this.t === d.to) this.vx = 0;
+    }
+    if (s.faceAtActive && this.t === s.startup) this.faceOpponent(); // passou por trás → vira e golpeia
+    // CLONE / ECO: cópia translúcida nasce a `offset` m na frente e repete um golpe (Hitter com visual 'clone')
+    if (s.clone && this.t === (s.clone.at ?? s.startup)) {
+      const c = s.clone, bx = c.box || { x: 0.3, y: 0.8, w: 1.0, h: 0.7 };
+      const cx = Math.max(-ARENA_HALF, Math.min(ARENA_HALF, this.x + this.facing * (c.offset ?? 1.5)));
+      match.spawn(new Hitter({
+        owner: this, hit: { ...s, ...(c.hit || {}) }, facing: this.facing,
+        x: cx + this.facing * ((bx.x ?? 0) + bx.w / 2), y: this.y + (bx.y ?? 0), w: bx.w, h: bx.h,
+        delay: c.delay ?? 8, life: c.life ?? 24, hitsLeft: 1, visual: c.visual ?? 'clone',
+        clone: { data: this.data, anim: c.anim ?? 'punch3', x: cx, delay: c.delay ?? 8, life: c.life ?? 24 },
+      }));
+      match.emit({ type: 'clone', fighter: this, x: cx });
     }
     if (this.t === s.startup) {
       if (s.screenFlash) match.emit({ type: 'flash', fighter: this, strength: s.screenFlash }); // flash de câmera na tela (Selfie)

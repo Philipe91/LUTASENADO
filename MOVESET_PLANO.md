@@ -49,7 +49,7 @@
 - **Meme:** Selfie do Dano.
 - Ref: `references/_novos/NIKOLAS PODER.png`
 
-## FLÁVIO / "FLAVÃO" — bruiser / impacto / pressão  ⏳
+## FLÁVIO / "FLAVÃO" — bruiser / impacto / pressão  ✅ (02/10, placeholder + VFX procedurais; sem GLB)
 - **Passiva CLÃ:** abaixo de 30% de vida, pequeno buff defensivo.
 - **E1 Rachadinha Sísmica** *(trocadilho visual/fantasia, não afirmação jurídica)*: pisa forte; rachadura percorre a arena; no inimigo: explosão de chão, knock-up ou knockback; ótimo anti-zoner.
 - **E2 Zero Um:** clone/holograma fictício por um instante; golpe sincronizado; some logo; clone translúcido ou modelo simplificado.
@@ -67,7 +67,7 @@
 - **Meme:** Mala de Contatos.
 - Ref: `references/_novos/VORCARO.png`
 
-## MARCOS DUVAL / "AGENTE DUVALL" — trap / técnico / contra-ataque  ⏳
+## MARCOS DUVAL / "AGENTE DUVALL" — trap / técnico / contra-ataque  ✅ (02/10, placeholder + VFX procedurais; sem GLB)
 - **Passiva ARQUIVO CONFIDENCIAL:** bloquear um especial enche um pouco mais a barra de Ultimate.
 - **E1 Pendrive Explosivo:** joga pendrive; hit simples; pequeno stun; overlay curto **ARQUIVO CORROMPIDO**.
 - **E2 Vazamento de Dados:** vários "arquivos" digitais caem em sequência; multi-hit leve; sprites/quads/partículas.

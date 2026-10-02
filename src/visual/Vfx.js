@@ -4,6 +4,9 @@ import * as THREE from 'three';
 import { PROJECTILE_VISUALS } from './projectiles.js';
 import { XANDOR_VISUALS } from './xandorVisuals.js';
 import { VORCARO_VISUALS } from './fx/vorcaroFx.js';
+import { CLONE_VISUALS } from './fx/cloneFx.js';
+import { FLAVIO_VISUALS } from './fx/flavioFx.js';
+import { DUVAL_VISUALS } from './fx/duvalFx.js';
 import { loadGLTF } from './models/GLBModel.js';
 
 function sparkTexture() {
@@ -44,7 +47,7 @@ function animateDrop(v, h) {
   d.position.y = v.userData.fromY - (v.userData.fromY - 0.25) * k * k;
   d.visible = k > 0.35;
 }
-const VISUALS = { ...BASIC_VISUALS, ...PROJECTILE_VISUALS, ...XANDOR_VISUALS, ...VORCARO_VISUALS };
+const VISUALS = { ...BASIC_VISUALS, ...PROJECTILE_VISUALS, ...XANDOR_VISUALS, ...VORCARO_VISUALS, ...CLONE_VISUALS, ...FLAVIO_VISUALS, ...DUVAL_VISUALS };
 
 export class Vfx {
   constructor(scene) {

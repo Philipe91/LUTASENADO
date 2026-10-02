@@ -144,7 +144,7 @@ export class Match {
   separate() {
     const [a, b] = this.fighters;
     if (a.heldBy || b.heldBy) return; // Abraço: o agarrador posiciona o preso
-    for (let pass = 0; pass < 2; pass++) {
+    for (let pass = 0; pass < 2 && !a.ghost && !b.ghost; pass++) { // ghost: especial que atravessa o oponente
       const minD = (a.stats.width + b.stats.width) * 0.45;
       const dx = b.x - a.x;
       if (Math.abs(dx) < minD && Math.abs(a.y - b.y) < 1.3 && a.state !== 'ko' && b.state !== 'ko') {
