@@ -57,6 +57,8 @@ export class Fighter {
     this.buffT = 0; this.lockT = 0; this.flash = 0; this.armorUsed = false; this.airAttackUsed = false;
     this.cooldowns = { neutral: 0, forward: 0, down: 0 };
     this.held = null; this.heldBy = null; this.heldZ = 0; this.spinAng = 0; // Abraço giratório
+    this.sinceHit = 0; // frames sem tomar golpe (passiva Presença)
+    this.counterSeq = 0; this.counterInfo = null; // último contra-golpe (Close Certo / PERFECT SELFIE): o visual lê
     this.ultRes = []; // resultado de cada hit da ultimate ('hit'|'miss'): o visual só mostra contato quando acertou
     this.setState('intro', 'intro');
   }
@@ -138,7 +140,10 @@ export class Fighter {
         const n = Math.floor((this.t - s.startup) / (s.rehit || 999));
         // último pulso do multi-hit pode ter efeito próprio (ex.: Discurso atordoa no final)
         const last = Math.floor((s.active - 1) / (s.rehit || 999));
-        return { id: this.hitId * 100 + n, box: this.relBox(s.box), hit: n === last && s.final ? { ...s, ...s.final } : s };
+        let hit = n === last && s.final ? { ...s, ...s.final } : s;
+        // de perto o golpe atordoa (Selfie do Dano: flash na cara)
+        if (s.closeStun && this.distTo(this.opponent) <= s.closeStun.range) hit = { ...hit, stun: s.closeStun.stun, text: s.closeStun.text ?? hit.text };
+        return { id: this.hitId * 100 + n, box: this.relBox(s.box), hit };
       }
     }
     return null;
@@ -151,7 +156,9 @@ export class Fighter {
   }
 
   // ---------- passiva / recursos ----------
-  speedMult() { return this.buffT > 0 ? (this.passive.comboBuff?.speed ?? 1) : 1; }
+  // Presença (Erika): N frames sem apanhar → bônus de velocidade até tomar o próximo golpe
+  get presenceOn() { const p = this.passive.presence; return !!p && this.sinceHit >= p.after; }
+  speedMult() { return (this.buffT > 0 ? (this.passive.comboBuff?.speed ?? 1) : 1) * (this.presenceOn ? this.passive.presence.speed : 1); }
   damageMult() {
     let m = this.stats.damage;
     const low = this.passive.lowHp;
@@ -175,6 +182,7 @@ export class Fighter {
     if (this.lockT > 0) this.lockT--;
     if (this.buffT > 0) this.buffT--;
     if (this.flash > 0) this.flash--;
+    this.sinceHit++;
     // agarrão interrompido (tomou golpe, KO...): solta quem estava preso
     if (this.held && this.state !== 'special') this.releaseHeld();
     // golpe com impacto no chão (pisão, Pisão Cretáceo): poeira + tremor no 1º frame ativo, acertando ou não
@@ -304,7 +312,7 @@ export class Fighter {
     const s = this.specials[dir];
     this.sp = { level: 'mid', startup: 10, active: 0, recovery: 15, ...s, dir };
     this.cooldowns[dir] = s.cooldown ?? 120;
-    this.hitId = uid(); this.armorUsed = false; this.vx = 0;
+    this.hitId = uid(); this.armorUsed = false; this.vx = 0; this.spHitSeq = this.hitSeq;
     const total = this.sp.startup + this.sp.active + this.sp.recovery;
     this.setState('special', s.anim || SPECIAL_ANIM[dir], total);
     match.emit({ type: 'special', fighter: this, name: s.name, dir });
@@ -319,6 +327,7 @@ export class Fighter {
       this.vx = active ? (s.lunge || 0) * this.facing * this.speedMult() : this.vx * 0.7;
     }
     if (this.t === s.startup) {
+      if (s.screenFlash) match.emit({ type: 'flash', fighter: this, strength: s.screenFlash }); // flash de câmera na tela (Selfie)
       if (s.kind === 'projectile') {
         // fromBehind: nasce atrás do lançador e atravessa a arena (ex.: caminhão)
         const x = s.fromBehind ? this.x - this.facing * s.fromBehind : this.x + this.facing * 0.6;
@@ -339,7 +348,32 @@ export class Fighter {
       }
     }
     if (this.held) this.updateSpin(match);
-    if (this.t >= total) this.toNeutral();
+    if (this.t >= total) {
+      // Engajamento (Nikolas): terminou a provocação/selfie sem tomar golpe → enche a barra
+      const en = this.passive.engage;
+      if (en && s.dir === en.dir && !s.countered && this.hitSeq === this.spHitSeq) {
+        this.gainMeter(en.meter);
+        match.emit({ type: 'text', fighter: this, text: en.text || 'ENGAJOU!', cls: 'buff' });
+      }
+      this.toNeutral();
+    }
+  }
+
+  // ---------- counter (Close Certo): pose; se tomar um golpe na janela ativa, anula e dispara o contra-ataque ----------
+  // Chamado pelo Combat.applyHit antes da defesa. kind: 'counter', followup: spec de strike que entra na hora.
+  tryCounter(match, atk, hit) {
+    const s = this.sp;
+    if (this.state !== 'special' || s?.kind !== 'counter' || hit.throw || hit.ultimate) return false;
+    if (this.t < s.startup || this.t >= s.startup + s.active) return false;
+    const fu = s.followup || {};
+    this.sp = { level: 'mid', startup: 4, active: 4, recovery: 14, ...fu, kind: 'strike', dir: s.dir, countered: true, name: s.name };
+    this.hitId = uid(); this.armorUsed = false; this.vx = 0; this.faceOpponent();
+    this.setState('special', fu.anim || s.anim || SPECIAL_ANIM[s.dir], this.sp.startup + this.sp.active + this.sp.recovery);
+    this.counterInfo = { seq: ++this.counterSeq, frame: match.frame, text: s.text };
+    atk.flash = 8;
+    match.hitstop = Math.max(match.hitstop, s.freeze ?? 12); // congela: a pose "fotografa" o golpe
+    match.emit({ type: 'counter', fighter: this, attacker: atk, x: this.x + this.facing * 0.4, y: this.y + this.stats.height * 0.7, text: s.text || 'COUNTER!' });
+    return true;
   }
 
   // ---------- Abraço giratório (grab com spin): prende, gira N voltas em volta de si e arremessa ----------
@@ -407,7 +441,7 @@ export class Fighter {
     }
     if (this.t === hitsEnd + 6) {
       this.ultRes[u.hits] = d <= u.range + 1 ? applyHit(match, this, o, {
-        damage: u.finisher, knockdown: true, push: 0.25, unblockable: true, heavy: true, ultimate: true, text: u.text,
+        damage: u.finisher, knockdown: true, push: u.push ?? 0.25, unblockable: true, heavy: true, ultimate: true, text: u.text,
       }, this.x) : 'miss';
     }
     if (this.t >= this.ultimateLength()) this.toNeutral();

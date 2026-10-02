@@ -7,6 +7,8 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { loadGLTF } from './models/GLBModel.js';
 import { Puffs, Rings, Shards, canvasTex, textSprite, add, flat } from './fx/common.js';
 import { makeVadeMecum } from './fx/dinoFx.js';
+import { NIKOLAS_VISUALS } from './fx/nikolasFx.js';
+import { ERIKA_VISUALS } from './fx/erikaFx.js';
 
 // ---- civis da Picanha do Povo: Quaternius Ultimate Modular Men/Women (CC0), clip Run ----
 // Carregados 1x; cada onda reusa (pool do Vfx) 5 clones com mixer próprio.
@@ -394,4 +396,7 @@ export const PROJECTILE_VISUALS = {
       u.dust.update(dt);
     },
   },
+  // ---------------- NIKOLAS (chupeta, mamadeira) e ERIKA (onda sonora): fx/nikolasFx.js, fx/erikaFx.js ----------------
+  ...NIKOLAS_VISUALS,
+  ...ERIKA_VISUALS,
 };

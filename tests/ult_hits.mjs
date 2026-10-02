@@ -17,7 +17,7 @@ function run(id, gap, range) {
   return { res: a.ultRes.join(','), hits };
 }
 let ok = true;
-for (const id of ['xandor', 'lulacio']) {
+for (const id of ['xandor', 'lulacio', 'nikolas', 'erika']) {
   const near = run(id, 2), far = run(id, 6, 0.5);
   // o que importa: cada 'hit' registrado = 1 dano real (e 'miss' = nenhum). Longe, os primeiros hits têm que errar.
   const count = (r) => r.res.split(',').filter((x) => x === 'hit').length;

@@ -84,6 +84,9 @@ export class PlaceholderModel {
       if (P.sidePart) hair.rotation.z = 0.3;
       if (P.longFace) hair.scale.set(0.87, 1.15, 0.97);
       this.head.add(hair);
+      if (P.longHair) { // cabelão caindo atrás da cabeça até os ombros (mullet do Nikolas, ondas da Erika)
+        const back = mesh(new THREE.SphereGeometry(headR * 0.95, 16, 12), P.hair); back.scale.set(1.05, 1.5, 0.75); back.position.set(0, -headR * 0.45, -headR * 0.55); this.head.add(back);
+      }
     }
     if (P.beard) { const beard = mesh(new THREE.SphereGeometry(headR * 0.8, 16, 12), P.hair); beard.position.set(0, -headR * 0.5, headR * 0.3); beard.scale.set(1.05, 0.85, 0.8); this.head.add(beard); }
     if (P.glasses) {
