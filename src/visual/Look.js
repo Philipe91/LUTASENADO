@@ -36,9 +36,19 @@ const FINAL = /* glsl */`
   uniform sampler2D tScene; uniform sampler2D tBloom; uniform float bloomStrength;
   uniform float contrast; uniform float saturation; uniform vec3 lift; uniform vec3 gain;
   uniform float vignette; uniform vec3 vignetteColor; uniform float aspect;
+  uniform vec2 shockC; uniform float shockR; uniform float shockS; // onda de choque (ultimate / KO): anel que refrata a imagem
   varying vec2 vUv;
   void main(){
-    vec3 c = texture2D(tScene, vUv).rgb + texture2D(tBloom, vUv).rgb * bloomStrength;
+    vec2 uv = vUv;
+    float ring = 0.0;
+    if (shockS > 0.0) {
+      vec2 p = (vUv - shockC) * vec2(aspect, 1.0);
+      float d = length(p);
+      ring = exp(-pow((d - shockR) * 11.0, 2.0)) * shockS;
+      uv -= (p / max(d, 1e-4)) * ring * 0.045 / vec2(aspect, 1.0); // puxa a imagem pro centro na crista do anel
+    }
+    vec3 c = texture2D(tScene, uv).rgb + texture2D(tBloom, uv).rgb * bloomStrength;
+    c += ring * 0.22; // crista levemente clara
     #ifdef TONE_MAPPING
       c = toneMapping(c);
     #endif
@@ -109,7 +119,9 @@ export class Look {
       lift: { value: new THREE.Vector3(0.035, 0.015, 0.05) },   // sombras levemente roxas
       gain: { value: new THREE.Vector3(1.0, 0.985, 0.955) },    // altas luzes levemente quentes
       vignette: { value: 0.42 }, vignetteColor: { value: new THREE.Vector3(0.09, 0.05, 0.12) }, aspect: { value: 1 },
+      shockC: { value: new THREE.Vector2(0.5, 0.5) }, shockR: { value: 0 }, shockS: { value: 0 },
     }, true);
+    this.shockT = -1; this.shockStr = 0; this.shockDur = 0.45; this.shockP = new THREE.Vector3();
     this.quad = new FullScreenQuad(this.final);
     this.size = new THREE.Vector2();
     this.ms = 0;
@@ -130,6 +142,15 @@ export class Look {
     this.bright.uniforms.texel.value.set(1 / s.x, 1 / s.y);
     this.final.uniforms.aspect.value = s.x / s.y;
     this.bw = bw; this.bh = bh;
+  }
+
+  // onda de choque em tela a partir do ponto (x, y) do mundo: anel de refração que abre e some em `dur` s (ARTE.md §4:
+  // ENTRA → IMPACTA → SOME). strength ~0.6 golpe de ultimate · 1 ativação/KO. Sem Look (?look=0) não existe (fallback).
+  shock(x, y, strength = 1, dur = 0.45) {
+    if (!this.enabled) return;
+    this.shockP.set(x, y, 0).project(this.stage.camera);
+    this.final.uniforms.shockC.value.set(this.shockP.x * 0.5 + 0.5, this.shockP.y * 0.5 + 0.5);
+    this.shockT = 0; this.shockStr = strength; this.shockDur = dur;
   }
 
   pass(material, target) {
@@ -179,8 +200,15 @@ export class Look {
       this.blur.uniforms.tSrc.value = this.bB.texture; this.blur.uniforms.dir.value.set(0, 1 / this.bh);
       this.pass(this.blur, this.bA);
     }
-    this.pass(this.final, null);
     const now = performance.now();
+    if (this.shockT >= 0) {
+      this.shockT += Math.min(0.05, (now - (this.lastT || now)) / 1000); // relógio do jogo (manual=1 também anda)
+      const k = this.shockT / this.shockDur;
+      this.final.uniforms.shockR.value = 0.08 + k * 0.9;
+      this.final.uniforms.shockS.value = k < 1 ? this.shockStr * (1 - k) * (1 - k) : 0;
+      if (k >= 1) this.shockT = -1;
+    }
+    this.pass(this.final, null);
     this.ms += (now - t0 - this.ms) * 0.05; // média móvel do custo de CPU do render (GPU é assíncrona)
     // guarda de celular: se o quadro inteiro passa de ~30 ms nos primeiros segundos, derruba o bloom (fica rim+tone+vinheta)
     if (this.mobile && this.bloomOn && this.lastT) {
