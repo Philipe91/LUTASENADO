@@ -19,7 +19,7 @@ export default {
     // LACRAÇÃO REVERSA (meme): tapa de microfone; projétil do rival que entra na frente volta pra ele (+40% dano) com
     // selo LACROU! — de perto também bate
     neutral: {
-      name: 'Lacração Reversa', kind: 'strike', startup: 4, active: 18, recovery: 16, cooldown: 150,
+      name: 'Lacração Reversa', kind: 'strike', startup: 4, active: 18, recovery: 11, cooldown: 150,
       damage: 6, hitstun: 18, push: 0.15, box: { x: 0.1, y: 0.45, w: 1.0, h: 1.3 },
       reflect: { box: { x: -0.2, y: 0, w: 1.9, h: 2.3 }, speed: 1.3, damage: 1.4, text: 'LACROU!' }, text: 'LACROU!',
     },
@@ -32,7 +32,7 @@ export default {
     },
     // DEBATE RELÂMPAGO: dash com o microfone; empurra longe com o balão TEXTÃO
     down: {
-      name: 'Debate Relâmpago', kind: 'strike', startup: 6, active: 12, recovery: 20, cooldown: 190,
+      name: 'Debate Relâmpago', kind: 'strike', startup: 6, active: 12, recovery: 14, cooldown: 190,
       dash: { from: 4, to: 16, v: 0.3 },
       damage: 9, hitstun: 22, push: 0.36, heavy: true, box: { x: 0, y: 0.6, w: 1.1, h: 1.0 }, text: 'TEXTÃO!',
     },

@@ -109,6 +109,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #140d24; col
 .pop.miss { color: #aaa; font-size: 24px; }
 .pop.shout { font-size: 40px; color: #fff; background: #1fa34a; padding: 0 14px; border: 3px solid #000; border-radius: 10px; -webkit-text-stroke: 2px #000; box-shadow: 4px 4px 0 #000; }
 .pop.perfect { font-size: 44px; color: #fff; background: linear-gradient(90deg, #ff3fa4, #ffb800); padding: 2px 18px 0; border: 4px solid #000; -webkit-text-stroke: 2px #000; text-shadow: 3px 3px 0 #000; box-shadow: 6px 6px 0 #000; letter-spacing: 2px; } /* PERFECT SELFIE! / CLOSE CERTO! */
+.pop.counter { font-size: 34px; color: #0b0b12; background: var(--gold); padding: 2px 12px 0; border: 3px solid #000; -webkit-text-stroke: 0; text-shadow: none; box-shadow: 4px 4px 0 #000; letter-spacing: 2px; font-family: var(--display); } /* COUNTER! (contra-golpe) */
 .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
 .flash.on { animation: camflash .26s ease-out forwards; }
 @keyframes camflash { 0% { opacity: var(--fs, .7); } 100% { opacity: 0; } }
@@ -283,3 +284,18 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #140d24; col
 .res b { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1f8a3a, #8ff0a0); transition: width .15s; }
 .side.p2 .res b { margin-left: auto; }
 .res.full b { background: linear-gradient(90deg, #d4af37, #fff2a0); box-shadow: 0 0 8px #ffd84a; }
+
+/* ---------- controles de toque (src/ui/Touch.js) ---------- */
+.touch { position: absolute; left: 0; right: 0; bottom: 0; height: 0; pointer-events: none; z-index: 5; }
+.touch.hidden { display: none; }
+.tpad { position: absolute; left: max(16px, env(safe-area-inset-left)); bottom: calc(18px + env(safe-area-inset-bottom)); width: 148px; height: 148px; pointer-events: auto; touch-action: none; }
+.tring { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, #ffffff10 0 45%, #ffffff22 46% 100%); border: 3px solid #ffffff55; box-shadow: 0 0 0 3px #00000055; }
+.tknob { position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px; border-radius: 50%; background: #fff8e7cc; border: 3px solid #000; box-shadow: 0 3px 0 #000; transition: transform .05s linear; }
+.tbtns { position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: calc(14px + env(safe-area-inset-bottom)); width: 176px; height: 176px; pointer-events: none; }
+.tbtn { position: absolute; width: 74px; height: 74px; border-radius: 50%; border: 3px solid #000; box-shadow: 0 4px 0 #000; font: 400 15px/1 var(--display); letter-spacing: .5px; color: #fff; -webkit-text-stroke: 1px #000; pointer-events: auto; touch-action: none; opacity: .82; padding: 0; -webkit-tap-highlight-color: transparent; }
+.tbtn.on { transform: translateY(3px) scale(.94); box-shadow: 0 1px 0 #000; opacity: 1; filter: brightness(1.2); }
+.b-punch { left: 0; bottom: 0; background: #1d4ed8; }
+.b-kick { right: 0; bottom: 0; background: #e0262b; }
+.b-special { left: 0; top: 0; background: #1fa34a; font-size: 12px; }
+.b-ult { right: 0; top: 0; background: linear-gradient(135deg, #7c3aed, #ff5bd8); }
+@media (max-height: 520px) { .tpad { width: 120px; height: 120px; } .tbtns { width: 150px; height: 150px; } .tbtn { width: 64px; height: 64px; } }

@@ -20,7 +20,7 @@ export default {
       box: { y: 1.12, w: 0.55, h: 0.36 }, visual: 'energyShot', text: 'PÁ!',
     },
     forward: {
-      name: 'Motociata', kind: 'strike', startup: 10, active: 24, recovery: 18, rehit: 9, lunge: 0.27, // arrancada forte: ≈6,5 m
+      name: 'Motociata', kind: 'strike', startup: 10, active: 24, recovery: 22, rehit: 9, lunge: 0.27, // arrancada forte: ≈6,5 m
       damage: 2.6, hitstun: 16, push: 0.1, cooldown: 200,
       box: { x: -0.2, y: 0, w: 1.2, h: 1.3 }, text: 'MOTOCIATA!',
     },

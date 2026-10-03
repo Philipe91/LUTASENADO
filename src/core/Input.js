@@ -31,9 +31,10 @@ export class Input {
 }
 
 export class HumanController {
-  constructor(input, map) { this.input = input; this.map = map; }
+  // touch: lê também os controles de toque (input.virtual) — só o P1; no 2 jogadores o P2 fica no teclado
+  constructor(input, map, touch = true) { this.input = input; this.map = map; this.touch = touch; }
   read() {
-    const k = this.input.keys, v = this.input.virtual, m = this.map, c = {};
+    const k = this.input.keys, v = this.touch ? this.input.virtual : {}, m = this.map, c = {};
     for (const b in m) c[b] = m[b].some((code) => k.has(code)) || !!v[b];
     return c;
   }

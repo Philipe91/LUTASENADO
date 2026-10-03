@@ -23,13 +23,13 @@ export default {
     },
     // MEGAFONE DO ATO: cone de onda sonora na frente (2,7 m) — 3 pulsos; o último empurra longe
     forward: {
-      name: 'Megafone do Ato', kind: 'strike', startup: 10, active: 18, rehit: 6, recovery: 18, cooldown: 170,
+      name: 'Megafone do Ato', kind: 'strike', startup: 10, active: 18, rehit: 6, recovery: 15, cooldown: 170,
       damage: 1.8, hitstun: 12, push: 0.12, final: { damage: 3, hitstun: 22, push: 0.42, text: 'ATO!' },
       box: { x: 0.3, y: 0.45, w: 2.4, h: 1.35 }, text: 'MEGAFONE!',
     },
     // MARCHA: avança com faixa e bandeiras, multidão fictícia atrás (dash com armadura: aguenta 1 golpe)
     down: {
-      name: 'Marcha', kind: 'strike', startup: 8, active: 22, rehit: 11, recovery: 22, cooldown: 240, armor: true,
+      name: 'Marcha', kind: 'strike', startup: 8, active: 22, rehit: 11, recovery: 18, cooldown: 240, armor: true,
       dash: { from: 6, to: 28, v: 0.2 },
       damage: 3.5, hitstun: 16, push: 0.05, final: { damage: 5, knockdown: true, push: 0.3, heavy: true, text: 'MARCHOU!' },
       box: { x: -0.1, y: 0, w: 1.3, h: 1.8 }, text: 'MARCHA!',
