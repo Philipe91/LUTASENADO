@@ -93,6 +93,14 @@ export class PlaceholderModel {
       for (const s of [-1, 1]) { const lens = box(headR * 0.5, headR * 0.3, 0.03, 0x111111); lens.position.set(s * headR * 0.33, headR * 0.12, headR * 0.98); this.head.add(lens); }
     }
 
+    if (P.headset) { // fone de streamer: arco por cima + conchas + microfone de haste até a boca (Renan Santos)
+      const dark = 0x161616;
+      const band = mesh(new THREE.TorusGeometry(headR * 1.08, headR * 0.07, 6, 20, Math.PI), dark); band.position.y = headR * 0.05; this.head.add(band);
+      for (const s of [-1, 1]) { const cup = mesh(new THREE.CylinderGeometry(headR * 0.3, headR * 0.3, headR * 0.22, 14), dark); cup.rotation.z = Math.PI / 2; cup.position.set(s * headR * 1.05, 0, 0); this.head.add(cup); }
+      const boom = mesh(new THREE.CylinderGeometry(headR * 0.04, headR * 0.04, headR * 1.0, 6), dark); boom.position.set(headR * 0.8, -headR * 0.4, headR * 0.45); boom.rotation.set(0.9, 0, 0.6); this.head.add(boom);
+      const mic = mesh(new THREE.SphereGeometry(headR * 0.13, 10, 8), 0x9146ff); mic.position.set(headR * 0.42, -headR * 0.62, headR * 0.92); this.head.add(mic);
+    }
+
     this.arms = {};
     for (const [name, s] of [['R', -1], ['L', 1]]) {
       const pivot = new THREE.Group(); pivot.position.set(s * (W / 2 + 0.08), torsoH - 0.06, 0); this.hips.add(pivot);

@@ -1,4 +1,5 @@
 // Resolução de golpes: colisão AABB 2D, defesa, armadura, dano, combo, barra e efeitos.
+import { METER_MAX } from './constants.js';
 const BLOCK_STATES = new Set(['idle', 'walk', 'crouch', 'blockstun']);
 const COMBO_STATES = new Set(['hitstun', 'knockdown']);
 
@@ -99,10 +100,11 @@ export function applyHit(match, atk, def, hit, sourceX) {
   def.sinceHit = 0;
 
   // passiva do Capitão Brasa: likes viram buff
+  // comboOnly: conta só hits do MESMO combo (CORTE VIRAL do Renan: 3 hits seguidos)
   const buff = atk.passive.comboBuff;
   if (buff) {
     atk.likes++;
-    if (atk.likes % buff.every === 0) {
+    if (buff.comboOnly ? def.comboTaken % buff.every === 0 : atk.likes % buff.every === 0) {
       atk.buffT = buff.frames;
       match.emit({ type: 'text', fighter: atk, text: buff.text || 'VIRALIZOU!', cls: 'buff' });
     }
@@ -114,6 +116,7 @@ export function applyHit(match, atk, def, hit, sourceX) {
   def.gainMeter(dmg * 1.5);
 
   if (hit.lockSpecials) { def.lockT = def.lockMax = hit.lockSpecials; match.emit({ type: 'locked', fighter: def }); }
+  applyDebuffs(match, atk, def, hit);
   if (hit.pull) def.x = atk.x + atk.facing * ((atk.stats.width + def.stats.width) / 2 + 0.35);
 
   // reação visual: zona do golpe (alta = cabeça, média = corpo, baixa = pernas) e força (dano + empurrão + pesado)
@@ -147,4 +150,33 @@ export function applyHit(match, atk, def, hit, sourceX) {
   match.hitstop = Math.max(match.hitstop, def.hp <= 0 ? Math.max(5, Math.round(stop * 0.5)) : stop);
   match.emit({ type: 'hit', x: fx, y: fy, dmg, heavy: !!hit.heavy, ultimate: !!hit.ultimate, text: hit.text, attacker: atk, fighter: def, dir, zone, force, ko: def.hp <= 0 });
   return 'hit';
+}
+
+// Efeitos extras de um golpe que ACERTOU, todos por dados (sem visual):
+//   hit.invert      — frames com esquerda/direita invertidas (CONFUSO)
+//   hit.slow        — { frames, mult, text }: velocidade de andar/pular/dash ×mult (+IMPOSTO)
+//   hit.meterSteal  — rouba até N da barra de ultimate do alvo (TAXAÇÃO SUPREMA)
+//   passive.tax     — { meter, text }: todo golpe que acerta "taxa" N da barra do rival (ARRECADAÇÃO do Haddad)
+//   passive.doubleNext — especial que acertou arma o dano dobrado do próximo (DOBRAR A META da Dilma)
+function applyDebuffs(match, atk, def, hit) {
+  if (hit.invert) {
+    if (def.invertT <= 0) match.emit({ type: 'text', fighter: def, text: hit.invertText || 'CONFUSO!', cls: 'lock' });
+    def.invertT = Math.max(def.invertT, hit.invert);
+  }
+  if (hit.slow) {
+    def.slowT = Math.max(def.slowT, hit.slow.frames ?? 180); def.slowMult = hit.slow.mult ?? 0.6; def.slowText = hit.slow.text || 'LENTO';
+    match.emit({ type: 'text', fighter: def, text: def.slowText, cls: 'lock' });
+  }
+  const tax = atk.passive.tax;
+  const steal = (hit.meterSteal ?? 0) + (tax?.meter ?? 0);
+  if (steal > 0 && def.meter > 0) {
+    const take = Math.min(def.meter, steal);
+    def.meter -= take; atk.meter = Math.min(METER_MAX, atk.meter + take);
+    if (tax?.text && (hit.kind || hit.meterSteal)) match.emit({ type: 'text', fighter: atk, text: tax.text, cls: 'buff' });
+  }
+  const dn = atk.passive.doubleNext;
+  if (dn && hit.kind && !hit.doubled && !atk.doubleReady) {
+    atk.doubleReady = true;
+    match.emit({ type: 'text', fighter: atk, text: dn.armText || 'META BATIDA!', cls: 'buff' });
+  }
 }

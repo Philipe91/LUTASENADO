@@ -10,12 +10,17 @@ import erika from './erika.js';
 import vorcaro from './vorcaro.js';
 import flavio from './flavio.js';
 import duval from './duval.js';
+import dilma from './dilma.js';
+import haddad from './haddad.js';
+import boulos from './boulos.js';
+import renan from './renan.js';
 
 export const CHARACTERS = [lulacio, capitaoBrasa, xandor, dinoSupremo];
 CHARACTERS.push(nikolas);
 CHARACTERS.push(vorcaro);
 CHARACTERS.push(erika);
 CHARACTERS.push(flavio, duval);
+CHARACTERS.push(dilma, haddad, boulos, renan);
 
 export function getCharacter(id) {
   return CHARACTERS.find((c) => c.id === id) || CHARACTERS[0];

@@ -4,7 +4,7 @@ import { BASE_MOVES } from '../data/baseMoves.js';
 import { GRAVITY, ARENA_HALF, METER_MAX, BUFFER, NEUTRAL } from './constants.js';
 import { Hitter } from './Hitter.js';
 import { Assist } from './Assist.js';
-import { applyHit } from './Combat.js';
+import { applyHit, overlap } from './Combat.js';
 
 const DEFAULT_STATS = { hp: 100, walk: 1, jump: 1, width: 0.8, height: 1.8, damage: 1, defense: 1, meterGain: 1 };
 const WALK = 0.055;
@@ -64,12 +64,17 @@ export class Fighter {
     this.sinceHit = 0; // frames sem tomar golpe (passiva Presença)
     this.counterSeq = 0; this.counterInfo = null; // último contra-golpe (Close Certo / PERFECT SELFIE): o visual lê
     this.lowHpShown = false; this.dashV = 0;
+    // debuffs genéricos por dados (Combat.applyHit): controles invertidos (hit.invert) e lentidão (hit.slow)
+    this.invertT = 0; this.slowT = 0; this.slowMult = 1; this.slowText = '';
+    this.doubleReady = false; this.charged = 0; // passiva doubleNext (DOBRAR A META) · carga do especial (charge)
     this.ultRes = []; // resultado de cada hit da ultimate ('hit'|'miss'): o visual só mostra contato quando acertou
     this.setState('intro', 'intro');
   }
 
   // ---------- entrada ----------
   recordInput(cmd) {
+    // CONFUSO (controles invertidos): esquerda ↔ direita enquanto invertT > 0 (Dilmês Total)
+    if (this.invertT > 0) cmd = { ...cmd, left: cmd.right, right: cmd.left };
     this.prevCmd = this.cmd;
     this.cmd = cmd;
     for (const b of BUTTONS) {
@@ -164,7 +169,7 @@ export class Fighter {
   get buffSpec() { return this.passive.comboBuff || this.passive.perfectBlock; }
   // Presença (Erika): N frames sem apanhar → bônus de velocidade até tomar o próximo golpe
   get presenceOn() { const p = this.passive.presence; return !!p && this.sinceHit >= p.after; }
-  speedMult() { return (this.buffT > 0 ? (this.buffSpec?.speed ?? 1) : 1) * (this.presenceOn ? this.passive.presence.speed : 1); }
+  speedMult() { return (this.buffT > 0 ? (this.buffSpec?.speed ?? 1) : 1) * (this.presenceOn ? this.passive.presence.speed : 1) * (this.slowT > 0 ? this.slowMult : 1); }
   get lowHpOn() { const low = this.passive.lowHp; return !!low && this.hp / this.maxHp <= low.below; }
   damageMult() {
     let m = this.stats.damage;
@@ -184,6 +189,9 @@ export class Fighter {
     let g = this.stats.meterGain;
     const aura = this.opponent?.passive?.aura;
     if (aura && this.distTo(this.opponent) <= aura.radius) g *= aura.enemyMeterMult;
+    // passiva MOBILIZAÇÃO (Boulos): perto do rival a barra enche mais rápido
+    const near = this.passive.nearMeter;
+    if (near && this.opponent && this.distTo(this.opponent) <= near.radius) g *= near.mult;
     this.meter = Math.min(METER_MAX, this.meter + v * g);
   }
   gainRes(v) { if (this.resource) this.res = Math.min(this.resource.max, this.res + v); }
@@ -207,6 +215,8 @@ export class Fighter {
     if (this.lockT > 0) this.lockT--;
     if (this.buffT > 0) this.buffT--;
     if (this.flash > 0) this.flash--;
+    if (this.invertT > 0) this.invertT--;
+    if (this.slowT > 0) this.slowT--;
     this.sinceHit++;
     // passiva de vida baixa com aviso: avisa UMA vez ao cruzar o limite (ex.: CLÃ!)
     const low = this.passive.lowHp;
@@ -341,6 +351,14 @@ export class Fighter {
   startSpecial(dir, match) {
     const s = this.specials[dir];
     this.sp = this.boostSpecial({ level: 'mid', startup: 10, active: 0, recovery: 15, ...s, dir }, match);
+    // passiva DOBRAR A META (Dilma): especial que acertou deixa o PRÓXIMO especial com dano ×mult (uma vez)
+    const dn = this.passive.doubleNext;
+    if (dn && this.doubleReady) {
+      this.doubleReady = false;
+      this.sp = { ...boostHit(this.sp, dn.mult ?? 2), doubled: true };
+      match.emit({ type: 'text', fighter: this, text: dn.text || 'DOBROU!', cls: 'buff' });
+    }
+    this.charged = 0;
     this.cooldowns[dir] = s.cooldown ?? 120;
     this.hitId = uid(); this.armorUsed = false; this.vx = 0; this.spHitSeq = this.hitSeq;
     const total = this.sp.startup + this.sp.active + this.sp.recovery;
@@ -350,7 +368,19 @@ export class Fighter {
   }
 
   updateSpecial(match) {
-    const s = this.sp, o = this.opponent;
+    let s = this.sp;
+    const o = this.opponent;
+    // CARGA (charge: { max, damage, grow, push }): segurando o botão de especial, o frame de disparo espera até `max`
+    // frames; ao soltar, dano/tamanho/empurrão crescem com a fração carregada (Estocar Vento)
+    if (s.charge && this.t === s.startup) {
+      if (this.cmd.special && this.charged < s.charge.max) { this.t--; this.charged++; if (this.charged === 1) match.emit({ type: 'charge', fighter: this }); return; }
+      if (this.charged > 0) {
+        const c = s.charge, q = this.charged / c.max;
+        s = this.sp = { ...boostHit(s, 1 + q * (c.damage ?? 0)), push: (s.push ?? 0.1) + q * (c.push ?? 0), chargeK: q,
+          box: { ...s.box, w: s.box.w * (1 + q * (c.grow ?? 0)), h: s.box.h * (1 + q * (c.grow ?? 0)) } };
+        if (q >= 0.5 && c.text) match.emit({ type: 'text', fighter: this, text: c.text, cls: 'shout' });
+      }
+    }
     const total = s.startup + s.active + s.recovery;
     if (s.kind === 'strike') {
       const active = this.t >= s.startup && this.t < s.startup + s.active;
@@ -365,6 +395,7 @@ export class Fighter {
       else if (this.t === d.to) this.vx = 0;
     }
     if (s.faceAtActive && this.t === s.startup) this.faceOpponent(); // passou por trás → vira e golpeia
+    if (s.reflect && this.t >= s.startup && this.t < s.startup + Math.max(1, s.active)) this.reflectProjectiles(match, s.reflect);
     // CLONE / ECO: cópia translúcida nasce a `offset` m na frente e repete um golpe (Hitter com visual 'clone')
     if (s.clone && this.t === (s.clone.at ?? s.startup)) {
       const c = s.clone, bx = c.box || { x: 0.3, y: 0.8, w: 1.0, h: 0.7 };
@@ -412,6 +443,24 @@ export class Fighter {
         match.emit({ type: 'text', fighter: this, text: en.text || 'ENGAJOU!', cls: 'buff' });
       }
       this.toNeutral();
+    }
+  }
+
+  // ---------- REFLETIR (Lacração Reversa): projéteis do rival que entram na caixa viram do lançador, voltam mais rápidos ----------
+  // reflect: { box, speed (× velocidade), damage (× dano), text }
+  reflectProjectiles(match, r) {
+    const box = this.relBox(r.box || { x: -0.2, y: 0, w: 1.6, h: 2.2 });
+    for (const h of match.hitters) {
+      if (h.owner !== this.opponent || h.dead || h.spent || h.hit?.kind !== 'projectile' || !h.vx) continue;
+      if (!overlap(box, h.box())) continue;
+      h.owner = this; h.facing = this.facing;
+      h.vx = Math.abs(h.vx) * (r.speed ?? 1.2) * this.facing; h.vy = Math.max(h.vy, 0);
+      h.hit = { ...h.hit, damage: (h.hit.damage ?? 0) * (r.damage ?? 1.2), text: r.text ?? h.hit.text };
+      h.returning = false; h.turnAt = null; h.homing = 0; h.x0 = h.x; h.cool = 0; h.reflected = true;
+      h.life = h.t - h.delay + (h.hit.life ?? 90);
+      this.counterInfo = { seq: ++this.counterSeq, frame: match.frame, text: r.text };
+      match.hitstop = Math.max(match.hitstop, 6);
+      match.emit({ type: 'counter', fighter: this, attacker: this.opponent, x: h.x, y: h.y + h.h / 2, text: r.text || 'REFLETIU!' });
     }
   }
 
@@ -496,8 +545,9 @@ export class Fighter {
       }, this.x) : 'miss';
     }
     if (this.t === hitsEnd + 6) {
+      // finalHit: campos extras do finalizador (debuffs: invert, slow, meterSteal, lockSpecials...)
       this.ultRes[u.hits] = d <= u.range + 1 ? applyHit(match, this, o, {
-        damage: u.finisher, knockdown: true, push: u.push ?? 0.25, unblockable: true, heavy: true, ultimate: true, text: u.text,
+        damage: u.finisher, knockdown: true, push: u.push ?? 0.25, unblockable: true, heavy: true, ultimate: true, text: u.text, ...(u.finalHit || {}),
       }, this.x) : 'miss';
     }
     if (this.t >= this.ultimateLength()) this.toNeutral();
