@@ -25,6 +25,8 @@ page.on('pageerror', (e) => console.error('[página]', e.message));
 await page.goto(`${BASE}?${query}&manual=1`, { waitUntil: 'networkidle0' });
 await page.evaluate(() => document.fonts.ready);
 await page.evaluate(() => { for (let i = 0; i < 10; i++) window.__rk.advance(0); });
+// RK_PRE="..." → JS rodado antes de gravar (controlador de teste, barra cheia...), igual ao tools/snap.mjs
+if (process.env.RK_PRE) await page.evaluate(process.env.RK_PRE);
 
 const t0 = Date.now();
 for (let i = 0; i < total; i++) {

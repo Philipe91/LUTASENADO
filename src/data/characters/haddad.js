@@ -14,7 +14,7 @@ export default {
   passive: {
     name: 'Arrecadação',
     desc: 'Todo golpe que acerta "taxa" um pouco da barra de Ultimate do rival para ele.',
-    tax: { meter: 4, text: 'ARRECADOU!' },
+    tax: { meter: 3, text: 'ARRECADOU!' },
   },
   moves: {},
   specials: {

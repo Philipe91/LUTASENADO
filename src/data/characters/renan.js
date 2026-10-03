@@ -8,7 +8,7 @@ export default {
   name: 'RENAN SANTOS',
   title: 'O Streamer do Caos',
   archetype: 'Contra-ataque / Streamer',
-  stats: { hp: 100, walk: 1.12, jump: 1.05, width: 0.78, height: 1.8 },
+  stats: { hp: 102, walk: 1.12, jump: 1.05, width: 0.78, height: 1.8 },
   passive: {
     name: 'Corte Viral',
     desc: 'Combo de 3 hits vira "corte": +25% de velocidade por 2,5 s.',
@@ -34,7 +34,7 @@ export default {
     down: {
       name: 'Debate Relâmpago', kind: 'strike', startup: 6, active: 12, recovery: 20, cooldown: 190,
       dash: { from: 4, to: 16, v: 0.3 },
-      damage: 8.5, hitstun: 22, push: 0.36, heavy: true, box: { x: 0, y: 0.6, w: 1.1, h: 1.0 }, text: 'TEXTÃO!',
+      damage: 9, hitstun: 22, push: 0.36, heavy: true, box: { x: 0, y: 0.6, w: 1.1, h: 1.0 }, text: 'TEXTÃO!',
     },
   },
   // CANCELAMENTO EM MASSA: avalanche de hashtags, notificações e DISLIKE soterra o rival; finalizador trava os

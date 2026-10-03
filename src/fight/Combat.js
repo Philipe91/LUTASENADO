@@ -102,7 +102,7 @@ export function applyHit(match, atk, def, hit, sourceX) {
   // passiva do Capitão Brasa: likes viram buff
   // comboOnly: conta só hits do MESMO combo (CORTE VIRAL do Renan: 3 hits seguidos)
   const buff = atk.passive.comboBuff;
-  if (buff) {
+  if (buff && !(buff.comboOnly && hit.ultimate)) {
     atk.likes++;
     if (buff.comboOnly ? def.comboTaken % buff.every === 0 : atk.likes % buff.every === 0) {
       atk.buffT = buff.frames;

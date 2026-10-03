@@ -9,7 +9,7 @@ export default {
   name: 'DILMA',
   title: 'A Estocadora de Vento',
   archetype: 'Zoner / Confusa',
-  stats: { hp: 100, walk: 0.92, jump: 0.95, width: 0.8, height: 1.68 },
+  stats: { hp: 96, walk: 0.92, jump: 0.95, width: 0.8, height: 1.68 },
   passive: {
     name: 'Dobrar a Meta',
     desc: 'Acertar um especial deixa o PRÓXIMO especial com dano dobrado (uma vez).',
@@ -28,14 +28,14 @@ export default {
     // SAUDAÇÃO À MANDIOCA: mandioca gigante girando que vai e volta (bumerangue, até 2 hits)
     forward: {
       name: 'Saudação à Mandioca', kind: 'projectile', startup: 11, recovery: 18, cooldown: 180,
-      speed: 0.17, life: 80, turnAt: 26, hits: 2, rehit: 16, damage: 3.5, hitstun: 16, push: 0.08,
-      box: { y: 0.8, w: 0.85, h: 0.5 }, visual: 'mandioca', color: 0xc98b4a, text: 'SAÚDO A MANDIOCA!',
+      speed: 0.17, life: 80, turnAt: 26, hits: 2, rehit: 16, damage: 3, hitstun: 16, push: 0.08,
+      box: { y: 0.8, w: 0.85, h: 0.5 }, visual: 'mandioca', color: 0xc98b4a, text: 'MANDIOCADA!',
     },
     // PEDALADA FISCAL: monta na bicicleta e atropela pedalando (dash multi-hit, 3 hits; o último derruba)
     down: {
       name: 'Pedalada Fiscal', kind: 'strike', startup: 8, active: 24, recovery: 20, cooldown: 230, rehit: 8,
       dash: { from: 6, to: 30, v: 0.22 },
-      damage: 2.5, hitstun: 14, push: 0.04, final: { damage: 4, knockdown: true, push: 0.25, text: 'PEDALADA!' },
+      damage: 2.5, hitstun: 14, push: 0.04, final: { damage: 3.5, knockdown: true, push: 0.25, text: 'PEDALADA!' },
       box: { x: -0.2, y: 0, w: 1.4, h: 1.4 }, text: 'PEDALOU!',
     },
   },

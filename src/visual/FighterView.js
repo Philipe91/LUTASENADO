@@ -16,10 +16,14 @@ import { ErikaPlenario } from './ultimates/ErikaPlenario.js';
 import { VorcaroCapital } from './ultimates/VorcaroCapital.js';
 import { FlavioDinastia } from './ultimates/FlavioDinastia.js';
 import { DuvalBackup } from './ultimates/DuvalBackup.js';
+import { DilmaDilmes } from './ultimates/DilmaDilmes.js';
+import { HaddadTaxacao } from './ultimates/HaddadTaxacao.js';
+import { BoulosAto } from './ultimates/BoulosAto.js';
+import { RenanCancelamento } from './ultimates/RenanCancelamento.js';
 import { SpecialFx } from './SpecialFx.js';
 import { StatusFx } from './StatusFx.js';
 
-const ULTIMATE_FX = { xandorAvatar: XandorAvatar, lulacioPolvo: LulacioPolvo, brasaJacare: BrasaJacare, dinoTrex: DinoTrex, nikolasViral: NikolasViral, erikaPlenario: ErikaPlenario, vorcaroCapital: VorcaroCapital, flavioDinastia: FlavioDinastia, duvalBackup: DuvalBackup };
+const ULTIMATE_FX = { xandorAvatar: XandorAvatar, lulacioPolvo: LulacioPolvo, brasaJacare: BrasaJacare, dinoTrex: DinoTrex, nikolasViral: NikolasViral, erikaPlenario: ErikaPlenario, vorcaroCapital: VorcaroCapital, flavioDinastia: FlavioDinastia, duvalBackup: DuvalBackup, dilmaDilmes: DilmaDilmes, haddadTaxacao: HaddadTaxacao, boulosAto: BoulosAto, renanCancelamento: RenanCancelamento };
 
 const LYING = new Set(['knockdown', 'down', 'ko', 'getup']);
 

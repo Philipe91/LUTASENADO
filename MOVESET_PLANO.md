@@ -96,28 +96,28 @@
 # LOTE 3 (03/10) — Dilma, Haddad, Boulos, Renan Santos
 > Poderes tirados de MEMES, GAFES e episódios PÚBLICOS conhecidos, sempre como piada/fantasia — nada de acusar crime não comprovado.
 
-## DILMA — zoner confusa ("dilmês")  ⏳
+## DILMA — zoner confusa ("dilmês")  ✅ (03/10, placeholder 3D)
 - **Passiva DOBRAR A META:** ao acertar um especial, o próximo especial causa o dobro (uma vez; texto "DOBROU A META!").
 - **E1 Estocar Vento** (meme): segura e "estoca" vento num pote; solta uma rajada que cresce com o tempo segurado (projétil, empurra).
 - **E2 Saudação à Mandioca:** mandioca gigante girando em arco (vai e volta).
 - **E3 Pedalada Fiscal:** monta numa bicicleta e atravessa pedalando (dash multi-hit), notas/boletos voando.
 - **Ultimate DILMÊS TOTAL:** discurso incompreensível — balões com frases embaralhadas cercam o rival (controles invertidos ~2 s), cachorro aparece "atrás da criança", final com mandioca colossal caindo.
 
-## HADDAD — "TAXADD" — controle / recursos  ⏳
+## HADDAD — "TAXADD" — controle / recursos  ✅ (03/10, placeholder 3D)
 - **Passiva ARRECADAÇÃO:** cada golpe que acerta "taxa" um pouco da barra de ultimate do rival para ele.
 - **E1 Taxa das Blusinhas** (meme): arremessa pacotes de encomenda com selo "TAXADO!" (projétil, 2 hits).
 - **E2 Arcabouço Fiscal:** ergue uma moldura de planilhas que bloqueia projéteis por um instante (escudo/counter).
 - **E3 Carimbo do Imposto:** carimba "+IMPOSTO" no rival: fica mais lento por 3 s.
 - **Ultimate TAXAÇÃO SUPREMA:** etiquetas de preço grudam em tudo, chuva de boletos, final com o Leão da Receita gigante mordendo.
 
-## BOULOS — mobilização / zona  ⏳
+## BOULOS — mobilização / zona  ✅ (03/10, placeholder 3D)
 - **Passiva MOBILIZAÇÃO:** perto do rival, a barra de ultimate enche mais rápido.
 - **E1 Ocupação Relâmpago** (meme): barraca de acampamento brota onde o rival está (zona) com placa "OCUPADO!".
 - **E2 Megafone do Ato:** cone de onda sonora do megafone que empurra.
 - **E3 Marcha:** avança com faixa e bandeiras, multidão fictícia atrás (dash).
 - **Ultimate ATO GIGANTE:** multidão com barracas e faixas toma a arena e "despeja" o rival pra fora do quadro.
 
-## RENAN SANTOS — streamer polêmico / contra-ataque  ⏳
+## RENAN SANTOS — streamer polêmico / contra-ataque  ✅ (03/10, placeholder 3D)
 - **Passiva CORTE VIRAL:** combo de 3 hits vira "corte" e dá bônus curto de velocidade.
 - **E1 Lacração Reversa** (meme): devolve projéteis com selo "LACROU!" (reflete).
 - **E2 Live Polêmica:** liga a live; chat de comentários voando atordoa o rival.

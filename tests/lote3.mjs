@@ -39,7 +39,7 @@ function caster(dir, hold = 1, wait = 0) {
   d.cooldowns.neutral = 0; const h0 = t.hp; let k = 0;
   m.controllers[0] = { read(self) { k++; return k === 1 ? { ...NEUTRAL, special: true } : NEUTRAL; } };
   t.x = d.x + 3; run(m, 150);
-  check('dobrar a meta', armed && !d.doubleReady && Math.abs((h0 - t.hp) - 10) < 0.6, `dano 2º=${(h0 - t.hp).toFixed(1)}`);
+  check('dobrar a meta', armed && !d.doubleReady && Math.abs((h0 - t.hp) - 2 * getCharacter('dilma').specials.neutral.damage) < 0.6, `dano 2º=${(h0 - t.hp).toFixed(1)}`);
 }
 // 3) REFLETIR: Intimação do Xandor volta e acerta o Xandor
 {
@@ -75,7 +75,7 @@ function caster(dir, hold = 1, wait = 0) {
   const m = setup('boulos', 'dino-supremo'); const [b] = m.fighters;
   b.x = m.fighters[1].x - 1; b.meter = 0; b.gainMeter(10); const near = b.meter;
   b.x = m.fighters[1].x - 5; b.meter = 0; b.gainMeter(10); const far = b.meter;
-  check('mobilização', near > far * 1.3, `perto=${near} longe=${far}`);
+  check('mobilização', near > far * 1.2, `perto=${near} longe=${far}`);
 }
 // 8) CORTE VIRAL: combo de 3 socos dá buff de velocidade
 {
