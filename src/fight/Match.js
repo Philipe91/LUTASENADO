@@ -70,6 +70,7 @@ export class Match {
   step() {
     this.frame++;
     const fs = this.fighters;
+    for (const f of fs) { f.px = f.x; f.py = f.y; } // o visual interpola entre o frame lógico anterior e o atual
     for (let i = 0; i < 2; i++) {
       const cmd = this.phase === 'fight' && !this.cinematic ? this.controllers[i].read(fs[i], fs[1 - i], this) : NEUTRAL;
       fs[i].recordInput(cmd);

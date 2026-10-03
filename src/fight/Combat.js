@@ -1,7 +1,18 @@
 // Resolução de golpes: colisão AABB 2D, defesa, armadura, dano, combo, barra e efeitos.
-import { METER_MAX } from './constants.js';
+import { METER_MAX, ARENA_HALF, FEEL } from './constants.js';
 const BLOCK_STATES = new Set(['idle', 'walk', 'crouch', 'blockstun']);
 const COMBO_STATES = new Set(['hitstun', 'knockdown']);
+
+// escala de dano do combo: n = hits que o defensor já tomou neste combo (FEEL.scaling)
+export function comboScale(n) {
+  const S = FEEL.scaling;
+  return n < S.table.length ? S.table[n] : S.min;
+}
+// o defensor está no startup/ativo de um golpe próprio? (contra-golpe)
+function inStartup(def) {
+  const m = def.state === 'attack' ? def.move : def.state === 'special' ? def.sp : null;
+  return !!m && def.t < m.startup + Math.min(FEEL.counter.active, Math.max(1, m.active || 0));
+}
 
 export function overlap(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
@@ -16,6 +27,7 @@ export function resolveHits(match) {
     if (!hurt || !overlap(atk.box, hurt)) continue;
     if (atk.hit.throw && !o.canBeThrown()) continue;
     f.lastLanded = atk.id;
+    if (atk.hit.throw && throwTech(match, f, o)) continue;
     applyHit(match, f, o, atk.hit, f.x);
   }
   for (const h of match.hitters) {
@@ -32,6 +44,25 @@ export function resolveHits(match) {
     if (--h.hitsLeft <= 0) h.spend();
     if (h.hit.stopOnHit) h.stop(h.hit.stopOnHit);
   }
+}
+
+// THROW TECH: o defensor apertou soco nos últimos FEEL.throwTech.window frames → os dois se soltam, ninguém toma dano
+export function throwTech(match, atk, def) {
+  const T = FEEL.throwTech;
+  if (!def.pressedWithin(T.window, ['punch'])) return false;
+  def.consume('punch');
+  const dir = Math.sign(def.x - atk.x) || atk.facing;
+  for (const [f, s] of [[atk, -1], [def, 1]]) {
+    f.move = null; f.sp = null; f.stun = 14;
+    f.setState('blockstun', 'block', 14);
+    f.vx = s * dir * T.push;
+  }
+  match.hitstop = Math.max(match.hitstop, 8);
+  const x = (atk.x + def.x) / 2, y = def.stats.height * 0.6;
+  match.emit({ type: 'tech', fighter: def, attacker: atk, x, y, throw: true });
+  match.emit({ type: 'block', x, y, fighter: def, dir, heavy: true });
+  match.emit({ type: 'text', fighter: def, text: 'ESCAPOU!', cls: 'buff' });
+  return true;
 }
 
 // Retorna 'hit' | 'block' | 'armor' | 'miss' | 'counter'
@@ -63,6 +94,7 @@ export function applyHit(match, atk, def, hit, sourceX) {
     def.stun = Math.max(2, (hit.blockstun ?? 10) - (perfect ? pb.stunCut ?? 0 : 0));
     def.setState('blockstun', def.cmd.down ? 'crouchBlock' : 'block', def.stun);
     def.vx = dir * (hit.push ?? 0.1) * 0.8;
+    pushAttacker(atk, def, hit, sourceX, dir, FEEL.push.blockSelf);
     def.gainMeter(8); atk.gainMeter(3);
     // passiva: bloquear um ESPECIAL (hit.kind) enche mais a barra de ultimate (ARQUIVO CONFIDENCIAL do Duval)
     const bm = def.passive.blockSpecialMeter;
@@ -78,7 +110,12 @@ export function applyHit(match, atk, def, hit, sourceX) {
   }
 
   // ---- dano ----
-  const scaling = hit.ultimate ? 1 : Math.max(0.5, 1 - 0.1 * def.comboTaken);
+  // escala de combo (tabela FEEL.scaling) · juggle: hit no ar vale menos · contra-golpe: vale mais
+  const inCombo = COMBO_STATES.has(def.state);
+  const juggled = def.state === 'knockdown' && !def.grounded;
+  const counterHit = !cb && !hit.throw && !hit.ultimate && inStartup(def);
+  const C = FEEL.counter;
+  const scaling = hit.ultimate ? 1 : comboScale(inCombo ? def.comboTaken : 0) * (juggled ? FEEL.juggle.damage : 1) * (counterHit ? C.damage : 1);
   const dmg = hit.damage * atk.damageMult() * def.stats.defense * def.defenseMult() * scaling;
 
   // ---- super armor (Dino) ----
@@ -91,8 +128,12 @@ export function applyHit(match, atk, def, hit, sourceX) {
     return 'armor';
   }
 
-  const inCombo = COMBO_STATES.has(def.state);
   def.comboTaken = inCombo ? def.comboTaken + 1 : 1;
+  if (counterHit) {
+    atk.gainMeter(C.meter);
+    def.counterHit = true;
+    match.emit({ type: 'counterHit', fighter: atk, attacker: atk, target: def, x: fx, y: fy, text: C.text });
+  }
   atk.comboCount = def.comboTaken;
   def.hp -= dmg;
   def.flash = 8;
@@ -134,22 +175,39 @@ export function applyHit(match, atk, def, hit, sourceX) {
     match.onKO(atk, def, !!hit.ultimate);
   } else if (hit.knockdown || !def.grounded) {
     def.move = null; def.sp = null;
+    const J = FEEL.juggle;
+    if (juggled) { def.juggle++; def.juggleG += J.gravityStep; } // juggle: cada hit no ar pesa mais e lança menos
+    const launch = (hit.launch ?? 0.17) * (juggled ? J.launchDecay ** def.juggle : 1);
     def.setState('knockdown', 'knockdown');
-    def.vy = Math.max(def.vy, hit.launch ?? 0.17); def.y = Math.max(def.y, 0.001); // launch: knock-UP (voa alto)
+    def.hardKD = !!(hit.throw || hit.ultimate || hit.hardKD) || def.hardKD; // queda dura: sem tech
+    def.vy = Math.max(def.vy, launch); def.y = Math.max(def.y, 0.001); // launch: knock-UP (voa alto)
     def.vx = dir * (hit.push ?? 0.12) * 1.2;
   } else {
     def.move = null; def.sp = null;
-    def.stun = (hit.hitstun ?? 14) + (hit.stun ?? 0);
+    def.stun = (hit.hitstun ?? 14) + (hit.stun ?? 0) + (counterHit ? C.hitstun : 0);
     def.setState('hitstun', hit.stun ? 'dizzy' : 'hit', def.stun);
     def.vx = dir * (hit.push ?? 0.1);
   }
 
   // hitstop escalado pela força: jab ≈ 7, golpe pesado ≈ 12–14. No KO a câmera lenta (0.3) já estica o congelamento
   // ~3×, então usa metade (≈0,5s real de pose congelada antes do voo em câmera lenta)
-  const stop = hit.hitstop ?? Math.round(Math.max(6, Math.min(14, 4 + dmg * 0.75)) + (hit.heavy ? 3 : 0));
+  const stop = (hit.hitstop ?? Math.round(Math.max(6, Math.min(14, 4 + dmg * 0.75)) + (hit.heavy ? 3 : 0))) + (counterHit ? C.hitstop : 0);
   match.hitstop = Math.max(match.hitstop, def.hp <= 0 ? Math.max(5, Math.round(stop * 0.5)) : stop);
-  match.emit({ type: 'hit', x: fx, y: fy, dmg, heavy: !!hit.heavy, ultimate: !!hit.ultimate, text: hit.text, attacker: atk, fighter: def, dir, zone, force, ko: def.hp <= 0 });
+  if (def.hp > 0) pushAttacker(atk, def, hit, sourceX, dir, 0); // quina: quem recua é o atacante
+  match.emit({ type: 'hit', x: fx, y: fy, dmg, heavy: !!hit.heavy, ultimate: !!hit.ultimate, text: hit.text, attacker: atk, fighter: def, dir, zone, force, ko: def.hp <= 0, counter: counterHit, combo: def.comboTaken, juggle: juggled });
   return 'hit';
+}
+
+// PUSHBACK: golpe de corpo (não projétil, não agarrão/ultimate) empurra também quem bateu — `self` × push sempre
+// (defesa: o atacante recua e não "gruda"); com o defensor na quina, o atacante recua NO LUGAR dele (FEEL.push.corner)
+function pushAttacker(atk, def, hit, sourceX, dir, self) {
+  if (sourceX !== atk.x || hit.throw || hit.ultimate || hit.pull) return;
+  if (atk.state !== 'attack' && atk.state !== 'special') return;
+  if (!def.grounded) return; // juggle: sem recuo (deixa emendar no ar)
+  const P = FEEL.push, push = hit.push ?? 0.1;
+  const cornered = Math.abs(def.x) >= ARENA_HALF - P.cornerZone && Math.sign(def.x) === dir;
+  const k = cornered ? P.corner : self;
+  if (k > 0) atk.vx = -dir * push * k;
 }
 
 // Efeitos extras de um golpe que ACERTOU, todos por dados (sem visual):

@@ -15,7 +15,7 @@ export default {
   passive: {
     name: 'Arrecadação',
     desc: 'Todo golpe que acerta "taxa" um pouco da barra de Ultimate do rival para ele.',
-    tax: { meter: 3, text: 'ARRECADOU!' },
+    tax: { meter: 2, text: 'ARRECADOU!' },
   },
   moves: {},
   specials: {
@@ -28,7 +28,7 @@ export default {
     },
     // ARCABOUÇO FISCAL: ergue uma moldura de planilhas; golpe ou PROJÉTIL que bater nela é anulado e ele carimba de volta
     forward: {
-      name: 'Arcabouço Fiscal', kind: 'counter', startup: 3, active: 26, recovery: 18, cooldown: 200, text: 'ARCABOUÇO!', freeze: 10,
+      name: 'Arcabouço Fiscal', kind: 'counter', startup: 3, active: 26, recovery: 22, cooldown: 200, text: 'ARCABOUÇO!', freeze: 10,
       followup: {
         startup: 5, active: 8, recovery: 16, lunge: 0.22, damage: 10, knockdown: true, push: 0.3, heavy: true, hitstop: 12,
         box: { x: 0.0, y: 0.4, w: 1.4, h: 1.4 }, text: 'TETO DE GASTOS!',

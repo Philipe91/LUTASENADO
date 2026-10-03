@@ -28,6 +28,7 @@ import { Hud } from './ui/Hud.js';
 import { SelectScreen } from './ui/SelectScreen.js';
 import { gameBus } from './core/EventBus.js';
 import { setupAudio } from './audio/index.js';
+import { TouchControls } from './ui/Touch.js';
 
 // URL: ?p1=lulacio&p2=xandor&mode=cpu|2p|demo&level=easy|normal|hard&debug=1&placeholder=1
 const params = new URLSearchParams(location.search);
@@ -37,6 +38,7 @@ const arena = stage.setArena(buildArena(stage.scene, params.get('arena'))); // ?
 const look = new Look(stage, params); // ARTE.md §3 — tone mapping, rim, bloom, vinheta (?look=0 desliga)
 const input = new Input();
 const hud = new Hud(ui, stage);
+const touch = new TouchControls(ui, input, params); // D-pad + botões no celular (?touch=1 força, ?touch=0 esconde)
 const vfx = new Vfx(stage.scene);
 const debug = new DebugDraw(stage.scene);
 debug.enabled = params.has('debug');
@@ -59,7 +61,7 @@ function startMatch(cfg) {
     const file = params.get('glbtest') && params.get('glbtest') !== '1' ? params.get('glbtest') : 'Soldier.glb';
     a = { ...a, visual: { ...a.visual, model: `assets/test/${file}`, yaw: Number(params.get('yaw') ?? Math.PI), height: a.stats.height } };
   }
-  const level = params.get('level') || 'normal';
+  const level = params.get('ai') || params.get('level') || 'normal'; // ?ai=1|2|3 (fácil/normal/difícil) ou ?level=easy|normal|hard
   // ?cast=neutral|forward|down → P1 solta esse especial em loop; P2 vira boneco parado (teste de golpe)
   const cast = params.get('cast');
   const animP1 = params.has('animtest') ? new AnimTestP1() : params.has('feeltest') ? new FeelTestP1() : null;
@@ -72,13 +74,14 @@ function startMatch(cfg) {
     : cfg.mode === 'demo'
     ? [new AIController(a.ai, level), new AIController(b.ai, level)]
     : cfg.mode === '2p'
-      ? [new HumanController(input, KEYMAPS.p1), new HumanController(input, KEYMAPS.p2)]
+      ? [new HumanController(input, KEYMAPS.p1), new HumanController(input, KEYMAPS.p2, false)]
       : [new HumanController(input, KEYMAPS.solo), new AIController(b.ai, level)];
   match = new Match(a, b, controllers);
   views = match.fighters.map((f) => new FighterView(stage.scene, f, { placeholderOnly: params.has('placeholder') }));
   hud.bind(match);
   gameBus.emit('matchStart', match);
   select.hide();
+  if (controllers[0] instanceof HumanController) touch.show(); else touch.hide();
   handleEvents(match.drainEvents());
 }
 
@@ -89,6 +92,7 @@ function toMenu() {
   match = null;
   gameBus.emit('menu');
   hud.hide();
+  touch.hide();
   select.show();
 }
 
@@ -133,6 +137,14 @@ function handleEvents(events) {
         break;
       case 'locked': break; // o cadeado 3D acima da cabeça (StatusFx) já mostra; o hit já grita BLOQUEADO!
       case 'flash': hud.flash(e.strength); break; // flash de câmera (Selfie do Dano)
+      case 'counterHit': // contra-golpe genérico (acertou o rival no startup do golpe dele): carimbo amarelo + tranco
+        hud.pop(e.x, e.y + 0.9, e.text, 'counter');
+        vfx.burst(e.x, e.y, { heavy: true, color: 0xffd400 }); stage.punch(0.05);
+        break;
+      case 'tech': // tech de queda / escape de agarrão
+        if (e.throw) { vfx.burst(e.x, e.y, { blocked: true, heavy: true }); stage.shake(0.08); }
+        else vfx.dust(e.x, 0.4);
+        break;
       case 'counter': // Close Certo / PERFECT SELFIE: clarão, carimbo e tranco
         hud.flash(1); hud.pop(e.x, e.y + 0.7, e.text, 'perfect');
         vfx.burst(e.x, e.y, { heavy: true, color: 0xffffff }); stage.shake(0.22, 0); stage.punch(0.09); stage.react(0.7);
@@ -142,6 +154,7 @@ function handleEvents(events) {
       case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); stage.react(1); if (e.timeUp) hud.flash(0.5, 180); break;
       case 'roundWin': break;
       case 'matchEnd':
+        touch.hide();
         hud.showResult(e.winner, e.line, () => startMatch(config), toMenu);
         break;
       default: break;
@@ -179,6 +192,10 @@ function tick(dt) {
     let steps = 0;
     while (acc >= STEP && steps < 6) { match.step(); acc -= STEP; steps++; }
     if (steps === 6) acc = 0;
+    // interpolação (Fix Your Timestep): o visual desenha entre o frame lógico anterior e o atual pela fração que sobrou
+    // no acumulador — sem tremedeira quando a tela (60/120/144 Hz) não bate com os 48–60 passos lógicos por segundo
+    const alpha = match.hitstop > 0 || match.cinematic ? 1 : Math.min(1, acc / STEP);
+    for (const f of match.fighters) { f.rx = f.px + (f.x - f.px) * alpha; f.ry = f.py + (f.y - f.py) * alpha; }
     handleEvents(match.drainEvents());
     gameBus.emit('frame', match);
     const frozen = match.hitstop > 0;

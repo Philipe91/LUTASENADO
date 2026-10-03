@@ -149,7 +149,9 @@ export class FighterView {
     const f = this.f;
     // Abraço: o preso orbita em Z (a lógica é 2D) e fica um pouco erguido; os dois se encaram durante o giro
     const heldZ = f.heldZ || 0;
-    this.group.position.set(f.x, f.y + (f.heldBy ? 0.3 : 0), heldZ);
+    // rx/ry: posição interpolada entre frames lógicos (main.js) — movimento liso em qualquer taxa de tela
+    const X = f.rx ?? f.x, Y = f.ry ?? f.y;
+    this.group.position.set(X, Y + (f.heldBy ? 0.3 : 0), heldZ);
     const other = f.held || f.heldBy;
     if (other) {
       this.turn = Math.atan2(other.x - f.x, (other.heldZ || 0) - heldZ);
@@ -214,11 +216,11 @@ export class FighterView {
     this.status.update(dt, f, model, this.formScale);
     if (this.ultFx) model.object.visible = !this.ultFx.hideBase; // polvo substitui o corpo
 
-    this.blob.position.set(f.x, 0.012, heldZ);
-    const s = Math.max(0.4, 1 - f.y * 0.25) * this.formScale;
+    this.blob.position.set(X, 0.012, heldZ);
+    const s = Math.max(0.4, 1 - Y * 0.25) * this.formScale;
     this.blob.scale.set(s, s, s);
     if (this.aura) {
-      this.aura.position.x = f.x;
+      this.aura.position.x = X;
       this.aura.material.opacity = 0.18 + Math.sin(performance.now() / 300) * 0.08;
     }
   }
