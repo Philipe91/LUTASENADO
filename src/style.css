@@ -288,14 +288,14 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #140d24; col
 /* ---------- controles de toque (src/ui/Touch.js) ---------- */
 .touch { position: absolute; left: 0; right: 0; bottom: 0; height: 0; pointer-events: none; z-index: 5; }
 .touch.hidden { display: none; }
-.tpad { position: absolute; left: max(16px, env(safe-area-inset-left)); bottom: calc(18px + env(safe-area-inset-bottom)); width: 148px; height: 148px; pointer-events: auto; touch-action: none; }
+.tpad { position: absolute; left: max(16px, env(safe-area-inset-left)); bottom: calc(66px + env(safe-area-inset-bottom)); width: 148px; height: 148px; pointer-events: auto; touch-action: none; }
 .tring { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, #ffffff10 0 45%, #ffffff22 46% 100%); border: 3px solid #ffffff55; box-shadow: 0 0 0 3px #00000055; }
 .tknob { position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px; border-radius: 50%; background: #fff8e7cc; border: 3px solid #000; box-shadow: 0 3px 0 #000; transition: transform .05s linear; }
-.tbtns { position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: calc(14px + env(safe-area-inset-bottom)); width: 176px; height: 176px; pointer-events: none; }
-.tbtn { position: absolute; width: 74px; height: 74px; border-radius: 50%; border: 3px solid #000; box-shadow: 0 4px 0 #000; font: 400 15px/1 var(--display); letter-spacing: .5px; color: #fff; -webkit-text-stroke: 1px #000; pointer-events: auto; touch-action: none; opacity: .82; padding: 0; -webkit-tap-highlight-color: transparent; }
+.tbtns { position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: calc(40px + env(safe-area-inset-bottom)); width: 176px; height: 176px; pointer-events: none; }
+.tbtn { position: absolute; width: 74px; height: 74px; border-radius: 50%; border: 3px solid #000; box-shadow: 0 4px 0 #000; font: 400 19px/1 var(--display); letter-spacing: 1px; color: #fff; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; pointer-events: auto; touch-action: none; opacity: .82; padding: 0; -webkit-tap-highlight-color: transparent; }
 .tbtn.on { transform: translateY(3px) scale(.94); box-shadow: 0 1px 0 #000; opacity: 1; filter: brightness(1.2); }
 .b-punch { left: 0; bottom: 0; background: #1d4ed8; }
 .b-kick { right: 0; bottom: 0; background: #e0262b; }
-.b-special { left: 0; top: 0; background: #1fa34a; font-size: 12px; }
+.b-special { left: 0; top: 0; background: #1fa34a; font-size: 15px; }
 .b-ult { right: 0; top: 0; background: linear-gradient(135deg, #7c3aed, #ff5bd8); }
 @media (max-height: 520px) { .tpad { width: 120px; height: 120px; } .tbtns { width: 150px; height: 150px; } .tbtn { width: 64px; height: 64px; } }
