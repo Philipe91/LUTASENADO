@@ -9,6 +9,10 @@ import { Puffs, Rings, Shards, canvasTex, textSprite, add, flat } from './fx/com
 import { makeVadeMecum } from './fx/dinoFx.js';
 import { NIKOLAS_VISUALS } from './fx/nikolasFx.js';
 import { ERIKA_VISUALS } from './fx/erikaFx.js';
+import { DILMA_VISUALS } from './fx/dilmaFx.js';
+import { HADDAD_VISUALS } from './fx/haddadFx.js';
+import { BOULOS_VISUALS } from './fx/boulosFx.js';
+import { RENAN_VISUALS } from './fx/renanFx.js';
 
 // ---- civis da Picanha do Povo: Quaternius Ultimate Modular Men/Women (CC0), clip Run ----
 // Carregados 1x; cada onda reusa (pool do Vfx) 5 clones com mixer próprio.
@@ -435,4 +439,6 @@ export const PROJECTILE_VISUALS = {
   // ---------------- NIKOLAS (chupeta, mamadeira) e ERIKA (onda sonora): fx/nikolasFx.js, fx/erikaFx.js ----------------
   ...NIKOLAS_VISUALS,
   ...ERIKA_VISUALS,
+  // lote 3: vento/mandioca (Dilma), pacote (Haddad), barraca (Boulos), chat da live (Renan)
+  ...DILMA_VISUALS, ...HADDAD_VISUALS, ...BOULOS_VISUALS, ...RENAN_VISUALS,
 };

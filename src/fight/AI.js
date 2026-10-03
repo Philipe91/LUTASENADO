@@ -32,6 +32,7 @@ export class AIController {
 
   decide(self, opp, match) {
     const p = this.p;
+    this.self = self;
     const d = self.distTo(opp);
     const F = self.facing > 0 ? 'right' : 'left';
     const B = self.facing > 0 ? 'left' : 'right';
@@ -42,6 +43,12 @@ export class AIController {
 
     const threat = ((opp.state === 'attack' || opp.state === 'special') && d < 2.8) ||
       match.hitters.some((h) => h.owner === opp && h.dangerous && Math.abs(h.x - self.x) < 2.6);
+    // projétil do rival chegando perto: especial que reflete (Lacração Reversa) ou pose de counter (Arcabouço) absorve
+    const shot = match.hitters.find((h) => h.owner === opp && h.dangerous && h.hit?.kind === 'projectile' && h.vx && Math.abs(h.x - self.x) < 2.2 && Math.sign(self.x - h.x) === Math.sign(h.vx));
+    if (shot) {
+      const answer = Object.entries(self.specials).find(([dir, s]) => (s.reflect || s.kind === 'counter') && self.canSpecial(dir));
+      if (answer && Math.random() < p.blockChance * this.lv.block) return this.special(answer[0], F);
+    }
     if (threat) {
       // pose de counter (Close Certo) no lugar da defesa, quando o golpe vem de perto
       const counter = Object.entries(self.specials).find(([dir, s]) => s.kind === 'counter' && self.canSpecial(dir));
@@ -101,7 +108,9 @@ export class AIController {
     const c = { special: true };
     if (dir === 'forward') c[F] = true;
     if (dir === 'down') c.down = true;
-    this.press(c);
+    // especial com carga (charge): a IA segura o botão um tempo aleatório
+    const ch = this.self?.specials?.[dir]?.charge;
+    this.press(c, ch ? 2 + Math.floor(Math.random() * ch.max) : 2);
   }
   combo() {
     for (let i = 0; i < 3; i++) this.plan.push({ c: { ...NEUTRAL, punch: true }, f: 2 }, { c: NEUTRAL, f: 7 });
