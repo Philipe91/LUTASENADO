@@ -1,7 +1,8 @@
 // DILMA — zoner confusa ("dilmês"). Versão paródica de memes/gafes PÚBLICAS (estocar vento, saudação à mandioca,
 // "dobrar a meta", cachorro atrás da criança) — pura fantasia de desenho animado, nada aqui afirma fato ou crime.
 // Golpe meme: ESTOCAR VENTO (segura o especial para "estocar" vento num pote; a rajada cresce com a carga).
-const GUARDA = '01a0ef75-1fd9-7538-9154-0af77913ed07'; // guarda de boxe (GLB do Xandor)
+const GUARDA = '01a0fff6-26a6-7504-b92e-9ff1b071c1ce'; // dilma_guarda (Texto para Motion, GLB próprio)
+const VENTO = '01a0fff7-85b5-7639-9251-7699f213fbf0';  // dilma_vento: junta o ar e empurra com as duas mãos
 const ARREMESSO = '01a0efe4-99e1-76ec-90af-8512dfe57528'; // arremesso por cima do ombro (GLB do Lulácio)
 
 export default {
@@ -65,7 +66,7 @@ export default {
       block: 'Block2', crouchBlock: 'Block2',
       hit: 'Hit_Reaction_to_Waist', dizzy: 'Hit_Reaction_to_Waist',
       knockdown: 'Fall_Down', down: 'Dead', ko: 'Dead', getup: 'Stand_Up1',
-      special1: 'Talk_Passionately', // estocar vento (abre o pote e solta)
+      special1: VENTO, // estocar vento (gesto próprio gerado no Meshy)
       special2: ARREMESSO,           // mandioca (arremesso por cima)
       special3: 'Running',           // pedalada
       victory: 'Chest_Pound_Taunt',

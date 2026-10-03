@@ -1,7 +1,8 @@
 // HADDAD / "TAXADD" — controle / recursos. Versão paródica e de desenho animado dos memes públicos de "taxação"
 // (taxa das blusinhas, arcabouço fiscal, Leão da Receita) — piada de fantasia, nada aqui afirma fato ou crime.
 // Golpe meme: TAXA DAS BLUSINHAS (pacotes de encomenda com selo TAXADO!).
-const GUARDA = '01a0ef75-1fd9-7538-9154-0af77913ed07';
+const GUARDA = '01a0fff8-e511-75af-a381-456ca0d8cb84'; // haddad_guarda (Texto para Motion, GLB próprio)
+const CARIMBO = '01a0fff9-f9f2-72d5-84ce-5ba077e3441a'; // haddad_carimbo: punho alto e carimbada
 const ARREMESSO = '01a0efe4-99e1-76ec-90af-8512dfe57528'; // arremesso por cima do ombro (Lulácio)
 const CANETADA = '01a0ef6f-f255-734e-b234-53a83134aa3d'; // golpe de cima pra baixo (Xandor) → carimbada
 
@@ -68,7 +69,7 @@ export default {
       knockdown: 'Fall_Down', down: 'Dead', ko: 'Dead', getup: 'Stand_Up1',
       special1: ARREMESSO, // pacote
       special2: 'Block1',  // arcabouço (pose) → contra-carimbo usa o mesmo clip
-      special3: CANETADA,  // carimbada
+      special3: CARIMBO,  // carimbada (gesto próprio gerado no Meshy)
       victory: 'victory',
     },
     specialFx: {

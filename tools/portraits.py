@@ -17,6 +17,10 @@ CHARS = {
     'vorcaro': ('references/vorcaro/ref_front.png', 0.32, -0.02),
     'duval': ('references/duval/ref_front.png', 0.32, -0.02),
     'erika': ('references/erika/ref_front.png', 0.32, -0.02),
+    'dilma': ('references/dilma/ref_front.png', 0.34, -0.02),
+    'haddad': ('references/haddad/ref_front.png', 0.32, -0.02),
+    'boulos': ('references/boulos/ref_front.png', 0.32, -0.02),
+    'renan': ('references/renan/ref_front.png', 0.32, -0.02),
 }
 ONLY = set(sys.argv[2].split(',')) if len(sys.argv) > 2 else None  # python tools/portraits.py 384 nikolas,erika
 
