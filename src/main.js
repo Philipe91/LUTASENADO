@@ -1,258 +1,62 @@
+// BOOT: pacote mínimo (sem three.js). Mostra a tela de título no 1º segundo e baixa o jogo por trás.
+//   1. guardas de celular/portal, nível de qualidade (sem WebGL pesado), SDK da plataforma (máx. 4 s)
+//   2. import('./game.js') em paralelo → three.js + lutas num pacote separado (cache longo)
+//   3. título interativo já durante o download; JOGAR fica na fila até o jogo ficar pronto
+// URL com p1=/mode=demo (testes, gravações, links antigos) pula o título e vai direto para a luta.
 import './style.css';
-import { Stage } from './visual/Stage.js';
-import { buildArena } from './visual/arena/index.js';
-import { Look } from './visual/Look.js';
-import { FighterView } from './visual/FighterView.js';
-import { Vfx } from './visual/Vfx.js';
-import { DebugDraw } from './visual/DebugDraw.js';
-import { Match } from './fight/Match.js';
-import { AIController } from './fight/AI.js';
-import { STEP, NEUTRAL } from './fight/constants.js';
-import { AnimTestP1, AnimTestP2, animTestLabel } from './dev/animtest.js';
-import { FeelTestP1, FeelTestP2 } from './dev/feeltest.js';
-import { ParryP1, ParryP2 } from './dev/parrytest.js';
+import { platform } from './platform/index.js';
+import { quality } from './platform/quality.js';
+import { unlocks } from './platform/unlocks.js';
+import { installGuards, registerServiceWorker } from './platform/system.js';
+import { TitleScreen } from './ui/TitleScreen.js';
 
-class CastController {
-  constructor(dir) { this.dir = dir; this.t = 0; }
-  read(self) {
-    this.t++;
-    if (self.state !== 'idle' || this.t % 20 > 1) return NEUTRAL;
-    if (this.dir === 'ultimate') return { ...NEUTRAL, ultimate: true }; // ?cast=ultimate&meter=1
-    const F = self.facing > 0 ? 'right' : 'left';
-    return { ...NEUTRAL, special: true, [F]: this.dir === 'forward', down: this.dir === 'down' };
-  }
-}
-import { Input, HumanController, KEYMAPS } from './core/Input.js';
-import { getCharacter } from './data/characters/index.js';
-import { Hud } from './ui/Hud.js';
-import { SelectScreen } from './ui/SelectScreen.js';
-import { gameBus } from './core/EventBus.js';
-import { setupAudio } from './audio/index.js';
-import { TouchControls } from './ui/Touch.js';
-
-// URL: ?p1=lulacio&p2=xandor&mode=cpu|2p|demo&level=easy|normal|hard&debug=1&placeholder=1
 const params = new URLSearchParams(location.search);
-const ui = document.getElementById('ui');
-const stage = new Stage(document.getElementById('game'));
-const arena = stage.setArena(buildArena(stage.scene, params.get('arena'))); // ?arena=noite
-const look = new Look(stage, params); // ARTE.md §3 — tone mapping, rim, bloom, vinheta (?look=0 desliga)
-const input = new Input();
-const hud = new Hud(ui, stage);
-const touch = new TouchControls(ui, input, params); // D-pad + botões no celular (?touch=1 força, ?touch=0 esconde)
-const vfx = new Vfx(stage.scene);
-const debug = new DebugDraw(stage.scene);
-debug.enabled = params.has('debug');
-const audio = setupAudio(gameBus, params); // som: escuta o gameBus (eventos da partida + 'frame')
+const bootEl = document.getElementById('boot');
+const hideBoot = () => { bootEl?.classList.add('out'); setTimeout(() => bootEl?.remove(), 400); };
+installGuards();
+quality.init(params);
+const direct = !!(params.get('p1') || params.get('mode') === 'demo');
 
-let match = null;
-let views = [];
-let config = null;
+// o download do jogo começa já (em paralelo com o SDK do portal)
+const gameModule = import('./game.js');
 
-const select = new SelectScreen(ui, (cfg) => startMatch(cfg));
-
-function startMatch(cfg) {
-  config = cfg;
-  views.forEach((v) => v.dispose());
-  vfx.clear();
-  let a = getCharacter(cfg.p1), b = getCharacter(cfg.p2);
-  // ?glbtest=1 troca o visual do P1 por um GLB rigado de teste (valida o pipeline sem os modelos finais)
-  // ?glbtest=<arquivo> testa qualquer GLB em public/assets/test/ (padrão Soldier.glb)
-  if (params.has('glbtest')) {
-    const file = params.get('glbtest') && params.get('glbtest') !== '1' ? params.get('glbtest') : 'Soldier.glb';
-    a = { ...a, visual: { ...a.visual, model: `assets/test/${file}`, yaw: Number(params.get('yaw') ?? Math.PI), height: a.stats.height } };
+async function main() {
+  const t0 = performance.now();
+  const ui = document.getElementById('ui');
+  let title = null;
+  if (!direct) {
+    title = new TitleScreen(ui, { onPlay: () => game?.quickPlay(), onChoose: () => game?.openSelect() });
+    title.show();
+    hideBoot();
   }
-  const level = params.get('ai') || params.get('level') || 'normal'; // ?ai=1|2|3 (fácil/normal/difícil) ou ?level=easy|normal|hard
-  // ?cast=neutral|forward|down → P1 solta esse especial em loop; P2 vira boneco parado (teste de golpe)
-  const cast = params.get('cast');
-  const animP1 = params.has('animtest') ? new AnimTestP1() : params.has('feeltest') ? new FeelTestP1() : null;
-  const controllers = params.has('parry')
-    ? [new ParryP1(params.get('parry') === 'late'), new ParryP2()] // ?parry=1: teste da defesa perfeita (TÁ OK)
-    : animP1
-    ? [animP1, animP1 instanceof FeelTestP1 ? new FeelTestP2(animP1) : new AnimTestP2(animP1)]
-    : cast
-    ? (params.has('castP2') ? [{ read: () => NEUTRAL }, new CastController(cast)] : [new CastController(cast), { read: () => NEUTRAL }]) // castP2: quem solta é o P2 (lado direito)
-    : cfg.mode === 'demo'
-    ? [new AIController(a.ai, level), new AIController(b.ai, level)]
-    : cfg.mode === '2p'
-      ? [new HumanController(input, KEYMAPS.p1), new HumanController(input, KEYMAPS.p2, false)]
-      : [new HumanController(input, KEYMAPS.solo), new AIController(b.ai, level)];
-  match = new Match(a, b, controllers);
-  views = match.fighters.map((f) => new FighterView(stage.scene, f, { placeholderOnly: params.has('placeholder') }));
-  hud.bind(match);
-  gameBus.emit('matchStart', match);
-  select.hide();
-  if (controllers[0] instanceof HumanController) touch.show(); else touch.hide();
-  handleEvents(match.drainEvents());
-}
+  // barra "andando" enquanto o pacote do jogo baixa (import() não dá bytes; o tempo de 4G típico guia a curva)
+  let p = 0.08;
+  const creep = setInterval(() => { p += (0.85 - p) * 0.06; title?.setProgress(p, 'Carregando o ringue…'); platform.loadingProgress(p); }, 120);
 
-function toMenu() {
-  views.forEach((v) => v.dispose());
-  views = [];
-  vfx.clear();
-  match = null;
-  gameBus.emit('menu');
-  hud.hide();
-  touch.hide();
-  select.show();
-}
+  await platform.init(params);
+  unlocks.init(params, platform.hasRewarded);
+  registerServiceWorker();
 
-function handleEvents(events) {
-  for (const e of events) {
-    gameBus.emit(e.type, e, match);
-    switch (e.type) {
-      case 'roundStart': hud.showBanner(e.name, 'round', 1300); break;
-      case 'banner': hud.showBanner(e.text, e.cls, 900); break;
-      case 'hit':
-        vfx.burst(e.x, e.y, e);
-        // câmera: tranco no sentido do golpe, proporcional à força; zoom-soco só nos fortes
-        stage.shake(e.ultimate ? 0.35 : e.heavy ? 0.16 + 0.06 * (e.force || 1) : 0.07 + 0.03 * (e.force || 0.5), e.dir || 0);
-        if (e.heavy || e.ultimate) stage.punch(e.ultimate ? 0.14 : Math.min(0.13, 0.06 + 0.04 * (e.force || 1))); // zoom-soco da câmera no impacto forte
-        if (e.ko && !e.ultimate) stage.focus(e.x, e.y, 2.2, 0.24); // último golpe do round: câmera lenta com close
-        else if (e.ko) stage.focus(e.x, e.y, 2.2, 0.12);
-        if (e.ko) hud.flash(0.8, 200); // KO: clarão branco curto na tela
-        if (e.ultimate || e.ko) look.shock(e.x, e.y, e.ko ? 0.9 : 0.4, e.ko ? 0.5 : 0.35); // onda de choque em tela
-        if (e.text) hud.pop(e.x, e.y + 0.5, e.text, 'big');
-        else hud.pop(e.x, e.y + 0.3, Math.round(e.dmg), 'dmg');
-        stage.react(e.ultimate ? 0.8 : e.heavy ? 0.35 : 0.08);
-        break;
-      case 'block': vfx.burst(e.x, e.y, { blocked: true }); stage.shake(e.heavy ? 0.06 : 0.03, (e.dir || 0) * 0.5); break;
-      case 'perfect': vfx.burst(e.x, e.y, { heavy: true, color: 0x9af07a }); vfx.burst(e.x, e.y + 0.2, { color: 0xffd400 }); break;
-      case 'dash': vfx.dust(e.x - e.fighter.facing * e.dir * 0.3, 0.35); break;
-      case 'land':
-        // queda de golpe bate no chão (poeira + tranco); pulo do pesado também assenta
-        if (e.state === 'knockdown' || e.state === 'ko') { vfx.dust(e.x, 0.7); stage.shake(0.12); }
-        else if (e.v > 0.2 && e.fighter.stats.width >= 0.95) stage.shake(0.04);
-        break;
-      case 'dust': vfx.dust(e.x, e.size); stage.shake(0.08); break;
-      case 'armor': vfx.burst(e.x, e.y, { heavy: true, blocked: true }); hud.pop(e.x, e.y + 0.6, e.text, 'armor'); break;
-      case 'special':
-        hud.showSpecialName(e.fighter.slot, e.name);
-        hud.pop(e.fighter.x, e.fighter.stats.height + 0.6, e.name.toUpperCase(), 'special');
-        stage.react(0.3);
-        break;
-      case 'text': hud.pop(e.fighter.x, e.fighter.stats.height + 0.4, e.text, e.cls); break;
-      case 'spawn':
-        vfx.burst(e.x, Math.max(0.4, e.y), { heavy: true, color: 0xff5a4a });
-        stage.react(0.6);
-        break;
-      case 'locked': break; // o cadeado 3D acima da cabeça (StatusFx) já mostra; o hit já grita BLOQUEADO!
-      case 'flash': hud.flash(e.strength); break; // flash de câmera (Selfie do Dano)
-      case 'counterHit': // contra-golpe genérico (acertou o rival no startup do golpe dele): carimbo amarelo + tranco
-        hud.pop(e.x, e.y + 0.9, e.text, 'counter');
-        vfx.burst(e.x, e.y, { heavy: true, color: 0xffd400 }); stage.punch(0.05);
-        break;
-      case 'tech': // tech de queda / escape de agarrão
-        if (e.throw) { vfx.burst(e.x, e.y, { blocked: true, heavy: true }); stage.shake(0.08); }
-        else vfx.dust(e.x, 0.4);
-        break;
-      case 'counter': // Close Certo / PERFECT SELFIE: clarão, carimbo e tranco
-        hud.flash(1); hud.pop(e.x, e.y + 0.7, e.text, 'perfect');
-        vfx.burst(e.x, e.y, { heavy: true, color: 0xffffff }); stage.shake(0.22, 0); stage.punch(0.09); stage.react(0.7);
-        break;
-      case 'grab': stage.shake(0.12); stage.punch(0.05); stage.react(0.5); break;
-      case 'ultimate': hud.ultimate(e.fighter, e.name); stage.shake(0.3); stage.react(1); look.shock(e.fighter.x, e.fighter.y + 1, 1.2, 0.6); vfx.dust(e.fighter.x, 0.9); break;
-      case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); stage.react(1); if (e.timeUp) hud.flash(0.5, 180); break;
-      case 'roundWin': break;
-      case 'matchEnd':
-        touch.hide();
-        hud.showResult(e.winner, e.line, () => startMatch(config), toMenu);
-        break;
-      default: break;
-    }
+  let game = null;
+  try {
+    const mod = await gameModule;
+    game = await mod.init({ params, platform, title });
+  } catch (e) {
+    clearInterval(creep);
+    console.error(e);
+    title?.setProgress(1, 'Falha ao carregar. Verifique a conexão e recarregue a página.');
+    return;
   }
-}
+  clearInterval(creep);
+  if (direct) { game.autostart(); hideBoot(); return; }
 
-addEventListener('keydown', (e) => {
-  if (e.code === 'F1') { e.preventDefault(); debug.enabled = !debug.enabled; }
-  if (e.code === 'F2' && match) {
-    e.preventDefault();
-    const [a] = match.fighters;
-    match.controllers[0] = match.controllers[0] instanceof AIController
-      ? new HumanController(input, config.mode === '2p' ? KEYMAPS.p1 : KEYMAPS.solo)
-      : new AIController(a.data.ai);
-  }
-  if (e.code === 'Escape' && match) toMenu();
-  if (e.code === 'Enter' && select.visible) select.start();
-});
-
-let acc = 0, last = performance.now(), time = 0;
-// velocidade geral do jogo (1 = 60 lógicas/s). 0.8 = ritmo mais legível (feedback 30/09: "jogo muito rápido"). ?speed= testa outros.
-const GAME_SPEED = Number(params.get('speed') || 0.8);
-function frame(now) {
-  requestAnimationFrame(frame);
-  const dt = Math.min(0.1, (now - last) / 1000);
-  last = now;
-  tick(dt);
+  // pré-busca a luta rápida (1 toque) enquanto o jogador olha o título
+  game.prefetchQuick();
+  const ch = game.challengeText();
+  if (ch) title.setChallenge(ch);
+  title.setProgress(1);
+  title.setReady();
+  platform.gameLoadingFinished();
+  console.info(`[boot] pronto em ${Math.round(performance.now() - t0)} ms · plataforma ${platform.name} · qualidade ${quality.tier}`);
 }
-function tick(dt) {
-  time += dt;
-  hud.tick(dt);
-  if (match) {
-    acc += dt * match.timeScale * GAME_SPEED;
-    let steps = 0;
-    while (acc >= STEP && steps < 6) { match.step(); acc -= STEP; steps++; }
-    if (steps === 6) acc = 0;
-    // interpolação (Fix Your Timestep): o visual desenha entre o frame lógico anterior e o atual pela fração que sobrou
-    // no acumulador — sem tremedeira quando a tela (60/120/144 Hz) não bate com os 48–60 passos lógicos por segundo
-    const alpha = match.hitstop > 0 || match.cinematic ? 1 : Math.min(1, acc / STEP);
-    for (const f of match.fighters) { f.rx = f.px + (f.x - f.px) * alpha; f.ry = f.py + (f.y - f.py) * alpha; }
-    handleEvents(match.drainEvents());
-    gameBus.emit('frame', match);
-    const frozen = match.hitstop > 0;
-    const vdt = frozen ? 0 : dt * match.timeScale * GAME_SPEED;
-    for (const v of views) v.update(match.cinematic && v.f !== match.cinematic.fighter ? 0 : vdt, match);
-    vfx.update(dt * match.timeScale * GAME_SPEED, match);
-    hud.update(match);
-  }
-  debug.update(match);
-  arena.update(dt, time);
-  stage.updateCamera(match, dt);
-  stage.render();
-  if (animLabel && match) animLabel.textContent = match.controllers[0] instanceof FeelTestP1
-    ? `GAME FEEL — ${match.controllers[0].label}`
-    : `TESTE DE ANIMAÇÃO — ${animTestLabel(match.controllers[0].t ?? 0)}  [${views[0]?.source ?? ''}]`;
-  if (statsEl) {
-    const r = stage.renderer.info;
-    statsEl.textContent = `draw ${r.render.calls} · tris ${(r.render.triangles / 1000).toFixed(1)}k · geo ${r.memory.geometries} · tex ${r.memory.textures} · views criadas ${vfx.created} · hitters ${match?.hitters.length ?? 0} · frame ${match?.frame ?? 0} · ${look.stats}`;
-  }
-}
-// ?stats=1 mostra custo de render e quantos visuais o pool já criou (tem que estabilizar)
-const statsEl = params.has('stats') ? Object.assign(document.createElement('div'), { className: 'stats' }) : null;
-if (statsEl) ui.appendChild(statsEl);
-const animLabel = params.has('animtest') || params.has('feeltest') ? Object.assign(document.createElement('div'), { className: 'animlabel' }) : null;
-if (animLabel) ui.appendChild(animLabel);
-
-// ?manual=1 — relógio controlado de fora (gravação de vídeo quadro a quadro: tools/record.mjs).
-// Tempo do jogo, animações CSS e performance.now() só andam quando __rk.advance(dt) é chamado.
-const manual = params.has('manual');
-let manualT = 0;
-if (manual) {
-  performance.now = () => manualT * 1000;
-} else {
-  requestAnimationFrame(frame);
-}
-function advance(dt) {
-  manualT += dt;
-  for (const a of document.getAnimations()) { a.pause(); a.currentTime = (a.currentTime || 0) + dt * 1000; }
-  tick(dt);
-  for (const a of document.getAnimations()) a.pause();
-}
-
-// Autostart por URL (link de desafio e testes)
-if (params.get('p1') || params.get('mode') === 'demo') {
-  startMatch({ p1: params.get('p1') || 'lulacio', p2: params.get('p2') || 'capitao-brasa', mode: params.get('mode') || 'cpu' });
-  // ?meter=1 começa com a barra de ultimate cheia (testar/gravar ultimates)
-  if (params.has('meter')) match.fighters.forEach((f) => { f.meter = 300; });
-  // ?ff=N adianta N frames da simulação (prints, testes, trailers)
-  const ff = Number(params.get('ff') || 0);
-  for (let i = 0; i < ff && match; i++) {
-    match.step();
-    vfx.update(STEP, match);
-    hud.tick(STEP);
-    const evs = match.drainEvents();
-    if (i > ff - 40) handleEvents(evs.filter((e) => e.type !== 'roundStart'));
-  }
-  for (const v of views) v.update(0.2, match);
-}
-
-window.__rk = { get match() { return match; }, views: () => views, startMatch, advance, audio, stage, hud };
+main();

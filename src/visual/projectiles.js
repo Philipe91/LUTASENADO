@@ -33,7 +33,9 @@ const CIVIL_LAYOUT = [ // x atrás da frente (m), z (profundidade), atraso de fa
   { x: -2.4, z: 0.25, ph: 0.15, s: 1.02 },
 ];
 let civilGltfs = null;
-const civilReady = Promise.all(CIVIL_FILES.map((f) => loadGLTF(f))).then((gs) => { civilGltfs = gs; }).catch(() => {});
+// sob demanda (antes baixava 1,5 MB ao abrir o jogo, mesmo sem o Lulácio na luta); a pré-carga da luta já busca
+let civilP = null;
+const civilReady = () => (civilP ||= Promise.all(CIVIL_FILES.map((f) => loadGLTF(f))).then((gs) => { civilGltfs = gs; }).catch(() => {}));
 
 function fillCrowd(g) {
   if (g.userData.civis || !civilGltfs) return;
@@ -203,7 +205,7 @@ export const PROJECTILE_VISUALS = {
       dust.rotation.x = -Math.PI / 2; dust.position.y = 0.02; dust.scale.set(1.6, 0.5, 1);
       g.add(dust);
       g.userData.dust = dust;
-      civilReady.then(() => fillCrowd(g));
+      civilReady().then(() => fillCrowd(g));
       return g;
     },
     animate(v, h, dt) {

@@ -2,9 +2,13 @@
 import * as THREE from 'three';
 
 export class Stage {
-  constructor(canvas) {
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  // opts.antialias: MSAA do canvas — com o Look ligado a cena vai para um alvo HDR com MSAA próprio e o canvas só
+  // recebe um quad de tela cheia, então o MSAA do canvas seria memória/banda jogada fora (pesa muito no celular).
+  // opts.maxPixelRatio: teto do devicePixelRatio (nível de qualidade)
+  constructor(canvas, opts = {}) {
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: opts.antialias ?? true, powerPreference: 'high-performance' });
+    this.maxPixelRatio = opts.maxPixelRatio ?? 2;
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, this.maxPixelRatio));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -19,8 +23,11 @@ export class Stage {
     addEventListener('resize', () => this.resize());
   }
 
+  setMaxPixelRatio(pr) { this.maxPixelRatio = pr; this.renderer.setPixelRatio(Math.min(devicePixelRatio, pr)); this.resize(); }
+
   resize() {
     const w = innerWidth, h = innerHeight;
+    if (this.renderer.getPixelRatio() !== Math.min(devicePixelRatio, this.maxPixelRatio)) this.renderer.setPixelRatio(Math.min(devicePixelRatio, this.maxPixelRatio)); // zoom/troca de monitor
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();

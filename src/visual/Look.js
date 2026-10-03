@@ -67,8 +67,10 @@ const FINAL = /* glsl */`
   }`;
 
 export class Look {
-  constructor(stage, params = new URLSearchParams()) {
+  // q: nível de qualidade (src/platform/quality.js: msaa, bloom, shadow) — ?msaa= / ?bloom= da URL têm prioridade
+  constructor(stage, params = new URLSearchParams(), q = null) {
     this.stage = stage;
+    this.params = params;
     this.enabled = params.get('look') !== '0';
     this.label = this.enabled ? 'look on' : 'look off';
     if (!this.enabled) return;
@@ -85,7 +87,7 @@ export class Look {
     r.shadowMap.type = THREE.VSMShadowMap;
     stage.scene.traverse((o) => {
       if (o.isDirectionalLight && o.castShadow) {
-        o.shadow.mapSize.setScalar(this.mobile ? 1024 : 2048);
+        o.shadow.mapSize.setScalar(q?.shadow ?? (this.mobile ? 1024 : 2048));
         o.shadow.radius = 5; o.shadow.blurSamples = 8; o.shadow.bias = -0.0002;
         if (o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; }
       }
@@ -103,8 +105,8 @@ export class Look {
     stage.scene.add(this.lights);
 
     // alvos de render
-    this.bloomOn = params.get('bloom') !== '0';
-    const msaa = params.has('msaa') ? Number(params.get('msaa')) : this.mobile ? 2 : 4;
+    this.bloomOn = params.get('bloom') === '1' || (params.get('bloom') !== '0' && (q ? q.bloom : true));
+    const msaa = params.has('msaa') ? Number(params.get('msaa')) : q ? q.msaa : this.mobile ? 2 : 4;
     this.rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: msaa, depthBuffer: true, stencilBuffer: false });
     this.rt.texture.name = 'look-scene';
     const small = () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
@@ -131,6 +133,23 @@ export class Look {
     stage.look = this;
     stage.render = () => this.render();
     this.label = `look on · ${r.toneMapping === THREE.AgXToneMapping ? 'agx' : 'aces'} · bloom ${this.bloomOn ? '1/4' : 'off'} · msaa ${msaa}`;
+  }
+
+  // troca de nível em tempo real (governador de FPS / botão de gráficos): bloom, MSAA do alvo HDR e sombra
+  applyQuality(q) {
+    if (!this.enabled) return;
+    const p = this.params;
+    this.bloomOn = p.get('bloom') === '1' || (p.get('bloom') !== '0' && q.bloom);
+    this.final.uniforms.bloomStrength.value = this.bloomOn ? 0.45 : 0;
+    const msaa = p.has('msaa') ? Number(p.get('msaa')) : q.msaa;
+    if (this.rt.samples !== msaa) { this.rt.dispose(); this.rt.samples = msaa; }
+    this.stage.scene.traverse((o) => {
+      if (o.isDirectionalLight && o.castShadow && o.shadow.mapSize.x !== q.shadow) {
+        o.shadow.mapSize.setScalar(q.shadow);
+        if (o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; }
+      }
+    });
+    this.label = `look on · ${q.name} · bloom ${this.bloomOn ? '1/4' : 'off'} · msaa ${msaa}`;
   }
 
   fit() {
@@ -210,11 +229,6 @@ export class Look {
     }
     this.pass(this.final, null);
     this.ms += (now - t0 - this.ms) * 0.05; // média móvel do custo de CPU do render (GPU é assíncrona)
-    // guarda de celular: se o quadro inteiro passa de ~30 ms nos primeiros segundos, derruba o bloom (fica rim+tone+vinheta)
-    if (this.mobile && this.bloomOn && this.lastT) {
-      this.frameMs = (this.frameMs ?? 16) + (now - this.lastT - (this.frameMs ?? 16)) * 0.05;
-      if (this.frame > 120 && this.frame < 400 && this.frameMs > 30) { this.bloomOn = false; this.final.uniforms.bloomStrength.value = 0; this.label += ' → bloom off (fps)'; }
-    }
     this.lastT = now;
   }
 

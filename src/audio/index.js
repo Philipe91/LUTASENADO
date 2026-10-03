@@ -39,8 +39,20 @@ export function setupAudio(bus, params = new URLSearchParams()) {
   };
   const director = new SoundDirector(out).attach(bus);
 
+  // ---- pausa geral do som (aba escondida, anúncio, pausa do jogo): hold(motivo, true|false) ----
+  // enquanto houver algum motivo, o AudioContext fica suspenso e o locutor calado; o gesto de desbloqueio não religa
+  const holds = new Set();
+  const hold = (reason, on) => {
+    if (on) holds.add(reason); else holds.delete(reason);
+    if (holds.size) {
+      engine.ctx?.suspend().catch(() => {});
+      try { speechSynthesis.cancel(); } catch { /* sem síntese de voz */ }
+    } else if (engine.unlocked) engine.ctx?.resume().catch(() => {});
+  };
+
   // ---- desbloqueio no primeiro gesto (regra do celular) ----
   const unlock = () => {
+    if (holds.size) return;
     engine.unlock();
     voice.unlock();
     if (engine.running) { if (wantMusic) music.start(); }
@@ -68,7 +80,7 @@ export function setupAudio(bus, params = new URLSearchParams()) {
     muteBtn.style.opacity = engine.muted ? '0.75' : '1';
     musicBtn.style.opacity = engine.musicVolume > 0 && !engine.muted ? '1' : '0.4';
   };
-  const setMuted = (m) => { engine.setMuted(m); voice.setMuted(m); store.set('rk.mute', m ? '1' : '0'); refresh(); };
+  const setMuted = (m) => { engine.setMuted(m); voice.setMuted(m); store.set('rk.mute', m ? '1' : '0'); refresh(); bus.emit('mute', m); };
   const toggleMusic = () => {
     const on = engine.musicVolume === 0;
     engine.setMusicVolume(on ? musicVolume : 0);
@@ -108,5 +120,5 @@ export function setupAudio(bus, params = new URLSearchParams()) {
     document.body.appendChild(panel);
   }
 
-  return { engine, voice, music, director, setMuted, toggleMusic };
+  return { engine, voice, music, director, setMuted, toggleMusic, hold, box };
 }

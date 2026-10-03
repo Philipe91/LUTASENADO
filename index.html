@@ -2,16 +2,39 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
     <title>República Kombat</title>
     <meta name="description" content="Jogo de luta satírico no navegador. Obra de ficção e sátira." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@500;700;900&display=swap" rel="stylesheet" />
+    <meta name="theme-color" content="#140d24" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="icons/favicon-48.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <!-- fontes servidas localmente (portais não aceitam requisição externa); latin cobre o português -->
+    <link rel="preload" href="fonts/bangers-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      @font-face { font-family: 'Bangers'; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/bangers-latin.woff2) format('woff2'); }
+      @font-face { font-family: 'Inter'; font-style: normal; font-weight: 100 900; font-display: swap; src: url(fonts/inter-latin.woff2) format('woff2'); }
+      /* tela de carregamento inline: aparece no 1º quadro, antes de qualquer JS */
+      html, body { margin: 0; height: 100%; background: #140d24; overflow: hidden; }
+      #boot { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; color: #fff;
+        background: radial-gradient(ellipse 80% 50% at 50% -5%, #7c3aedaa, #0000 70%), linear-gradient(#1c1033, #0b0b12 70%); font-family: 'Inter', system-ui, sans-serif; transition: opacity .35s; }
+      #boot.out { opacity: 0; pointer-events: none; }
+      #boot .blogo { font: 400 clamp(44px, 9vw, 96px)/.95 'Bangers', Impact, 'Arial Black', sans-serif; letter-spacing: 2px; text-align: center; transform: rotate(-2deg) skewX(-6deg);
+        -webkit-text-stroke: 4px #000; paint-order: stroke fill; text-shadow: 5px 5px 0 #000; }
+      #boot .blogo span { color: #ffd400; text-shadow: 5px 5px 0 #e0262b; }
+      #boot .bbar { width: min(360px, 74vw); height: 16px; border: 3px solid #000; border-radius: 4px; background: #0b0b12; box-shadow: 0 4px 0 #000; overflow: hidden; transform: skewX(-12deg); }
+      #boot .bbar i { display: block; height: 100%; width: 8%; background: linear-gradient(#fff2a8, #ffd400 40%, #f59e0b); transition: width .25s; }
+      #boot .bmsg { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; opacity: .7; }
+    </style>
   </head>
   <body>
     <canvas id="game"></canvas>
     <div id="ui"></div>
+    <div id="boot"><div class="blogo">REPÚBLICA <span>KOMBAT</span></div><div class="bbar"><i></i></div><div class="bmsg">Carregando…</div></div>
+    <noscript>Ative o JavaScript para jogar.</noscript>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

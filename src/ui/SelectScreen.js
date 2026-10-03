@@ -1,16 +1,21 @@
 // Tela de seleção montada a partir do registro de personagens (personagem novo aparece sozinho).
 // Grade compacta de "figuras de ação" (retrato ou inicial + paleta) para N lutadores + painel com os golpes dos dois
 // escolhidos. Colunas: até 6 lutadores = 1 fileira; mais = 2 fileiras (9 → 5 colunas); celular em retrato = 3 colunas (CSS).
+// opts: initial {p1,p2,mode} (preferências salvas) · isLocked(id) · onUnlock(id) → Promise<bool> (anúncio com
+// recompensa) · onPick(cfg) (salva + pré-busca os GLBs) · onBack() (volta ao título)
 import { CHARACTERS, getCharacter } from '../data/characters/index.js';
 import { portrait, hex } from './portraits.js';
 
 export class SelectScreen {
-  constructor(root, onStart) {
+  constructor(root, onStart, opts = {}) {
     this.onStart = onStart;
-    this.p1 = CHARACTERS[0].id;
-    this.p2 = CHARACTERS[1].id;
-    this.mode = 'cpu';
+    this.opts = opts;
+    const free = (id) => id && CHARACTERS.some((c) => c.id === id) && !opts.isLocked?.(id);
+    this.p1 = free(opts.initial?.p1) ? opts.initial.p1 : CHARACTERS[0].id;
+    this.p2 = free(opts.initial?.p2) ? opts.initial.p2 : CHARACTERS[1].id;
+    this.mode = opts.initial?.mode === '2p' ? '2p' : 'cpu';
     this.picking = 1;
+    this.asking = null;
     this.el = document.createElement('div');
     this.el.className = 'select';
     root.appendChild(this.el);
@@ -35,24 +40,37 @@ export class SelectScreen {
       </div>`;
   }
 
+  picked() { this.opts.onPick?.({ p1: this.p1, p2: this.p2, mode: this.mode }); }
+  choose(id) {
+    if (this.picking === 1) { this.p1 = id; this.picking = 2; }
+    else { this.p2 = id; this.picking = 1; }
+    this.picked();
+  }
+
   render() {
     const n = CHARACTERS.length;
     const cols = n <= 6 ? n : Math.ceil(n / 2); // 6 → 1 fileira; 9 → 5 + 4 (retrato: 3 colunas via CSS)
     const cards = CHARACTERS.map((c) => {
       const P = c.visual?.placeholder || {};
+      const locked = this.opts.isLocked?.(c.id);
       const tag = [this.p1 === c.id ? '<span class="tag t1">P1</span>' : '', this.p2 === c.id ? `<span class="tag t2">${this.mode === 'cpu' ? 'CPU' : 'P2'}</span>` : ''].join('');
       return `
-        <button class="char ${this.p1 === c.id ? 'sel1' : ''} ${this.p2 === c.id ? 'sel2' : ''}" data-id="${c.id}" title="${c.title}"
+        <button class="char ${this.p1 === c.id ? 'sel1' : ''} ${this.p2 === c.id ? 'sel2' : ''} ${locked ? 'locked' : ''}" data-id="${c.id}" title="${c.title}"
           style="--c1:${hex(P.suit)};--c2:${hex(P.accent)}">
-          ${tag}
+          ${tag}${locked ? '<span class="padlock">BLOQUEADO</span>' : ''}
           <div class="cardTop"><span class="ini">${c.name[0]}</span></div>
           <div class="cname">${c.name}</div>
           <div class="carch">${c.archetype}</div>
         </button>`;
     }).join('');
     const p2who = this.mode === 'cpu' ? 'ADVERSÁRIO (CPU)' : 'JOGADOR 2';
+    const ask = this.asking ? getCharacter(this.asking) : null;
     this.el.innerHTML = `
+      ${this.opts.onBack ? '<button class="sback" title="Voltar"><span>‹ VOLTAR</span></button>' : ''}
       <div class="logo">REPÚBLICA <span>KOMBAT</span></div>
+      ${ask ? `<div class="unlockAsk"><div><b>${ask.name}</b> está bloqueado.</div>
+        <div class="usub">Assista a um anúncio para liberar nesta sessão, ou vença uma luta contra a CPU para liberar de vez.</div>
+        <div class="btns"><button class="uwatch"><span>ASSISTIR ANÚNCIO</span></button><button class="menu uno"><span>AGORA NÃO</span></button></div></div>` : ''}
       <div class="pickhint ${this.picking === 2 ? 'two' : ''}">Escolhendo: <b>${this.picking === 1 ? 'JOGADOR 1' : p2who}</b> · ${n} lutadores</div>
       <div class="grid" style="--cols:${cols}">${cards}</div>
       <div class="picks">${this.pickPanel(this.p1, 'JOGADOR 1', 'one')}<div class="vs">VS</div>${this.pickPanel(this.p2, p2who, 'two')}</div>
@@ -69,12 +87,23 @@ export class SelectScreen {
       const top = b.querySelector('.cardTop');
       portrait(b.dataset.id, (url) => { top.style.backgroundImage = `url(${url})`; top.querySelector('.ini').textContent = ''; });
       b.onclick = () => {
-        if (this.picking === 1) { this.p1 = b.dataset.id; this.picking = 2; }
-        else { this.p2 = b.dataset.id; this.picking = 1; }
+        if (this.opts.isLocked?.(b.dataset.id)) { this.asking = b.dataset.id; this.render(); return; }
+        this.choose(b.dataset.id);
         this.render();
       };
     });
-    this.el.querySelector('.mode').onclick = () => { this.mode = this.mode === 'cpu' ? '2p' : 'cpu'; this.render(); };
+    if (this.opts.onBack) this.el.querySelector('.sback').onclick = () => this.opts.onBack();
+    if (ask) {
+      this.el.querySelector('.uno').onclick = () => { this.asking = null; this.render(); };
+      this.el.querySelector('.uwatch').onclick = async (e) => {
+        e.currentTarget.disabled = true;
+        const ok = await this.opts.onUnlock?.(ask.id);
+        this.asking = null;
+        if (ok) this.choose(ask.id);
+        this.render();
+      };
+    }
+    this.el.querySelector('.mode').onclick = () => { this.mode = this.mode === 'cpu' ? '2p' : 'cpu'; this.picked(); this.render(); };
     this.el.querySelector('.go').onclick = () => this.start();
   }
 
