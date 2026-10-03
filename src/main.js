@@ -105,6 +105,8 @@ function handleEvents(events) {
         if (e.heavy || e.ultimate) stage.punch(e.ultimate ? 0.14 : Math.min(0.13, 0.06 + 0.04 * (e.force || 1))); // zoom-soco da câmera no impacto forte
         if (e.ko && !e.ultimate) stage.focus(e.x, e.y, 2.2, 0.24); // último golpe do round: câmera lenta com close
         else if (e.ko) stage.focus(e.x, e.y, 2.2, 0.12);
+        if (e.ko) hud.flash(0.8, 200); // KO: clarão branco curto na tela
+        if (e.ultimate || e.ko) look.shock(e.x, e.y, e.ko ? 0.9 : 0.4, e.ko ? 0.5 : 0.35); // onda de choque em tela
         if (e.text) hud.pop(e.x, e.y + 0.5, e.text, 'big');
         else hud.pop(e.x, e.y + 0.3, Math.round(e.dmg), 'dmg');
         stage.react(e.ultimate ? 0.8 : e.heavy ? 0.35 : 0.08);
@@ -136,8 +138,8 @@ function handleEvents(events) {
         vfx.burst(e.x, e.y, { heavy: true, color: 0xffffff }); stage.shake(0.22, 0); stage.punch(0.09); stage.react(0.7);
         break;
       case 'grab': stage.shake(0.12); stage.punch(0.05); stage.react(0.5); break;
-      case 'ultimate': hud.ultimate(e.fighter, e.name); stage.shake(0.3); stage.react(1); break;
-      case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); stage.react(1); break;
+      case 'ultimate': hud.ultimate(e.fighter, e.name); stage.shake(0.3); stage.react(1); look.shock(e.fighter.x, e.fighter.y + 1, 1.2, 0.6); vfx.dust(e.fighter.x, 0.9); break;
+      case 'ko': hud.showBanner(e.text, 'ko', 2200); stage.shake(0.6); stage.react(1); if (e.timeUp) hud.flash(0.5, 180); break;
       case 'roundWin': break;
       case 'matchEnd':
         hud.showResult(e.winner, e.line, () => startMatch(config), toMenu);

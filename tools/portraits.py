@@ -9,10 +9,16 @@ SIZE = int(sys.argv[1]) if len(sys.argv) > 1 else 384
 # id → (arquivo, fração da altura do corpo que vira o lado do quadrado, deslocamento vertical do topo em fração)
 CHARS = {
     'lulacio': ('references/lulacio/ref_punhos_apose.png', 0.36, -0.03),
-    'capitao-brasa': ('references/capitao-brasa/ref_front.png', 0.34, -0.02),
+    'capitao-brasa': ('references/capitao-brasa/v2/ref_front.png', 0.3, -0.02),
     'xandor': ('references/xandor/ref_front.png', 0.34, -0.03),
-    'dino-supremo': ('references/dino-supremo/ref_front.png', 0.42, -0.03),
+    'dino-supremo': ('references/dino-supremo/v2/ref_front.png', 0.36, -0.03),
+    'nikolas': ('references/nikolas/ref_front.png', 0.32, -0.02),
+    'flavio': ('references/flavio/ref_front.png', 0.32, -0.02),
+    'vorcaro': ('references/vorcaro/ref_front.png', 0.32, -0.02),
+    'duval': ('references/duval/ref_front.png', 0.32, -0.02),
+    'erika': ('references/erika/ref_front.png', 0.32, -0.02),
 }
+ONLY = set(sys.argv[2].split(',')) if len(sys.argv) > 2 else None  # python tools/portraits.py 384 nikolas,erika
 
 
 def remove_bg(img, tol=26):
@@ -72,6 +78,8 @@ def crop_bust(img, mask, frac, dy):
 
 
 for cid, (path, frac, dy) in CHARS.items():
+    if ONLY and cid not in ONLY:
+        continue
     img = Image.open(path)
     rgba, mask = remove_bg(img)
     bust = crop_bust(rgba, mask, frac, dy).resize((SIZE, SIZE), Image.LANCZOS)
