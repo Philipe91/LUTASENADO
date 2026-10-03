@@ -4,7 +4,10 @@ S = json.load(open('narr/script.json', encoding='utf-8'))
 def dur(f): return float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',f]).decode().strip())
 def run(a): subprocess.run(['ffmpeg','-nostdin','-y','-v','error']+a, check=True)
 VF = 'scale=540:960,fps=24,format=yuv420p'
+import sys
+PARTS = sys.argv[1:] or list(S)
 for part, lines in S.items():
+    if part not in PARTS: continue
     segs = []; t = 0.0
     for i, (seg, txt) in enumerate(lines):
         nw = f'narr/t/{part}_{i:02d}_{seg}.wav'; nd = dur(nw)

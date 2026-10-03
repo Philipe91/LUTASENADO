@@ -1,31 +1,164 @@
 {
  "p1": [
-  ["intro", "República Kombat! Novos lutadores chegaram ao ringue. Parte um!"],
-  ["card_nikolas", "Nikolas, o Nikolinha Viral. Rápido, debochado... e quanto mais provoca, mais forte fica."],
-  ["c_01_nik_selfie", "Golpe meme: Selfie do Dano! Um clique, e o rival tá no chão."],
-  ["c_02_nik_ult", "Ultimate: Viralizou! Dez mil, cem mil, um milhão de notificações na cara!"],
-  ["card_erika", "Erika Hilton. Elegante, precisa, mestre do contra-ataque. Sem apanhar, ela só acelera."],
-  ["c_03_erika_disc", "Discurso de Impacto: uma onda sonora que ninguém interrompe."],
-  ["c_04_erika_ult", "Ultimate: Plenário é Meu! Holofote, silêncio... e o rival voa pra fora da tela!"],
-  ["card_flavio", "Flavão. Brigão pesado, pressão o tempo todo. Com pouca vida, o Clã protege."],
-  ["c_05_flav_rach", "Rachadinha Sísmica! O chão racha, e a conta chega no adversário."],
-  ["c_06_flav_ult", "Ultimate: Dinastia! A família inteira repete o golpe."],
-  ["outro", "Isso foi só o começo. Na parte dois, mais quatro lutadores!"]
+  [
+   "intro",
+   "República Kombat! Novos lutadores chegaram ao ringue. Parte um!"
+  ],
+  [
+   "card_nikolas",
+   "Nikolas, o Nikolinha Viral. Rápido, debochado... e quanto mais provoca, mais forte fica."
+  ],
+  [
+   "c_01_nik_selfie",
+   "Golpe meme: Selfie do Dano! Um clique, e o rival tá no chão."
+  ],
+  [
+   "c_02_nik_ult",
+   "Ultimate: Viralizou! Dez mil, cem mil, um milhão de notificações na cara!"
+  ],
+  [
+   "card_erika",
+   "Erika Hilton. Elegante, precisa, mestre do contra-ataque. Sem apanhar, ela só acelera."
+  ],
+  [
+   "c_03_erika_disc",
+   "Discurso de Impacto: uma onda sonora que ninguém interrompe."
+  ],
+  [
+   "c_04_erika_ult",
+   "Ultimate: Plenário é Meu! Holofote, silêncio... e o rival voa pra fora da tela!"
+  ],
+  [
+   "card_flavio",
+   "Flavão. Brigão pesado, pressão o tempo todo. Com pouca vida, o Clã protege."
+  ],
+  [
+   "c_05_flav_rach",
+   "Rachadinha Sísmica! O chão racha, e a conta chega no adversário."
+  ],
+  [
+   "c_06_flav_ult",
+   "Ultimate: Dinastia! A família inteira repete o golpe."
+  ],
+  [
+   "outro",
+   "Isso foi só o começo. Na parte dois, mais quatro lutadores!"
+  ]
  ],
  "p2": [
-  ["intro", "República Kombat, parte dois! Mais caos no ringue."],
-  ["card_duval", "Agente Duvall. Técnico, frio, cheio de armadilhas. Defendeu um especial? A ultimate enche."],
-  ["c_07_duv_pen", "Pendrive Explosivo! Arquivo corrompido, rival travado."],
-  ["c_08_duv_ult", "Ultimate: Backup Completo! Copiando... noventa e nove... cem por cento!"],
-  ["card_vorcaro", "Vorcash. Cada golpe vira capital, e capital vira poder."],
-  ["c_09_vor_mala", "Golpe meme: Mala de Contatos! Abre a maleta e chama os amigos pra bater."],
-  ["c_10_vor_ult", "Ultimate: Capital Infinito! Chove dinheiro... e o saldo do rival vai a zero."],
-  ["card_capitao-brasa", "Capitão Brasa, de visual novo. Ofensivo, rápido... e na defesa perfeita, tá ok!"],
-  ["c_11_bra_arm", "Arminha de Energia! Verde e amarela, direto no alvo."],
-  ["c_12_bra_ult", "Ultimate: Efeito Colateral! Uma injeção... e ele vira jacaré. Não é fake!"],
-  ["card_dino-supremo", "Dino Supremo, agora de toga. Um tanque jurássico que aguenta tudo."],
-  ["c_00_luta", "Brasa contra Dino: velocidade contra peso."],
-  ["c_13_dino_ult", "Ultimate: T-Rex de Terno! Só não alcança os próprios óculos."],
-  ["outro", "Nove lutadores. Escolha o seu e chama pro X1 no República Kombat!"]
+  [
+   "intro",
+   "República Kombat, parte dois! Mais caos no ringue."
+  ],
+  [
+   "card_duval",
+   "Agente Duvall. Técnico, frio, cheio de armadilhas. Defendeu um especial? A ultimate enche."
+  ],
+  [
+   "c_07_duv_pen",
+   "Pendrive Explosivo! Arquivo corrompido, rival travado."
+  ],
+  [
+   "c_08_duv_ult",
+   "Ultimate: Backup Completo! Copiando... noventa e nove... cem por cento!"
+  ],
+  [
+   "card_vorcaro",
+   "Vorcash. Cada golpe vira capital, e capital vira poder."
+  ],
+  [
+   "c_09_vor_mala",
+   "Golpe meme: Mala de Contatos! Abre a maleta e chama os amigos pra bater."
+  ],
+  [
+   "c_10_vor_ult",
+   "Ultimate: Capital Infinito! Chove dinheiro... e o saldo do rival vai a zero."
+  ],
+  [
+   "card_capitao-brasa",
+   "Capitão Brasa, de visual novo. Ofensivo, rápido... e na defesa perfeita, tá ok!"
+  ],
+  [
+   "c_11_bra_arm",
+   "Arminha de Energia! Verde e amarela, direto no alvo."
+  ],
+  [
+   "c_12_bra_ult",
+   "Ultimate: Efeito Colateral! Uma injeção... e ele vira jacaré. Não é fake!"
+  ],
+  [
+   "card_dino-supremo",
+   "Dino Supremo, agora de toga. Um tanque jurássico que aguenta tudo."
+  ],
+  [
+   "c_00_luta",
+   "Brasa contra Dino: velocidade contra peso."
+  ],
+  [
+   "c_13_dino_ult",
+   "Ultimate: T-Rex de Terno! Só não alcança os próprios óculos."
+  ],
+  [
+   "outro",
+   "Nove lutadores. Escolha o seu e chama pro X1 no República Kombat!"
+  ]
+ ],
+ "p3": [
+  [
+   "intro",
+   "República Kombat, parte três! Mais quatro lutadores chegaram pra bagunçar Brasília."
+  ],
+  [
+   "card_dilma",
+   "Dilma! Zoneadora confusa, mestre do dilmês. Acertou um especial? Dobra a meta!"
+  ],
+  [
+   "c_dilma_estocar_vento",
+   "Golpe meme: Estocar Vento! Ela guarda o vento... e solta tudo de uma vez."
+  ],
+  [
+   "c_dilma_ult_dilmes_total",
+   "Ultimate: Dilmês Total! Ninguém entende nada, e o rival fica com os controles invertidos."
+  ],
+  [
+   "card_haddad",
+   "Taxadd! Cada golpe que acerta, ele taxa a barra do adversário."
+  ],
+  [
+   "c_haddad_taxa_das_blusinhas",
+   "Taxa das Blusinhas! Encomenda chegou... taxada!"
+  ],
+  [
+   "c_haddad_ult_taxacao_suprema",
+   "Ultimate: Taxação Suprema! Chuva de boletos, e o Leão da Receita morde forte."
+  ],
+  [
+   "card_boulos",
+   "Boulos! Perto do rival, a mobilização enche a barra mais rápido."
+  ],
+  [
+   "c_boulos_ocupacao_relampago",
+   "Ocupação Relâmpago! A barraca brota debaixo do adversário. Ocupado!"
+  ],
+  [
+   "c_boulos_ult_ato_gigante",
+   "Ultimate: Ato Gigante! A multidão toma a arena e despeja o rival da tela."
+  ],
+  [
+   "card_renan",
+   "Renan Santos! Streamer de contra-ataque: três golpes seguidos viram corte viral."
+  ],
+  [
+   "c_renan_lacracao_reversa",
+   "Lacração Reversa! Jogou projétil? Volta mais forte. Lacrou!"
+  ],
+  [
+   "c_renan_ult_cancelamento",
+   "Ultimate: Cancelamento em Massa! Avalanche de dislike, e os especiais do rival travam."
+  ],
+  [
+   "outro",
+   "Treze lutadores. Escolha o seu, e chama pro X1 no República Kombat!"
+  ]
  ]
 }
