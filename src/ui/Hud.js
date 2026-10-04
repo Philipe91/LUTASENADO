@@ -41,7 +41,7 @@ export class Hud {
     this.combos = [el('div', 'combo p1'), el('div', 'combo p2')];
     this.popups = el('div', 'popups');
     this.result = el('div', 'result hidden');
-    this.help = el('div', 'help hidden', 'F1 hitboxes · F2 CPU x CPU · ESC menu');
+    this.help = el('div', 'help hidden', 'F1 hitboxes · F2 CPU x CPU · ESC pausa');
     this.flashEl = el('div', 'flash'); // flash de câmera (Selfie do Dano, Close Certo)
     root.append(this.cine, this.hud, this.banner, ...this.combos, this.popups, this.result, this.flashEl, this.help);
   }
@@ -143,17 +143,23 @@ export class Hud {
     for (const x of due) x.fn();
   }
 
-  showResult(winner, line, onRematch, onMenu) {
+  // opts.note: aviso extra (lutador liberado) · opts.onShare: mostra o botão COMPARTILHAR
+  showResult(winner, line, onRematch, onMenu, opts = {}) {
     const P = winner.data.visual?.placeholder || {};
     this.result.innerHTML = `
       <div class="card" style="--c1:${hex(P.suit)};--c2:${hex(P.accent)}">
         <div class="wkicker">VENCEDOR</div>
         <div class="wname">${winner.data.name}</div>
         <div class="line">“${line}”</div>
-        <div class="btns"><button class="again">REVANCHE</button><button class="menu">TROCAR LUTADOR</button></div>
+        ${opts.note ? `<div class="rnote">${opts.note}</div>` : ''}
+        <div class="btns"><button class="again">REVANCHE</button><button class="menu">TROCAR LUTADOR</button>${opts.onShare ? '<button class="share">COMPARTILHAR</button>' : ''}</div>
       </div>`;
     this.result.classList.remove('hidden');
-    this.result.querySelector('.again').onclick = onRematch;
-    this.result.querySelector('.menu').onclick = onMenu;
+    // um clique só: o intervalo comercial pode demorar e um 2º toque não pode disparar outra revanche
+    const once = (fn) => () => { if (this.result.dataset.busy) return; this.result.dataset.busy = '1'; fn(); };
+    delete this.result.dataset.busy;
+    this.result.querySelector('.again').onclick = once(onRematch);
+    this.result.querySelector('.menu').onclick = once(onMenu);
+    if (opts.onShare) this.result.querySelector('.share').onclick = opts.onShare;
   }
 }

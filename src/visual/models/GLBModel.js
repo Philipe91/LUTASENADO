@@ -3,21 +3,43 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { buildBoneIndex, hipsRestY, retargetClip } from './retarget.js';
 import { rigidifyNearBones, robeToHips } from './skinFix.js';
 import { CLIP_NAMES, ANIM_FALLBACK } from '../animKeys.js';
+import { exists, bytes, modelUrl } from '../../platform/assets.js';
 
 const loader = new GLTFLoader();
 const draco = new DRACOLoader();
 draco.setDecoderPath('draco/'); // decodificador local (public/draco), sem depender de CDN
 loader.setDRACOLoader(draco);
+loader.setMeshoptDecoder(MeshoptDecoder); // bibliotecas de animação .anim.glb (EXT_meshopt_compression, ~¼ do tamanho)
 const cache = new Map();
+export const loadedBytes = new Map(); // url → bytes já baixados (barra de progresso da tela de carregamento)
 
+// Só pede arquivo que existe (catálogo rk-assets) e já na variante da qualidade atual (.m.glb nos níveis leves).
+// Promessa em cache por url: pré-carga, retrato de prop e lutador compartilham o mesmo download.
 export function loadGLTF(url) {
-  if (!cache.has(url)) cache.set(url, loader.loadAsync(url));
-  return cache.get(url);
+  const u = modelUrl(url);
+  if (!exists(u)) return Promise.reject(new Error(`sem arquivo: ${url}`));
+  if (!cache.has(u)) {
+    cache.set(u, loader.loadAsync(u, (e) => loadedBytes.set(u, e.loaded))
+      .then((g) => { loadedBytes.set(u, bytes(u)); return g; })
+      .catch((e) => { cache.delete(u); throw e; })); // erro de rede: deixa tentar de novo na próxima luta
+  }
+  return cache.get(u);
 }
+
+// Biblioteca de animação (visual.animations): se o modelo inteiro já está carregado/carregando (é um dos
+// lutadores), reaproveita; senão baixa só o esqueleto + clips (.anim.glb, gerado por tools/optimize_glb.mjs).
+export function animLibUrl(url) {
+  const full = modelUrl(url);
+  if (cache.has(full)) return full;
+  const lib = String(url).replace(/\.glb$/, '.anim.glb');
+  return exists(lib) ? lib : full;
+}
+export const isCached = (url) => cache.has(modelUrl(url));
 
 // chaves em que a física controla a altura: a animação fica sem subir/descer o quadril
 const LOCK_Y_KEYS = new Set(['jump', 'airPunch', 'airKick', 'knockdown']);
@@ -43,10 +65,11 @@ export class GLBModel {
     // animações que vieram dentro do próprio modelo têm prioridade (setClips mantém a 1ª de cada nome)
     const lockY = new Set(Object.entries(visual.clips || {}).filter(([k]) => LOCK_Y_KEYS.has(k)).map(([, n]) => n));
     const clips = gltf.animations.map((c) => retargetClip(c, m.bones, 1, lockY.has(c.name)));
-    const sources = [...(visual.animations || []), ...animSources].map((s) => (typeof s === 'string' ? { url: s } : s));
+    const sources = [...(visual.animations || []), ...animSources].map((s) => (typeof s === 'string' ? { url: s } : s))
+      .filter((s) => exists(s.url));
     await Promise.all(sources.map(async (src) => {
       try {
-        const lib = await loadGLTF(src.url);
+        const lib = await loadGLTF(animLibUrl(src.url));
         const libBones = buildBoneIndex(lib.scene);
         const srcY = hipsRestY(libBones), dstY = hipsRestY(m.bones);
         const scale = srcY && dstY ? dstY / srcY : 1;

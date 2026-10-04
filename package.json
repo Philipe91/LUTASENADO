@@ -6,8 +6,14 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
+    "build:poki": "vite build --mode poki --outDir dist-poki",
+    "build:crazygames": "vite build --mode crazygames --outDir dist-crazygames",
+    "build:google": "vite build --mode google --outDir dist-google",
+    "build:gamedistribution": "vite build --mode gamedistribution --outDir dist-gamedistribution",
     "preview": "vite preview --host",
-    "sim": "node tests/sim.mjs"
+    "sim": "node tests/sim.mjs",
+    "assets:optimize": "node tools/optimize_glb.mjs",
+    "test:publish": "node tests/publish.mjs"
   },
   "dependencies": {
     "three": "^0.170.0"
