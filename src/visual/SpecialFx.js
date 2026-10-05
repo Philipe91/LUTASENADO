@@ -56,6 +56,9 @@ class PropHandFx {
   constructor(scene, c) {
     this.scene = scene; this.c = c; this.v = new THREE.Vector3();
     this.p = PROJECTILE_VISUALS[c.visual].build(); this.p.visible = false; scene.add(this.p);
+    // prop com pegada (ex.: espeto da picanha): a mão fica no cabo, não no meio do objeto
+    const u = this.p.userData, grip = u.skewer?.userData.grip;
+    if (grip && u.spin) { u.spin.position.copy(grip).multiplyScalar(-(u.skewer.scale.x || 1)); u.spin.parent.rotation.set(0, 0, 0.9); }
   }
   update(dt, f, model, sp) {
     this.p.visible = false;
@@ -63,7 +66,8 @@ class PropHandFx {
     bodyPoint(this.v, f, model, this.c.hand || 'righthand', { dx: 0.3, y: f.stats.height * 0.6 });
     this.p.visible = true;
     this.p.position.copy(this.v);
-    this.p.scale.setScalar(0.5 * clamp01(f.t / 3));
+    this.p.scale.setScalar((this.p.userData.handScale ?? 0.5) * clamp01(f.t / 3));
+    if (this.p.userData.skewer) this.p.rotation.y = f.facing > 0 ? 0 : Math.PI;
     this.p.userData.spin && (this.p.userData.spin.rotation.z = 0);
   }
   dispose() { this.scene.remove(this.p); }

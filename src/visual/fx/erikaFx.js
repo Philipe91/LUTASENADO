@@ -6,6 +6,7 @@
 //   visual de Hitter: sonicWave (3 arcos rosa → dourado → branco, pulsando, com brilhos)
 // Cores: rosa 0xff5fa8, dourado 0xffc46b, branco. Terno preto 0x151515 (ARTE.md: energia = aditivo).
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Puffs, Rings, Shards, std, canvasTex, clamp01, easeOut, smooth, add, flat, bodyPoint } from './common.js';
 import { flashTexture, starTexture, roundRect, star } from './nikolasFx.js';
 
@@ -19,6 +20,7 @@ export function makeMic() {
   const foam = new THREE.Mesh(new THREE.SphereGeometry(0.079, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.6), std(0xff8ac4, { roughness: 0.95 })); foam.position.y = 0.36;
   for (const m of [handle, ball]) m.castShadow = true;
   g.add(handle, band, ball, foam); g.scale.setScalar(1.5);
+  swapToGLB(g, PROP_GLB.microfoneErika);
   return g;
 }
 const sprite = (tex, w, h, extra = {}) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, ...extra })); s.scale.set(w, h, 1); s.visible = false; s.renderOrder = 8; return s; };

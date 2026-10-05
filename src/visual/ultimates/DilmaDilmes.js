@@ -5,6 +5,7 @@
 // um CACHORRO atrás dela ("atrás da criança tem um cachorro"). Finalizador: MANDIOCA COLOSSAL cai do céu em cima do
 // rival (poeira + anel); o rival fica CONFUSO (a lógica inverte os controles — StatusFx mostra a etiqueta).
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Rings, Puffs, Shards, std, clamp01, easeIn, easeOut, smooth, bodyPoint, textSprite } from '../fx/common.js';
 import { makeMandioca, DILMA_RED } from '../fx/dilmaFx.js';
 
@@ -22,6 +23,7 @@ function makeDog() {
   g.add(body, head, snout, nose, ...ears, ...legs, tail);
   for (const m of g.children) m.castShadow = true;
   g.userData.tail = tail;
+  swapToGLB(g, PROP_GLB.cachorro);
   return g;
 }
 function makeKid() {
@@ -32,6 +34,7 @@ function makeKid() {
   const hair = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.45), std(0x3a2414)); hair.position.y = 1.04;
   g.add(body, legs, head, hair);
   for (const m of g.children) m.castShadow = true;
+  swapToGLB(g, PROP_GLB.crianca);
   return g;
 }
 

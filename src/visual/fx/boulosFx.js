@@ -6,6 +6,7 @@
 //   visual de Hitter: barraca (zona: marca no chão → barraca brota com placa OCUPADO! → some)
 // Cores: vermelho 0xd6332a / laranja 0xe84b2a, lona azul 0x2f6bd6, amarelo 0xffd23a.
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Rings, Puffs, Shards, std, canvasTex, clamp01, easeOut, add, flat, bodyPoint, mergeParts } from './common.js';
 
 export const PROTEST_RED = 0xd6332a, TENT = 0xe84b2a, TARP = 0x2f6bd6, YELLOW = 0xffd23a;
@@ -33,7 +34,9 @@ export function makeTent(color = TENT, sign = true) {
     const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.36), new THREE.MeshBasicMaterial({ map: banner('OCUPADO!', '#ffd23a', '#d6332a'), side: THREE.DoubleSide }));
     plate.position.set(0.75, 1.55, 0.37); plate.rotation.z = -0.08;
     g.add(stick, plate); g.userData.plate = plate;
+    stick.userData.keep = plate.userData.keep = true; // placa OCUPADO! continua por cima do GLB
   }
+  swapToGLB(g, PROP_GLB.barraca);
   return g;
 }
 
@@ -46,6 +49,7 @@ export function makeMegaphone() {
   const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.05), std(0x1a1a1a)); grip.position.set(0.05, -0.1, 0);
   g.add(horn, rim, grip);
   for (const m of g.children) m.castShadow = true;
+  swapToGLB(g, PROP_GLB.megafone);
   return g;
 }
 

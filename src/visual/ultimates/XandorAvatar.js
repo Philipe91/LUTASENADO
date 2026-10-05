@@ -5,6 +5,7 @@
 // Os frames vêm dos mesmos números da lógica (Fighter.updateUltimate): hit k = 12 + k·interval; final = 12 + hits·interval + 6.
 // Contato só quando a lógica confirma (f.ultRes[k] === 'hit'): errou → caneta passa direto e cai, martelo bate no chão.
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 
 const GOLD = 0xffd36b;
 const add = (c, o = 1) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
@@ -43,6 +44,7 @@ function makePen() {
   const tip = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.12, 8), std(GOLD, { metalness: 0.8, roughness: 0.25 }));
   tip.position.y = -0.31; tip.rotation.x = Math.PI;
   g.add(body, band, tip);
+  swapToGLB(g, PROP_GLB.canetaXandor);
   return g;
 }
 
@@ -68,6 +70,7 @@ function makeGavel() {
   const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 2.6, 10), wood);
   handle.position.y = 1.3;
   g.add(head, handle);
+  swapToGLB(g, PROP_GLB.martelo);
   return g;
 }
 

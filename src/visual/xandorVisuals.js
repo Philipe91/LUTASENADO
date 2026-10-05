@@ -5,6 +5,7 @@
 //           (h.landed), senão o risco fica no chão
 // Frames vêm da lógica: impacto em t = h.delay; h.landed = contato confirmado pela lógica.
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from './propModel.js';
 
 const GOLD = 0xd4af37;
 const std = (c, extra = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, ...extra });
@@ -69,14 +70,17 @@ export const XANDOR_VISUALS = {
       const faceMat = new THREE.MeshStandardMaterial({ map: stampFaceTexture(), roughness: 0.5 });
       const red = std(0xb81d1d);
       // caixa: frente (+z) com "BLOQUEADO" legível na câmera
-      const base = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.5, 0.9), [red, red, red, red, faceMat, red]);
+      const base = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.5, 0.9), red);
       base.position.y = 0.25;
+      // face "BLOQUEADO" como decal separado: continua por cima do GLB do carimbo
+      const face = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.5), faceMat); face.position.set(0, 0.25, 0.456);
       const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 0.7, 12), std(0x3a2414));
       neck.position.y = 0.85;
       const knob = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), std(0x3a2414));
       knob.position.y = 1.3; knob.scale.y = 0.8;
-      stamp.add(base, neck, knob);
+      stamp.add(base, neck, knob, face);
       g.add(stamp);
+      swapToGLB(stamp, PROP_GLB.carimboBloqueado, { keep: [face] });
       const mark = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.75), new THREE.MeshBasicMaterial({ map: floorStampTexture(), transparent: true, opacity: 0, depthWrite: false }));
       mark.rotation.x = -Math.PI / 2; mark.position.y = 0.025; g.add(mark);
       Object.assign(g.userData, { ring, stamp, mark });
@@ -117,6 +121,7 @@ export const XANDOR_VISUALS = {
       const tip = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.45, 12), std(GOLD, { metalness: 0.85, roughness: 0.25 }));
       tip.rotation.x = Math.PI; tip.position.y = -1.42;
       pen.add(body, band, clip, tip);
+      swapToGLB(pen, PROP_GLB.canetaXandor);
       pen.position.y = -1.25; // topo da caneta no pivô
       pivot.add(pen);
       const ink = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.2), new THREE.MeshBasicMaterial({ color: 0x0c0c2a, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));

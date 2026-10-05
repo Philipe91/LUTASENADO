@@ -8,6 +8,7 @@
 // água do espelho d'água espirra. Contato só quando a lógica confirma (f.ultRes[k] === 'hit').
 // Fim: nova nuvem verde e o Capitão volta.
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Tentacle } from '../fx/Tentacle.js';
 import { Puffs, Rings, std, clamp01, smooth, easeIn, easeOut, mergeParts } from '../fx/common.js';
 import { MeshyBody } from './meshyBody.js';
@@ -214,6 +215,7 @@ function makeSyringe() {
   g.add(glass, liquid, rod, cap, flange, needle);
   g.scale.setScalar(1.5);
   g.userData = { liquid, rod, cap };
+  swapToGLB(g, PROP_GLB.seringa, { keep: [rod, cap] }); // êmbolo procedural continua descendo
   return g;
 }
 
