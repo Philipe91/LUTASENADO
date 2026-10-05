@@ -85,13 +85,8 @@ export class Look {
 
     // sombras suaves: VSM com blur (barato: o blur é na resolução do shadow map)
     r.shadowMap.type = THREE.VSMShadowMap;
-    stage.scene.traverse((o) => {
-      if (o.isDirectionalLight && o.castShadow) {
-        o.shadow.mapSize.setScalar(q?.shadow ?? (this.mobile ? 1024 : 2048));
-        o.shadow.radius = 5; o.shadow.blurSamples = 8; o.shadow.bias = -0.0002;
-        if (o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; }
-      }
-    });
+    this.q = q;
+    this.adopt(stage.scene);
 
     // luz de recorte (rim) por trás/direita + preenchimento frio da frente/direita (ARTE.md §3)
     // (intensidade contida: luz direcional também cai no chão claro; o recorte forte vem do fresnel abaixo)
@@ -135,10 +130,23 @@ export class Look {
     this.label = `look on · ${r.toneMapping === THREE.AgXToneMapping ? 'agx' : 'aces'} · bloom ${this.bloomOn ? '1/4' : 'off'} · msaa ${msaa}`;
   }
 
+  // sombra suave (VSM) do nível atual nas luzes de uma arena — no início e a cada troca de cenário entre lutas
+  adopt(root) {
+    if (!this.enabled) return;
+    root.traverse((o) => {
+      if (o.isDirectionalLight && o.castShadow) {
+        o.shadow.mapSize.setScalar(this.q?.shadow ?? (this.mobile ? 1024 : 2048));
+        o.shadow.radius = 5; o.shadow.blurSamples = 8; o.shadow.bias = -0.0002;
+        if (o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; }
+      }
+    });
+  }
+
   // troca de nível em tempo real (governador de FPS / botão de gráficos): bloom, MSAA do alvo HDR e sombra
   applyQuality(q) {
     if (!this.enabled) return;
     const p = this.params;
+    this.q = q;
     this.bloomOn = p.get('bloom') === '1' || (p.get('bloom') !== '0' && q.bloom);
     this.final.uniforms.bloomStrength.value = this.bloomOn ? 0.45 : 0;
     const msaa = p.has('msaa') ? Number(p.get('msaa')) : q.msaa;

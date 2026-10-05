@@ -3,6 +3,7 @@
 // tudo que se repete vira InstancedMesh, e o que mexe (bandeira, plateia, nuvem) mexe no vertex shader.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { exists } from '../../platform/assets.js';
 
 const FONT = "'Bangers', 'Arial Black', Impact, sans-serif";
 
@@ -230,10 +231,10 @@ export const BANNERS = [
   { text: 'FORA TODO MUNDO', bg: '#f4ecd8', fg: '#1b1b1b', stripe: '#1a8a3d' },
   { text: 'REPÚBLICA KOMBAT', bg: '#11823b', fg: '#ffe14d', stripe: '#ffffff' },
 ];
-export function clothAtlas(flags) {
+export function clothAtlas(flags, banners = BANNERS) {
   return canvasTex(1024, 1024, (g) => {
     g.clearRect(0, 0, 1024, 1024);
-    BANNERS.forEach((b, i) => {
+    banners.slice(0, 4).forEach((b, i) => {
       const y = i * 128;
       g.fillStyle = b.bg; g.fillRect(0, y, 1024, 128);
       g.fillStyle = b.stripe; g.fillRect(0, y + 8, 1024, 8); g.fillRect(0, y + 112, 1024, 8);
@@ -353,40 +354,92 @@ function crowdAtlas() {
   }, { srgb: true });
 }
 
-// seats: [{x,y,z,s,color,pose}]
-export function makeCrowd(seats, U) {
+// Folha de sprites da plateia. Padrão: recortes de papelão desenhados acima (4 poses numa fileira).
+// Slot opcional: public/assets/arena/crowd_atlas.webp — grade 6 colunas (torcedores) × 4 linhas (poses: braços
+// baixos, bandeirinha, cartaz, comemorando), camiseta BRANCA (o shader tinge só as áreas sem saturação).
+export const CROWD_ATLAS_URL = 'assets/arena/crowd_atlas.webp';
+export function crowdSheet() {
+  if (exists(CROWD_ATLAS_URL)) {
+    const sheet = { tex: null, cols: 6, rows: 4, poseRows: true, cheer: 3, variants: 6, tint: 2.0, aspect: 0.5 };
+    sheet.tex = new THREE.TextureLoader().load(CROWD_ATLAS_URL, (t) => {
+      // proporção real da célula: o quad da plateia (0,9 × 1,8) estica/encolhe na largura para não deformar
+      sheet.aspect = (t.image.width / 6) / (t.image.height / 4);
+      sheet.onAspect?.(sheet.aspect);
+    });
+    sheet.tex.colorSpace = THREE.SRGBColorSpace;
+    sheet.tex.anisotropy = 4;
+    return sheet;
+  }
+  return { tex: crowdAtlas(), cols: 4, rows: 1, poseRows: false, cheer: 3, variants: 1, tint: 0, aspect: 0.5 };
+}
+
+// seats: [{x,y,z,s,color,pose,variant,dim}]
+// opts.sheet: { tex, cols, rows, poseRows (poses nas linhas e variações nas colunas), cheer (pose de comemorar),
+//   variants, tint (0 = tinge tudo; >0 = tinge só o que é cinza/branco abaixo desse brilho: pele e plaquinhas ficam),
+//   aspect (largura/altura da célula), poses (sorteio da pose base) } · seat.dim: brilho das partes NÃO tingidas (TINT_MASK)
+export function makeCrowd(seats, U, { sheet = crowdSheet() } = {}) {
   const geo = new THREE.PlaneGeometry(0.9, 1.8);
   geo.translate(0, 0.9, 0);
   geo.deleteAttribute('normal');
   const n = seats.length;
-  const mesh = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ map: crowdAtlas(), alphaTest: 0.5, side: THREE.DoubleSide }), n);
-  const aSeed = new Float32Array(n * 4);
+  const mat = new THREE.MeshBasicMaterial({ map: sheet.tex, alphaTest: 0.5, side: THREE.DoubleSide });
+  const mesh = new THREE.InstancedMesh(geo, mat, n);
+  const aSeed = new Float32Array(n * 4), aVar = new Float32Array(n * 2);
   const m = new THREE.Matrix4(), c = new THREE.Color();
   const r = rng(5);
+  const pickPose = sheet.poses || ((pr) => (pr < 0.58 ? 0 : pr < 0.86 ? 1 : 2)); // braços baixos / bandeirinha / cartaz
   seats.forEach((s, i) => {
     m.makeScale(s.s * (s.flip ? -1 : 1), s.s, s.s).setPosition(s.x, s.y ?? 0, s.z);
     mesh.setMatrixAt(i, m);
     mesh.setColorAt(i, c.copy(s.color));
     aSeed[i * 4] = r() * 6.28;                       // fase do balanço
     const pr = r();
-    aSeed[i * 4 + 1] = s.pose ?? (pr < 0.58 ? 0 : pr < 0.86 ? 1 : 2); // pose base: braços baixos / bandeirinha / cartaz
+    aSeed[i * 4 + 1] = s.pose ?? pickPose(pr, r);    // pose base
     aSeed[i * 4 + 2] = r();                          // empolgação (quem levanta os braços)
     aSeed[i * 4 + 3] = Math.abs(s.x) * 0.018 + r() * 0.12; // atraso da onda (sai do centro pras pontas)
+    aVar[i * 2] = s.variant ?? (sheet.variants > 1 ? Math.floor(r() * sheet.variants) : 0);
+    aVar[i * 2 + 1] = s.dim ?? 1;
   });
   geo.setAttribute('aSeed', new THREE.InstancedBufferAttribute(aSeed, 4));
-  const uni = { uEnergy: { value: 0 }, uKickT: { value: -10 }, uKick: { value: 0 } };
-  mesh.material.onBeforeCompile = (s) => {
+  geo.setAttribute('aVar', new THREE.InstancedBufferAttribute(aVar, 2));
+  const uni = {
+    uEnergy: { value: 0 }, uKickT: { value: -10 }, uKick: { value: 0 },
+    uSheet: { value: new THREE.Vector3(sheet.cols, sheet.rows, sheet.cheer) }, uAspK: { value: sheet.aspect / 0.5 }, uTintMax: { value: sheet.tint || 2 },
+  };
+  sheet.onAspect = (a) => { uni.uAspK.value = a / 0.5; };
+  mat.defines = {};
+  if (sheet.poseRows) mat.defines.POSE_ROWS = '';
+  if (sheet.tint) mat.defines.TINT_MASK = '';
+  mat.onBeforeCompile = (s) => {
     s.uniforms.uTime = U.time; Object.assign(s.uniforms, uni);
-    s.vertexShader = 'uniform float uTime, uEnergy, uKickT, uKick;\nattribute vec4 aSeed;\n' + s.vertexShader
+    s.vertexShader = 'uniform float uTime, uEnergy, uKickT, uKick, uAspK;\nuniform vec3 uSheet;\nattribute vec4 aSeed;\nattribute vec2 aVar;\nvarying float vDim;\n' + s.vertexShader
       .replace('#include <uv_vertex>', `#include <uv_vertex>
         float pose = aSeed.y;
-        if (uEnergy > 0.25 + aSeed.z * 0.5) pose = 3.0;
-        vMapUv.x = (vMapUv.x + pose) * 0.25;`)
+        if (uEnergy > 0.25 + aSeed.z * 0.5) pose = uSheet.z;
+        #ifdef POSE_ROWS
+          vec2 cell = vec2(aVar.x, pose);
+        #else
+          vec2 cell = vec2(pose, aVar.x);
+        #endif
+        vMapUv = (vMapUv + vec2(cell.x, uSheet.y - 1.0 - cell.y)) / uSheet.xy;
+        vDim = aVar.y;`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
+        transformed.x *= uAspK;
         float bob = abs(sin(uTime * (2.2 + aSeed.z * 2.5 + uEnergy * 4.0) + aSeed.x));
         float k = clamp((uTime - uKickT - aSeed.w) * 3.2, 0.0, 1.0);
         float hop = sin(k * 3.14159) * uKick * (0.7 + aSeed.z * 0.6);
         transformed.y += bob * (0.025 + uEnergy * 0.32) + hop * 0.75;`);
+    s.fragmentShader = 'uniform float uTintMax;\nvarying float vDim;\n' + s.fragmentShader.replace('#include <color_fragment>', `
+      #ifdef USE_COLOR
+        #ifdef TINT_MASK
+          { float mx = max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b)), mn = min(diffuseColor.r, min(diffuseColor.g, diffuseColor.b));
+            float sat = (mx - mn) / max(mx, 0.001);
+            float tm = (1.0 - smoothstep(0.1, 0.22, sat)) * (1.0 - smoothstep(uTintMax - 0.04, uTintMax, mx));
+            diffuseColor.rgb = mix(diffuseColor.rgb * vDim, diffuseColor.rgb * vColor, tm); } // vDim: luz/névoa do que não é tingido
+        #else
+          diffuseColor.rgb *= vColor;
+        #endif
+      #endif`);
   };
   mesh.frustumCulled = false;
   return { mesh, uni };

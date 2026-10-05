@@ -129,7 +129,7 @@ export function buildEsplanada(scene, P, { night = false } = {}) {
       const x = -spread + (i + r() * 0.8) * (spread * 2 / n);
       if (Math.abs(x) < 3.2 + row * 0.5 && r() < 0.85) continue; // respiro no centro (vê-se o Congresso atrás dos lutadores)
       const c = lin(shirts[Math.floor(r() * shirts.length)]).lerp(hazeC, (night ? 0.5 : 0.36) + row * 0.05).multiplyScalar(night ? 0.6 : 0.88 - row * 0.03);
-      seats.push({ x, y: GY, z: z - r() * 0.4, s: 0.9 + r() * 0.22, color: c, flip: r() < 0.5 });
+      seats.push({ x, y: GY, z: z - r() * 0.4, s: 0.9 + r() * 0.22, color: c, flip: r() < 0.5, dim: night ? 0.6 : 0.88 - row * 0.05 });
     }
   }
   const crowd = makeCrowd(seats, U);
