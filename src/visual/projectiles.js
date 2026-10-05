@@ -7,6 +7,7 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { loadGLTF } from './models/GLBModel.js';
 import { Puffs, Rings, Shards, canvasTex, textSprite, add, flat } from './fx/common.js';
 import { makeVadeMecum } from './fx/dinoFx.js';
+import { PICANHA_VISUAL } from './fx/picanhaFx.js';
 import { NIKOLAS_VISUALS } from './fx/nikolasFx.js';
 import { ERIKA_VISUALS } from './fx/erikaFx.js';
 import { DILMA_VISUALS } from './fx/dilmaFx.js';
@@ -125,38 +126,8 @@ export const PROJECTILE_VISUALS = {
   },
 
   // ---------------- LULÁCIO: PICANHA DO POVO ----------------
-  picanha: {
-    build() {
-      const g = new THREE.Group();
-      const meat = new THREE.Mesh(new THREE.SphereGeometry(0.3, 14, 10), std(0x9c2b1e, { roughness: 0.45 }));
-      meat.scale.set(1, 0.5, 0.7);
-      const fat = new THREE.Mesh(new THREE.SphereGeometry(0.3, 14, 6, 0, Math.PI * 2, 0, Math.PI * 0.32), std(0xfff1d6));
-      fat.scale.set(1.02, 0.55, 0.72);
-      const spin = new THREE.Group();
-      spin.add(meat, fat);
-      spin.scale.setScalar(1.8); // grande o bastante pra ler na câmera do jogo
-      g.add(spin);
-      // rastro: 6 "fantasmas" vermelhos que seguem a trajetória
-      const trail = [];
-      for (let i = 0; i < 6; i++) {
-        const t = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff6a3a, transparent: true, opacity: 0.5 - i * 0.07, depthWrite: false }));
-        t.scale.set(1, 0.55, 0.7); trail.push(t); g.add(t);
-      }
-      g.userData.spin = spin; g.userData.trail = trail; g.userData.hist = [];
-      g.userData.offY = 0.18;
-      return g;
-    },
-    animate(v, h, dt) {
-      const u = v.userData;
-      u.spin.rotation.z -= dt * 12 * h.facing;
-      if (u.lastId !== h.id) { u.lastId = h.id; u.hist.length = 0; }
-      u.hist.unshift([h.x, h.y]); if (u.hist.length > 24) u.hist.pop();
-      u.trail.forEach((t, i) => { // posição relativa ao grupo (o grupo está no ponto atual)
-        const p = u.hist[Math.min(u.hist.length - 1, (i + 1) * 3)] || [h.x, h.y];
-        t.position.set(p[0] - h.x, p[1] - h.y, 0); t.visible = u.hist.length > (i + 1) * 3;
-      });
-    },
-  },
+  // espeto de churrascaria com 3 fatias em "C" (fx/picanhaFx.js); rastro de gordura, brasa e fumaça
+  picanha: PICANHA_VISUAL,
 
   // onda de apoiadores: 9 silhuetas (3 fileiras) em sprites planos — barato e lê como multidão
   crowdWave: {
@@ -267,12 +238,12 @@ export const PROJECTILE_VISUALS = {
         body.add(side);
       }
       body.add(trailer);
-      const wheels = [];
+      const wheels = [], hubs = [];
       const wg = new THREE.CylinderGeometry(0.42, 0.42, 0.36, 14), hg = new THREE.CylinderGeometry(0.18, 0.18, 0.38, 8);
       for (const x of [-2.2, -1.2, 1.6, 2.9]) for (const z of [-0.95, 0.95]) {
         const w = new THREE.Mesh(wg, dark); w.rotation.x = Math.PI / 2; w.position.set(x, 0.42, z);
         const hub = new THREE.Mesh(hg, chrome); hub.rotation.x = Math.PI / 2; hub.position.copy(w.position);
-        body.add(w, hub); wheels.push(w);
+        body.add(w, hub); wheels.push(w); hubs.push(hub);
       }
       // o apoiador pendurado no para-brisa (boneco levíssimo), braços e pernas se debatendo
       const guy = new THREE.Group();
@@ -301,7 +272,8 @@ export const PROJECTILE_VISUALS = {
       const smoke = new Puffs(g, 16, 0x5a5a5a, { opacity: 0.55 });
       const dust = new Puffs(g, 16, 0xcdbda0, { opacity: 0.5 });
       // offX: alinha o para-choque (x local 3.5) com a borda frontal da hitbox (w 2.8 → +1.4)
-      g.userData = { body, wheels, guy, armL, armR, legL, legR, flag, honk, smoke, dust, lastX: 0, offX: -2.1, offY: 0 };
+      // GLB (caminhao.glb, sem rodas) substitui só a lataria: rodas girando, apoiador, buzina, fumaça e poeira ficam
+      g.userData = { body, glbKeep: [...wheels, ...hubs, guy], wheels, guy, armL, armR, legL, legR, flag, honk, smoke, dust, lastX: 0, offX: -2.1, offY: 0 };
       return g;
     },
     animate(v, h, dt) {

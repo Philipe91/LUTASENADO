@@ -7,7 +7,7 @@ import { VORCARO_VISUALS } from './fx/vorcaroFx.js';
 import { CLONE_VISUALS } from './fx/cloneFx.js';
 import { FLAVIO_VISUALS } from './fx/flavioFx.js';
 import { DUVAL_VISUALS } from './fx/duvalFx.js';
-import { loadGLTF } from './models/GLBModel.js';
+import { swapToGLB } from './propModel.js';
 import { Puffs, Shards } from './fx/common.js';
 
 function sparkTexture() {
@@ -205,27 +205,13 @@ export class Vfx {
     this.pools.get(v.userData.pool || v.userData.key).push(v);
   }
 
-  // Gancho para assets melhores: se o GLB do prop existir, ele substitui o placeholder dentro do mesmo view
+  // Gancho para assets melhores: se o GLB do prop existir, ele substitui SÓ o corpo procedural do view
+  // (userData.glbBody → body → spin → drop → o grupo todo). Fumaça, rastro, poeira, textos ("FOM FOM!") e o que
+  // estiver marcado userData.keep continuam; o GLB herda a animação do corpo (giro, balanço, queda).
   tryModel(v, url) {
     v.userData.glbTried = true;
-    loadGLTF(url).then((gltf) => {
-      // mede o placeholder no espaço LOCAL do view (independe de onde/como ele está agora)
-      const pos = v.position.clone(), rot = v.rotation.clone();
-      v.position.set(0, 0, 0); v.rotation.set(0, 0, 0); v.updateMatrixWorld(true);
-      const placeholder = new THREE.Box3().setFromObject(v);
-      const want = placeholder.getSize(new THREE.Vector3());
-      const m = gltf.scene.clone(true);
-      const got = new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3());
-      m.scale.setScalar(Math.max(want.x, want.y) / Math.max(got.x, got.y, 1e-3));
-      m.updateMatrixWorld(true);
-      const box = new THREE.Box3().setFromObject(m);
-      const c = box.getCenter(new THREE.Vector3()), pc = placeholder.getCenter(new THREE.Vector3());
-      m.position.set(pc.x - c.x, placeholder.min.y - box.min.y, pc.z - c.z);
-      for (const child of v.children) child.visible = false;
-      v.add(m);
-      v.position.copy(pos); v.rotation.copy(rot);
-      v.userData.glb = m;
-    }).catch(() => {});
+    const u = v.userData;
+    swapToGLB(u.glbBody || u.body || u.spin || u.drop || v, url, { keep: u.glbKeep });
   }
 
   update(dt, match) {

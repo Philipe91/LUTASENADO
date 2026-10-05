@@ -7,6 +7,7 @@
 // → FINALIZADOR: o 9º tentáculo (gag: polvo de 9 tentáculos) sobe atrás do corpo e ESMAGA o alvo; tinta espirra.
 // Fim: polvo encolhe numa nova nuvem de tinta e o Lulácio volta.
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Tentacle, lerpPoints } from '../fx/Tentacle.js';
 import { Puffs, Rings, std, clamp01, smooth, easeIn, easeOut, flat } from '../fx/common.js';
 
@@ -65,6 +66,7 @@ function makeMic() {
   const ball = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 10), std(0xa8a8a8, { metalness: 0.8, roughness: 0.35 }));
   ball.position.y = 0.66;
   g.add(handle, ball); g.scale.setScalar(1.5);
+  swapToGLB(g, PROP_GLB.microfonePolvo);
   return g;
 }
 

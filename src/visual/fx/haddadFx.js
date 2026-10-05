@@ -5,6 +5,7 @@
 //   visual de Hitter: pacote (caixa de encomenda girando com selo TAXADO!)
 // Cores: verde planilha 0x2fa64f, vermelho do carimbo 0xd62828, papelão 0xc8955a.
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Rings, Puffs, Shards, std, canvasTex, clamp01, easeOut, add, flat, bodyPoint } from './common.js';
 
 export const SHEET = 0x2fa64f, STAMP_RED = 0xd62828, CARDBOARD = 0xc8955a;
@@ -35,6 +36,7 @@ export function makePacote() {
   const seal2 = seal.clone(); seal2.position.z = -0.205; seal2.rotation.y = Math.PI;
   spin.add(box, tape, seal, seal2);
   g.userData.spin = spin;
+  swapToGLB(spin, PROP_GLB.pacote, { keep: [seal, seal2] }); // selo TAXADO! continua decal
   return g;
 }
 
@@ -104,6 +106,7 @@ function makeStampTool() {
   const pad = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.05, 0.39), std(STAMP_RED, { roughness: 0.6 })); pad.position.y = 0.03;
   for (const m of [handle, knob, block]) m.castShadow = true;
   g.add(handle, knob, block, pad);
+  swapToGLB(g, PROP_GLB.carimboImposto);
   return g;
 }
 class CarimboFx {

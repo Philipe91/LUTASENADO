@@ -4,6 +4,7 @@
 //   visuais de Hitter: chupeta (bumerangue girando com rastro) e mamadeira (gira, pinga leite, espirra ao acertar)
 // Cores: azul-bebê 0x6ecbff (chupeta), leite 0xfff5e6, ciano-notificação 0x3cc8ff (ultimate). Terno azul 0x1e2a6b.
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Puffs, std, toon, canvasTex, clamp01, easeOut, smooth, add, bodyPoint } from './common.js';
 
 export const CYAN = 0x3cc8ff, BABY = 0x6ecbff, MILK = 0xfff5e6;
@@ -32,6 +33,7 @@ export function makePhone() {
   g.add(edge, body, screen, cam, flashLed);
   g.scale.setScalar(1.5);
   g.userData.screen = screen;
+  swapToGLB(g, PROP_GLB.celular, { keep: [screen] }); // tela continua textura de canvas
   return g;
 }
 
@@ -181,6 +183,7 @@ export const NIKOLAS_VISUALS = {
       const teat = new THREE.Mesh(new THREE.SphereGeometry(0.085, 12, 10), toon(0xf7d6c1)); teat.position.z = 0.11; teat.scale.set(1, 1, 1.4);
       for (const m of [ring, shield, teat]) m.castShadow = true;
       spin.add(ring, shield, knob, teat); spin.scale.setScalar(1.7); g.add(spin);
+      swapToGLB(spin, PROP_GLB.chupeta);
       const trail = [];
       for (let i = 0; i < 5; i++) {
         const t = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), add(BABY, 0.45 - i * 0.08)); trail.push(t); g.add(t);
@@ -216,6 +219,7 @@ export const NIKOLAS_VISUALS = {
       }), transparent: true })); label.position.set(0, -0.02, 0.112);
       for (const m of [glass, cap, teat]) m.castShadow = true;
       spin.add(glass, milk, cap, teat, label); spin.scale.setScalar(1.6); g.add(spin);
+      swapToGLB(spin, PROP_GLB.mamadeira, { keep: [label] });
       const drops = new Puffs(g, 14, MILK, { opacity: 0.9 });
       const lines = Array.from({ length: 3 }, (_, i) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.04), add(0xffffff, 0.5)); m.position.set(-0.7, -0.2 + i * 0.2, 0.2); g.add(m); return m; });
       g.userData = { spin, drops, lines, center: true, lastX: 0 };

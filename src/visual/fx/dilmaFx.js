@@ -5,6 +5,7 @@
 //   visuais de Hitter: ventoEstocado (redemoinho que cresce com a carga), mandioca (gira; bumerangue)
 // Cores: vermelho do terninho 0xc81e1e, vento azul-claro 0xbfe8ff, mandioca 0xb07a3c (ARTE.md: energia = aditivo).
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Puffs, Rings, Shards, std, clamp01, easeOut, add, flat, bodyPoint, textSprite } from './common.js';
 
 export const DILMA_RED = 0xc81e1e, WIND = 0xbfe8ff, MANDIOCA = 0xb07a3c;
@@ -19,6 +20,7 @@ export function makeMandioca(scale = 1) {
   const leaves = [-0.5, 0, 0.5].map((a) => { const l = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.32, 5), std(0x3f9a3a)); l.position.set(-0.6, 0.06 * Math.sin(a * 3), 0); l.rotation.z = Math.PI / 2 + a; return l; });
   const spin = new THREE.Group(); spin.add(root, cut, ...rings, ...leaves);
   g.add(spin); g.userData.spin = spin; g.scale.setScalar(scale);
+  swapToGLB(spin, PROP_GLB.mandioca); // projétil, na mão e COLOSSAL
   return g;
 }
 
@@ -31,6 +33,7 @@ function makePot() {
   const label = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.12), new THREE.MeshBasicMaterial({ map: labelTex(), transparent: true })); label.position.set(0, 0, 0.165);
   const swirl = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.02, 6, 20, Math.PI * 1.6), add(WIND, 0.8));
   g.add(glass, base, lid, label, swirl); g.userData = { lid, swirl };
+  swapToGLB(g, PROP_GLB.pote, { keep: [lid, label, swirl], all: true }); // vidro sem tampa; a tampa procedural salta
   return g;
 }
 let _label = null;
@@ -110,6 +113,7 @@ function makeBike() {
   const basket = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.16, 0.26), std(0xb07a3c, { roughness: 1 })); basket.position.set(0.62, 0.78, 0); g.add(basket);
   for (const m of g.children) m.castShadow = true;
   g.userData.wheels = wheels;
+  swapToGLB(g, PROP_GLB.bicicleta, { keep: wheels }); // quadro sem rodas; rodas procedurais giram
   return g;
 }
 class PedaladaFx {

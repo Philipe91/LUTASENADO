@@ -5,6 +5,7 @@
 //             (o meteoro que cai é o visual 'meteor' do Hitter)
 //   stomp   — Pisão Cretáceo: no frame da pisada, anel de choque, rachadura e poeira sob o pé
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Puffs, Rings, Shards, std, bodyPoint, canvasTex, clamp01, easeOut, easeIn, add, flat } from './common.js';
 
 function mouthTexture() {
@@ -100,6 +101,7 @@ export function makeVadeMecum() {
   for (const s of [-1, 1]) { const band = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.05, 0.47), std(0xd4af37, { metalness: 0.7, roughness: 0.3 })); band.position.set(0, s * 0.1, 0); g.add(band); }
   g.add(cover, pages, spine, title);
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  swapToGLB(g, PROP_GLB.vadeMecum, { keep: [title] }); // título continua decal
   return g;
 }
 
