@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import { Tentacle } from '../fx/Tentacle.js';
 import { Puffs, Rings, std, clamp01, smooth, easeIn, easeOut, mergeParts } from '../fx/common.js';
+import { MeshyBody } from './meshyBody.js';
 
 // paleta (ARTE.md §2: verde-pântano só no ultimate)
 const GREEN = 0x4f8a38, DARK = 0x2f5f2a, BELLY = 0xd9c98c, BELLY_L = 0xe8dba4, SUIT = 0x1b1b21, SUIT_L = 0x2a2a33;
@@ -222,6 +223,10 @@ export class BrasaJacare {
     const root = new THREE.Group(); root.visible = false; scene.add(root); this.root = root;
     this.body = new THREE.Group(); root.add(this.body);
     this.J = makeJacare(); this.body.add(this.J.root);
+    // jacaré esculpido no Meshy: quando carrega, substitui o boneco procedural (que fica de reserva)
+    this.mesh = new MeshyBody(this.J.root, 'assets/characters/capitao-brasa/jacare.glb', {
+      height: 4.15, onReady: (m) => { for (const c of this.J.root.children) if (c !== m.group) c.visible = false; },
+    });
     this.syringe = makeSyringe(); this.syringe.visible = false; scene.add(this.syringe);
     this.gas = new Puffs(root, 24, 0x6ee05a, { opacity: 0.8 });
     this.gasDark = new Puffs(root, 10, 0x2e7d32, { opacity: 0.75 });
@@ -360,6 +365,8 @@ export class BrasaJacare {
       arm.rotation.set(ax, 0, az); fore.rotation.set(0, 0, fz);
     }
     this.tailPose(now, stiff);
+    // corpo Meshy: inclina no bote, estica ao abrir a bocarra, amassa no fechamento, respira parado
+    if (this.mesh.ready) this.mesh.pose({ lean: -(J.torso.rotation.z + 0.12) * 0.7, squash: (this.jawOpen - 0.2) * 0.12 + Math.sin(now * 2.6) * 0.012 - tk * 0.1, facing: f.facing, turn: spin || roll ? 0 : 0.5 });
   }
 
   dispose() { this.scene.remove(this.root, this.syringe); this.J.tail.dispose(); }

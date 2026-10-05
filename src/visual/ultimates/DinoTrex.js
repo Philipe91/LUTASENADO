@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { Tentacle } from '../fx/Tentacle.js';
 import { Puffs, Rings, Shards, std, clamp01, smooth, easeIn, easeOut, canvasTex, add, flat, mergeParts } from '../fx/common.js';
+import { MeshyBody } from './meshyBody.js';
 
 const SKIN = 0x5f8a3e, SKIN_D = 0x3e5a28, BELLY = 0xc6dc9a, BELLY_L = 0xd9e8b0, SUIT = 0x23262e, SUIT_L = 0x30343f, TOGA = 0x121216;
 const HAIR = 0xd2d2d2, HAIR_D = 0x9a9a9a, WHITE = 0xfffaf0, BLACK = 0x111111, MOUTH = 0x5a1424, TONGUE = 0xd0607a, CLAW = 0xe9dfc2;
@@ -226,6 +227,10 @@ export class DinoTrex {
     const root = new THREE.Group(); root.visible = false; scene.add(root); this.root = root;
     this.body = new THREE.Group(); root.add(this.body);
     this.T = makeTrex(); this.body.add(this.T.root);
+    // T-Rex esculpido no Meshy: quando carrega, substitui o boneco procedural (que fica de reserva)
+    this.mesh = new MeshyBody(this.T.root, 'assets/characters/dino-supremo/trex.glb', {
+      height: 4.6, onReady: (m) => { for (const c of this.T.root.children) if (c !== m.group) c.visible = false; },
+    });
     // óculos "soltos" da cinemática (saem do rosto, são limpos, voltam e crescem)
     this.bigGlasses = makeGlasses(0.55); this.bigGlasses.visible = false; scene.add(this.bigGlasses);
     this.dust = new Puffs(root, 22, 0xb9a98a, { lit: true, opacity: 0.85 });
@@ -381,6 +386,8 @@ export class DinoTrex {
     T.arms[0].arm.rotation.set(0, 0, -0.3 + Math.sin(now * 2.4) * 0.2); T.arms[0].fore.rotation.z = -0.9;
     T.glasses.position.set(1.0 + tryK * 0.16, 0.1 - tryK * 0.1, 0); T.glasses.rotation.z = -0.25 - tryK * 0.12; // escorregam mais quando ele tenta
     this.tailPose(now, stiff);
+    // corpo Meshy: mergulha no bote/pisão, levanta a cabeça no rugido, respira ofegante
+    if (this.mesh.ready) this.mesh.pose({ lean: bodyDip * 0.35 - headUp * 0.4, squash: -bodyDip * 0.08 + (this.jawOpen - 0.2) * 0.1 + Math.sin(now * 3.1) * 0.014, facing: f.facing, turn: spin ? 0 : 0.6 });
   }
 
   dispose() { this.scene.remove(this.root, this.bigGlasses, this.meteor, this.scorch); this.T.tail.dispose(); }
