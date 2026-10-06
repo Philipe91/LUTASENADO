@@ -102,11 +102,11 @@ export class SelectScreen {
       <div class="pickhint ${this.picking === 2 ? 'two' : ''}">Escolhendo: <b>${this.picking === 1 ? 'JOGADOR 1' : p2who}</b> · ${n} lutadores</div>
       <div class="grid" style="--cols:${cols}">${cards}</div>
       <div class="picks">${this.pickPanel(this.p1, 'JOGADOR 1', 'one')}<div class="vs">VS</div>${this.pickPanel(this.p2, p2who, 'two')}</div>
-      ${this.arenaRow()}
+      <div class="sfoot">${this.arenaRow()}
       <div class="opts">
         <button class="mode"><span>${this.mode === 'cpu' ? '1 JOGADOR vs CPU' : '2 JOGADORES (mesmo teclado)'}</span></button>
         <button class="go"><span>LUTAR!</span></button>
-      </div>
+      </div></div>
       <div class="keys">
         <div><b>P1</b> A/D andar · W pular · S agachar · J soco · K chute · L especial (+ direção) · U ultimate · segurar pra trás = defender</div>
         <div><b>P2</b> setas · 1 soco · 2 chute · 3 especial · 0 ultimate (teclado numérico)</div>

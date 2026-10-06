@@ -455,10 +455,15 @@ export function buildPlenario(scene) {
     const capR = WALL_R + 1, hD = 6, Rd = (capR * capR + hD * hD) / (2 * hD), yc = TOP + hD - Rd, thMax = Math.asin(capR / Rd);
     const dome = new THREE.SphereGeometry(Rd, 40, 10, 0, Math.PI * 2, 0, thMax);
     B.add(dome, C.concrete, { pos: [FAN.cx, yc, FAN.cz], scale: [-1, 1, 1], haze: 0.12, ao: 0, emissive: 0.55, top: [0xf2ece2, TOP, TOP + hD] });
-    for (const rr of [6, 11, 16, 21, 26]) {
+    const dp = { pos: [FAN.cx, yc, FAN.cz], scale: [-1, 1, 1], ao: 0 };
+    for (const rr of [5, 10, 15, 20, 25]) { // anéis de luz concêntricos
       const th = Math.asin(rr / Rd);
-      B.add(new THREE.SphereGeometry(Rd - 0.2, 40, 1, 0, Math.PI * 2, th, 0.01), C.ceilLight, { pos: [FAN.cx, yc, FAN.cz], scale: [-1, 1, 1], emissive: 1, haze: 0, ao: 0 });
+      B.add(new THREE.SphereGeometry(Rd - 0.2, 48, 1, 0, Math.PI * 2, th, 0.014), C.ceilLight, { ...dp, emissive: 1, haze: 0 });
     }
+    for (let i = 0; i < 28; i++) { // nervuras radiais (caixotões) entre os anéis
+      B.add(new THREE.SphereGeometry(Rd - 0.12, 1, 8, (i / 28) * Math.PI * 2, 0.022, Math.asin(5 / Rd), thMax - Math.asin(5 / Rd)), 0xa89c8c, { ...dp, emissive: 0.5, haze: 0.1 });
+    }
+    B.add(new THREE.SphereGeometry(Rd - 0.25, 24, 1, 0, Math.PI * 2, 0, Math.asin(2.2 / Rd)), C.ceilLight, { ...dp, emissive: 1, haze: 0 }); // óculo
   } else {
     root.add(makeBackdrop(BACKDROP, { D: 210, horizonV: 0.5, centerU: 0.5, sat: 0.9, bright: 0.95 }));
     panelFrames(B, 0); // sem a casca, o painel fica com a moldura própria

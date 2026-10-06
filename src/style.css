@@ -207,11 +207,15 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #140d24; col
   .pick li small { display: none; }
   .opts .go { font-size: 30px; padding: 7px 36px 5px; }
   .opts button.mode { font-size: 20px; }
-  .arena { min-height: 34px; padding: 2px 10px 2px 3px; box-shadow: 0 3px 0 #000; } .athumb { height: 24px; width: 38px; } .aname { font-size: 15px; } .asub { font-size: 9.5px; }
-  .arenas { margin: -2px 0; }
+  .select .arena { min-height: 34px; padding: 2px 10px 2px 3px; box-shadow: 0 3px 0 #000; } .select .athumb { height: 24px; width: 38px; } .select .aname { font-size: 15px; } .select .asub { font-size: 9.5px; }
+  .select .sfoot { flex-direction: row; justify-content: center; gap: 18px; }
+  .select .arenas { width: auto; flex-wrap: nowrap; }
+  .select .alabel small { display: none; }
   .keys { font-size: 11px; line-height: 1.4; } .keys div { display: inline; } .keys div + div::before { content: ' · '; }
   .disclaimer { display: none; }
 }
+/* rodapé da seleção: cenário + botões (lado a lado na paisagem baixa, empilhados no resto) */
+.sfoot { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
 /* cenário: 4 cartões compactos (miniatura em CSS, sem imagem) */
 .arenas { display: flex; gap: 8px; align-items: stretch; justify-content: center; flex-wrap: wrap; width: min(1000px, 100%); }
 .alabel { align-self: center; font-size: 12px; font-weight: 900; letter-spacing: 2px; margin-right: 4px; }
@@ -297,7 +301,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #140d24; col
   .arenas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
   .alabel { grid-column: 1 / -1; text-align: center; margin: 0; } .alabel small { display: inline; margin-left: 6px; }
   .arena { grid-template-columns: 38px minmax(0, 1fr); padding: 3px 8px 3px 4px; min-height: 44px; } .athumb { width: 38px; height: 30px; }
-  .aname { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .asub { font-size: 9.5px; }
+  .aname { font-size: 15px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .asub { font-size: 9.5px; }
 }
 
 /* barra extra de recurso (CAPITAL do Vorcaro): medidor fino com cifrão sob a barra de ultimate */
