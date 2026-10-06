@@ -46,7 +46,7 @@ function makeLion() {
   for (const m of [face, muzzle]) m.castShadow = true;
   g.userData.jaw = jaw;
   // 2 peças: cabeça (juba, rosto, dentes de cima) + mandíbula móvel; o crachá RECEITA continua decal
-  swapToGLB(g, PROP_GLB.leaoCabeca, { keep: [jaw, badge] });
+  swapToGLB(g, PROP_GLB.leaoCabeca, { keep: [badge] }); // leao_cabeca.glb do Meshy já ruge de boca aberta (sem mandíbula separada)
   swapToGLB(jaw, PROP_GLB.leaoMandibula);
   return g;
 }

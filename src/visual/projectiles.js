@@ -272,8 +272,8 @@ export const PROJECTILE_VISUALS = {
       const smoke = new Puffs(g, 16, 0x5a5a5a, { opacity: 0.55 });
       const dust = new Puffs(g, 16, 0xcdbda0, { opacity: 0.5 });
       // offX: alinha o para-choque (x local 3.5) com a borda frontal da hitbox (w 2.8 → +1.4)
-      // GLB (caminhao.glb, sem rodas) substitui só a lataria: rodas girando, apoiador, buzina, fumaça e poeira ficam
-      g.userData = { body, glbKeep: [...wheels, ...hubs, guy], wheels, guy, armL, armR, legL, legR, flag, honk, smoke, dust, lastX: 0, offX: -2.1, offY: 0 };
+      // GLB (caminhao.glb do Meshy já vem com rodas) substitui lataria e rodas: apoiador agarrado na grade, buzina, fumaça e poeira ficam
+      g.userData = { body, glbKeep: [guy], glbOpts: { yaw: Math.PI - 0.5, onReady: () => guy.position.set(3.25, 1.35, 1.0) } /* Meshy: frente em -X → vira p/ +X, ¾ p/ câmera; apoiador vai p/ a grade */, wheels, guy, armL, armR, legL, legR, flag, honk, smoke, dust, lastX: 0, offX: -2.1, offY: 0 };
       return g;
     },
     animate(v, h, dt) {

@@ -211,7 +211,7 @@ export class Vfx {
   tryModel(v, url) {
     v.userData.glbTried = true;
     const u = v.userData;
-    swapToGLB(u.glbBody || u.body || u.spin || u.drop || v, url, { keep: u.glbKeep });
+    swapToGLB(u.glbBody || u.body || u.spin || u.drop || v, url, { keep: u.glbKeep, ...u.glbOpts }); // glbOpts: yaw/pitch/offset do arquivo
   }
 
   update(dt, match) {

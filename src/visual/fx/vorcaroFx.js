@@ -71,8 +71,8 @@ export function makeBriefcase({ color = 0x151515, trim = GOLD, hinge = 'bottom' 
   g.add(base, money, handle, pivot);
   const OPEN = hinge === 'bottom' ? 1.95 : -1.75;
   g.userData.open = (k) => { pivot.rotation.x = OPEN * k; };
-  // 2 peças: corpo (o dinheiro de canvas fica) + tampa no pivô (continua abrindo)
-  swapToGLB(g, PROP_GLB.maletaCorpo, { keep: [money, pivot] });
+  // maleta_corpo.glb do Meshy já vem ABERTA com o dinheiro: substitui tudo (sem maleta_tampa.glb a tampa procedural some junto)
+  swapToGLB(g, PROP_GLB.maletaCorpo, { keep: [] });
   swapToGLB(pivot, PROP_GLB.maletaTampa);
   return g;
 }
