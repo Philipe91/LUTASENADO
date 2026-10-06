@@ -1,8 +1,11 @@
-// HUD "plantão de telejornal premium" (ARTE.md §5): vida chanfrada, retrato, urninhas de round, timer em placa,
-// barra de ultimate em 3 segmentos, banners (TURNO / LUTEM / K.O.) e popups de impacto.
+// HUD "plantão de telejornal premium" (ARTE.md §5, docs/UI_DIRECAO.md §5.5): vida chanfrada com dano vermelho atrasado,
+// retrato, marcadores de round, timer em placa, barra de ultimate em 3 segmentos, banners (TURNO / LUTEM / K.O.) e popups.
 import * as THREE from 'three';
 import { METER_MAX } from '../fight/constants.js';
 import { portrait, hex } from './portraits.js';
+import { ICON } from './icons.js';
+
+const TRAIL_HOLD = 22; // frames que a faixa vermelha espera antes de escorrer atrás da vida (padrão SF/Tekken)
 
 const el = (tag, cls, html = '') => { const e = document.createElement(tag); if (cls) e.className = cls; e.innerHTML = html; return e; };
 
@@ -19,16 +22,16 @@ export class Hud {
           <div class="nameTag"><span class="name"></span></div>
           <div class="pips"></div>
         </div>
-        <div class="bar"><div class="trail"></div><div class="fill"></div><div class="ticks"></div><div class="shine"></div></div>
-        <div class="meter"><i><b></b></i><i><b></b></i><i><b></b></i><span class="ultTag">ULTIMATE!</span></div>
+        <div class="bar"><div class="trail"></div><div class="fill"></div><div class="ticks"></div></div>
+        <div class="meter"><i><b></b></i><i><b></b></i><i><b></b></i><span class="ultTag">ULTIMATE</span></div>
         <div class="res"><em>$</em><i><b></b></i></div>
-        <div class="lock">BLOQUEADO</div>
+        <div class="lock">${ICON.lock} BLOQUEADO</div>
         <div class="spname"></div>`);
       this.hud.appendChild(s);
       return {
         root: s, name: s.querySelector('.name'), portrait: s.querySelector('.portrait'), ini: s.querySelector('.ini'), pips: s.querySelector('.pips'),
         bar: s.querySelector('.bar'), fill: s.querySelector('.fill'), trail: s.querySelector('.trail'), segs: [...s.querySelectorAll('.meter b')],
-        meter: s.querySelector('.meter'), res: s.querySelector('.res'), resFill: s.querySelector('.res b'), lock: s.querySelector('.lock'), sp: s.querySelector('.spname'), trailPct: 100, lastPct: 100, hurtT: 0,
+        meter: s.querySelector('.meter'), res: s.querySelector('.res'), resFill: s.querySelector('.res b'), lock: s.querySelector('.lock'), sp: s.querySelector('.spname'), trailPct: 100, lastPct: 100, hurtT: 0, holdT: 0,
       };
     });
     this.center = el('div', 'center', '<div class="timer">60</div><div class="live"><i></i>AO VIVO</div>');
@@ -68,7 +71,7 @@ export class Hud {
       s.portrait.style.backgroundImage = '';
       s.ini.textContent = f.data.name[0];
       portrait(f.data.id, (url) => { s.portrait.style.backgroundImage = `url(${url})`; s.ini.textContent = ''; });
-      s.trailPct = 100; s.lastPct = 100; s.hurtT = 0;
+      s.trailPct = 100; s.lastPct = 100; s.hurtT = 0; s.holdT = 0;
       s.res.classList.toggle('on', !!f.resource); // barra extra (ex.: CAPITAL do Vorcaro)
       if (f.resource) s.res.title = f.resource.name;
     });
@@ -81,9 +84,11 @@ export class Hud {
       const s = this.sides[i];
       const pct = Math.max(0, (f.hp / f.maxHp) * 100);
       s.fill.style.width = pct + '%';
-      s.trailPct = pct < s.trailPct ? s.trailPct - 0.35 : pct;
+      // faixa vermelha: segura um instante mostrando quanto saiu, depois escorre rápido até a vida atual
+      if (pct < s.lastPct - 0.01) { s.hurtT = 6; s.holdT = TRAIL_HOLD; } // flash branco na barra ao levar dano
+      if (pct < s.trailPct) { if (s.holdT > 0) s.holdT--; else s.trailPct = Math.max(pct, s.trailPct - 1.1); }
+      else s.trailPct = pct;
       s.trail.style.width = s.trailPct + '%';
-      if (pct < s.lastPct - 0.01) s.hurtT = 6; // flash branco na barra ao levar dano
       s.lastPct = pct;
       s.bar.classList.toggle('hurt', s.hurtT-- > 0);
       s.bar.classList.toggle('low', pct <= 30);
@@ -150,12 +155,26 @@ export class Hud {
     const P = winner.data.visual?.placeholder || {};
     this.result.innerHTML = `
       <div class="card" style="--c1:${hex(P.suit)};--c2:${hex(P.accent)}">
-        <div class="wkicker">VENCEDOR</div>
-        <div class="wname">${winner.data.name}</div>
-        <div class="line">“${line}”</div>
-        ${opts.note ? `<div class="rnote">${opts.note}</div>` : ''}
-        <div class="btns"><button class="again">REVANCHE</button><button class="menu">TROCAR LUTADOR</button>${opts.onShare ? '<button class="share">COMPARTILHAR</button>' : ''}</div>
+        <div class="rpic" data-id="${winner.data.id}"><span class="ini">${winner.data.name[0]}</span></div>
+        <div class="rbody">
+          <div class="wkicker">${ICON.trophy} Vencedor</div>
+          <div class="wname">${winner.data.name}</div>
+          <div class="wtitle">${winner.data.title || ''}</div>
+          <div class="line">“${line}”</div>
+          ${opts.note ? `<div class="rnote">${ICON.star} ${opts.note}</div>` : ''}
+          <div class="btns">
+            <button class="mbtn primary again"><i class="cur">${ICON.caret}</i><span class="mlabel">REVANCHE</span></button>
+            <button class="mbtn menu"><i class="cur">${ICON.caret}</i><span class="mlabel">TROCAR LUTADOR</span></button>
+            ${opts.onShare ? `<button class="mbtn share"><i class="cur">${ICON.caret}</i><span class="mlabel">${ICON.share} COMPARTILHAR</span></button>` : ''}
+          </div>
+        </div>
       </div>`;
+    const pic = this.result.querySelector('.rpic');
+    portrait(winner.data.id, (url) => { pic.style.backgroundImage = `url(${url})`; pic.querySelector('.ini').textContent = ''; });
+    const items = [...this.result.querySelectorAll('.mbtn')];
+    const hot = (b) => { for (const x of items) x.classList.toggle('hot', x === b); };
+    for (const b of items) { b.addEventListener('focus', () => hot(b)); b.addEventListener('pointerenter', () => hot(b)); }
+    hot(items[0]);
     this.result.classList.remove('hidden');
     // um clique só: o intervalo comercial pode demorar e um 2º toque não pode disparar outra revanche
     const once = (fn) => () => { if (this.result.dataset.busy) return; this.result.dataset.busy = '1'; fn(); };

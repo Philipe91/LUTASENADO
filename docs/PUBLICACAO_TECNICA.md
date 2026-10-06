@@ -17,7 +17,7 @@ site próprio (PWA). Este documento diz **o que foi feito**, **como gerar o buil
 |---|---|---|
 | JS para a 1ª tela | 1 arquivo de 1.059 kB (301 kB gzip), tela preta até baixar e rodar tudo | boot de 13,5 kB (5,6 kB gzip) + CSS 32 kB (7,4 kB gzip) |
 | motor + lutas | junto do boot | `three` 661 kB (171 kB gzip, cache longo, muda raramente) + `game` 433 kB (141 kB gzip), baixados enquanto o título já está na tela |
-| fontes | Google Fonts (requisição externa, proibida no Poki) | `public/fonts/` (Bangers + Inter latin, 72 kB, OFL) com `preload` |
+| fontes | Google Fonts (requisição externa, proibida no Poki) | `public/fonts/` (Anton + Barlow Condensed latin ≈ 85 kB, Bangers só para canvas 3D, OFL) com `preload` |
 | SDKs dos portais | — | um chunk de ~1 kB por adaptador, só o escolhido é baixado |
 | tela de carregamento | nenhuma | `#boot` inline no `index.html` (aparece no 1º quadro, sem JS) → título com barra |
 
