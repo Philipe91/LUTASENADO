@@ -16,6 +16,7 @@ import { ParryP1, ParryP2 } from './dev/parrytest.js';
 import { Input, HumanController, KEYMAPS } from './core/Input.js';
 import { CHARACTERS, getCharacter } from './data/characters/index.js';
 import { Hud } from './ui/Hud.js';
+import { GuardHud } from './ui/GuardHud.js';
 import { SelectScreen } from './ui/SelectScreen.js';
 import { FightLoading, PauseMenu, Toast, systemButtons } from './ui/Overlays.js';
 import { gameBus } from './core/EventBus.js';
@@ -52,6 +53,7 @@ export async function init({ params, platform, title }) {
   const look = new Look(stage, params, q0); // ARTE.md §3 — tone mapping, rim, bloom, vinheta (?look=0 desliga)
   const input = new Input();
   const hud = new Hud(ui, stage);
+  const guardHud = new GuardHud(hud); // barra de guarda (FEEL.guard) — src/ui/GuardHud.js
   const touch = new TouchControls(ui, input, params); // D-pad + botões no celular (?touch=1 força, ?touch=0 esconde)
   const vfx = new Vfx(stage.scene);
   const debug = new DebugDraw(stage.scene);
@@ -359,6 +361,7 @@ export async function init({ params, platform, title }) {
       for (const v of views) v.update(match.cinematic && v.f !== match.cinematic.fighter ? 0 : vdt, match);
       vfx.update(dt * match.timeScale * GAME_SPEED, match);
       hud.update(match);
+      guardHud.update(match);
     }
     debug.update(match);
     arena.update(dt, time);

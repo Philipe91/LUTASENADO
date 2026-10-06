@@ -86,26 +86,36 @@ export function applyHit(match, atk, def, hit, sourceX) {
   const lowOk = hit.level !== 'low' || def.cmd.down;
   const highOk = hit.level !== 'high' || !def.cmd.down;
   if (!hit.unblockable && !hit.throw && BLOCK_STATES.has(def.state) && def.holdingBack && lowOk && highOk) {
+    const sinceBack = def.frameCount - (def.backAt ?? -999);
     // passiva TÁ OK (Capitão Brasa): defesa começada no último instante = perfeita (sem raspão, sai antes, buff curto)
     const pb = def.passive.perfectBlock;
-    const perfect = !!pb && def.frameCount - (def.backAt ?? -999) <= pb.window;
-    const chip = perfect ? 0 : hit.damage * 0.15 * atk.damageMult() * def.stats.defense * def.defenseMult();
+    const perfect = !!pb && sinceBack <= pb.window;
+    // DEFESA NA HORA (universal, FEEL.justBlock): sem raspão, sem gasto de guarda, sai antes, ganha barra
+    const JB = FEEL.justBlock;
+    const just = !perfect && !!JB && sinceBack <= JB.window;
+    const isSpecial = !!hit.kind || !!hit.ultimate;
+    const chipK = perfect || just ? 0 : isSpecial ? FEEL.chip.special : FEEL.chip.normal;
+    const chip = hit.damage * chipK * atk.damageMult() * def.stats.defense * def.defenseMult();
     def.hp = Math.max(1, def.hp - chip);
-    def.stun = Math.max(2, (hit.blockstun ?? 10) - (perfect ? pb.stunCut ?? 0 : 0));
+    def.stun = Math.max(2, (hit.blockstun ?? 10) - (perfect ? pb.stunCut ?? 0 : just ? JB.stunCut : 0));
     def.setState('blockstun', def.cmd.down ? 'crouchBlock' : 'block', def.stun);
     def.vx = dir * (hit.push ?? 0.1) * 0.8;
     pushAttacker(atk, def, hit, sourceX, dir, FEEL.push.blockSelf);
-    def.gainMeter(8); atk.gainMeter(3);
+    const M = FEEL.meter;
+    def.gainMeter(M.block + (just ? JB.meter : 0)); atk.gainMeter(M.blockAtk);
     // passiva: bloquear um ESPECIAL (hit.kind) enche mais a barra de ultimate (ARQUIVO CONFIDENCIAL do Duval)
     const bm = def.passive.blockSpecialMeter;
     if (bm && hit.kind) { def.gainMeter(bm.gain ?? 30); if (bm.text) match.emit({ type: 'text', fighter: def, text: bm.text, cls: 'buff' }); }
     match.hitstop = hit.heavy ? 6 : 4;
-    match.emit({ type: 'block', x: fx, y: fy, fighter: def, dir, heavy: !!hit.heavy });
+    match.emit({ type: 'block', x: fx, y: fy, fighter: def, dir, heavy: !!hit.heavy, just: just || perfect });
     if (perfect) {
       def.buffT = pb.frames;
       match.emit({ type: 'perfect', x: fx, y: fy, fighter: def });
       match.emit({ type: 'text', fighter: def, text: pb.text, cls: 'buff' });
-    }
+    } else if (just) {
+      match.emit({ type: 'justBlock', x: fx, y: fy, fighter: def });
+      match.emit({ type: 'text', fighter: def, text: JB.text, cls: 'buff' });
+    } else if (guardDamage(match, atk, def, hit, isSpecial, dir)) return 'guardBreak';
     return 'block';
   }
 
@@ -114,8 +124,11 @@ export function applyHit(match, atk, def, hit, sourceX) {
   const inCombo = COMBO_STATES.has(def.state);
   const juggled = def.state === 'knockdown' && !def.grounded;
   const counterHit = !cb && !hit.throw && !hit.ultimate && inStartup(def);
+  // ANTI-AÉREO: golpe de chão marcado `antiAir` pegando o rival no pulo (ou no golpe aéreo dele)
+  const AA = FEEL.antiAir;
+  const antiAir = !!AA && !!hit.antiAir && atk.grounded && (def.state === 'jump' || (def.state === 'attack' && !!def.move?.air));
   const C = FEEL.counter;
-  const scaling = hit.ultimate ? 1 : comboScale(inCombo ? def.comboTaken : 0) * (juggled ? FEEL.juggle.damage : 1) * (counterHit ? C.damage : 1);
+  const scaling = hit.ultimate ? 1 : comboScale(inCombo ? def.comboTaken : 0) * (juggled ? FEEL.juggle.damage : 1) * (counterHit ? C.damage : 1) * (antiAir ? AA.damage : 1);
   const dmg = hit.damage * atk.damageMult() * def.stats.defense * def.defenseMult() * scaling;
 
   // ---- super armor (Dino) ----
@@ -133,6 +146,12 @@ export function applyHit(match, atk, def, hit, sourceX) {
     atk.gainMeter(C.meter);
     def.counterHit = true;
     match.emit({ type: 'counterHit', fighter: atk, attacker: atk, target: def, x: fx, y: fy, text: C.text });
+  }
+  if (antiAir) {
+    atk.gainMeter(AA.meter);
+    hit = { ...hit, knockdown: true, launch: Math.max(hit.launch ?? 0, AA.launch) };
+    match.emit({ type: 'antiAir', fighter: atk, target: def, x: fx, y: fy, text: AA.text });
+    match.emit({ type: 'text', fighter: atk, text: AA.text, cls: 'counter' });
   }
   atk.comboCount = def.comboTaken;
   def.hp -= dmg;
@@ -153,8 +172,8 @@ export function applyHit(match, atk, def, hit, sourceX) {
 
   // recurso extra por dano causado (passiva LIQUIDEZ do Vorcaro: barra de CAPITAL)
   if (atk.resource) atk.gainRes(dmg * (atk.resource.perDamage ?? 1));
-  atk.gainMeter(dmg * 2.4);
-  def.gainMeter(dmg * 1.5);
+  atk.gainMeter(dmg * FEEL.meter.dealt);
+  def.gainMeter(dmg * FEEL.meter.taken);
 
   if (hit.lockSpecials) { def.lockT = def.lockMax = hit.lockSpecials; match.emit({ type: 'locked', fighter: def }); }
   applyDebuffs(match, atk, def, hit);
@@ -178,6 +197,7 @@ export function applyHit(match, atk, def, hit, sourceX) {
     const J = FEEL.juggle;
     if (juggled) { def.juggle++; def.juggleG += J.gravityStep; } // juggle: cada hit no ar pesa mais e lança menos
     const launch = (hit.launch ?? 0.17) * (juggled ? J.launchDecay ** def.juggle : 1);
+    if (!juggled) def.wallBounced = false; // queda nova: pode quicar na parede de novo (1× por queda)
     def.setState('knockdown', 'knockdown');
     def.hardKD = !!(hit.throw || hit.ultimate || hit.hardKD) || def.hardKD; // queda dura: sem tech
     def.vy = Math.max(def.vy, launch); def.y = Math.max(def.y, 0.001); // launch: knock-UP (voa alto)
@@ -196,6 +216,29 @@ export function applyHit(match, atk, def, hit, sourceX) {
   if (def.hp > 0) pushAttacker(atk, def, hit, sourceX, dir, 0); // quina: quem recua é o atacante
   match.emit({ type: 'hit', x: fx, y: fy, dmg, heavy: !!hit.heavy, ultimate: !!hit.ultimate, text: hit.text, attacker: atk, fighter: def, dir, zone, force, ko: def.hp <= 0, counter: counterHit, combo: def.comboTaken, juggle: juggled });
   return 'hit';
+}
+
+// BARRA DE GUARDA (FEEL.guard): cada golpe defendido gasta guarda; zerou → GUARDA QUEBRADA: o defensor fica
+// `breakStun` frames aberto (como um atordoamento), a barra volta pela metade. Retorna true se quebrou.
+function guardDamage(match, atk, def, hit, isSpecial, dir) {
+  const G = FEEL.guard;
+  if (!G) return false;
+  const cost = hit.guardDamage ?? (isSpecial ? G.special : hit.heavy ? G.heavy : G.normal);
+  def.guard = Math.max(0, def.guard - cost);
+  def.guardCd = G.pause ?? 0; // a regeneração espera um pouco depois de cada defesa
+  if (def.guard > 0) return false;
+  def.guard = G.max * G.refill;
+  def.move = null; def.sp = null;
+  def.stun = G.breakStun;
+  def.comboTaken = 0;
+  def.setState('hitstun', 'dizzy', def.stun);
+  def.vx = dir * 0.12;
+  def.flash = 10;
+  match.hitstop = Math.max(match.hitstop, 10);
+  atk.gainMeter(15);
+  match.emit({ type: 'guardBreak', fighter: def, attacker: atk, x: def.x, y: def.y + def.stats.height * 0.7, text: G.text });
+  match.emit({ type: 'text', fighter: def, text: G.text, cls: 'lock' });
+  return true;
 }
 
 // PUSHBACK: golpe de corpo (não projétil, não agarrão/ultimate) empurra também quem bateu — `self` × push sempre

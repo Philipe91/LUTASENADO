@@ -3,7 +3,7 @@ export default {
   name: 'CAPITÃO BRASA',
   title: 'O Motociclista do Caos',
   archetype: 'Rushdown / Pressão',
-  stats: { hp: 100, walk: 1.3, jump: 1.05, width: 0.75, height: 1.85, damage: 1.1 },
+  stats: { hp: 92, walk: 1.3, dash: 1.2, backdash: 1.1, jump: 1.05, gravity: 1.05, width: 0.75, height: 1.85, damage: 1.1 }, // rushdown: anda e avança rápido
   // TÁ OK: defesa PERFEITA = começar a segurar pra trás no máximo `window` frames antes do golpe chegar.
   // Prêmio: sem dano de raspão, sai do blockstun 4 frames antes e ganha +10% velocidade/dano por 2s (brilho verde).
   passive: {
@@ -21,7 +21,8 @@ export default {
     },
     forward: {
       name: 'Motociata', kind: 'strike', startup: 10, active: 24, recovery: 22, rehit: 9, lunge: 0.27, // arrancada forte: ≈6,5 m
-      damage: 2.6, hitstun: 16, push: 0.1, cooldown: 200,
+      damage: 2.6, hitstun: 16, push: 0.1, cooldown: 230,
+      final: { damage: 3, knockdown: true, push: 0.26, heavy: true }, // último hit derruba (antes: acertava e ficava −12)
       box: { x: -0.2, y: 0, w: 1.2, h: 1.3 }, text: 'MOTOCIATA!',
     },
     // PATRIOTA NO PARA-BRISA: grito → caminhão nasce atrás dele e atravessa a arena. 1 hit forte, knockback grande.

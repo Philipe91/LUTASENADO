@@ -11,7 +11,7 @@ export default {
   name: 'VORCASH',
   title: 'O Banqueiro do Caos',
   archetype: 'Summoner / Recursos',
-  stats: { hp: 100, walk: 0.88, jump: 0.9, width: 0.95, height: 1.85, damage: 1.0 },
+  stats: { hp: 100, walk: 0.88, dash: 0.85, backdash: 1.0, jump: 0.9, gravity: 1.0, width: 0.95, height: 1.85, damage: 1.0 }, // summoner: lento, joga de longe
   passive: {
     name: 'Liquidez',
     desc: 'Todo dano causado enche a barra de CAPITAL. Especiais gastam CAPITAL para bater até +35% mais forte.',

@@ -7,7 +7,7 @@ export default {
   name: 'FLAVÃO',
   title: 'O Herdeiro Sísmico',
   archetype: 'Bruiser / Impacto',
-  stats: { hp: 100, walk: 0.95, jump: 0.95, width: 0.9, height: 1.85 },
+  stats: { hp: 110, walk: 0.95, dash: 0.9, backdash: 0.85, jump: 0.95, gravity: 1.12, width: 0.9, height: 1.85 }, // bruiser: mais vida, pesado
   passive: {
     name: 'Clã',
     desc: 'Abaixo de 30% de vida o clã fecha em volta dele: toma 20% menos dano.',
@@ -31,14 +31,14 @@ export default {
     },
     // ZERO UM: soco + clone holográfico "01" nasce 1,5 m à frente e repete o soco em sincronia → alcance dobrado
     forward: {
-      name: 'Zero Um', kind: 'strike', startup: 10, active: 4, recovery: 20, cooldown: 180,
-      damage: 5, hitstun: 18, push: 0.12, box: { x: 0.2, y: 0.9, w: 1.0, h: 0.6 }, text: 'ZERO UM!',
+      name: 'Zero Um', kind: 'strike', startup: 10, active: 4, recovery: 16, cooldown: 180,
+      damage: 5, hitstun: 24, push: 0.12, box: { x: 0.2, y: 0.9, w: 1.0, h: 0.6 }, text: 'ZERO UM!', // +5 no acerto (antes −6): dá tempo do clone emendar
       clone: { at: 4, offset: 2.0, delay: 7, life: 22, anim: 'punch3', box: { x: 0.25, y: 0.85, w: 1.2, h: 0.65 }, hit: { damage: 6, hitstun: 20, push: 0.22, heavy: true, text: 'ZERO UM!' } },
     },
     // SENADOR EXPRESS: cadeira institucional com rodinhas entra embaixo dele e ele ATRAVESSA o inimigo em alta
     // velocidade (passThrough + dash até 1,8 m depois do alvo); 1 hit pesado que derruba.
     down: {
-      name: 'Senador Express', kind: 'strike', startup: 8, active: 18, recovery: 22, cooldown: 230,
+      name: 'Senador Express', kind: 'strike', startup: 8, active: 18, recovery: 14, cooldown: 230,
       passThrough: true, dash: { from: 6, to: 26, v: 0.3, past: 1.8 },
       damage: 7, knockdown: true, push: 0.1, heavy: true, blockstun: 16,
       box: { x: -0.3, y: 0, w: 1.3, h: 1.5 }, text: 'SENADOR EXPRESS!',

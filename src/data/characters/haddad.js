@@ -11,11 +11,11 @@ export default {
   name: 'TAXADD',
   title: 'O Arrecadador',
   archetype: 'Controle / Recursos',
-  stats: { hp: 100, walk: 0.95, jump: 0.95, width: 0.8, height: 1.8 },
+  stats: { hp: 102, walk: 0.95, dash: 0.95, backdash: 1.1, jump: 0.95, gravity: 1.0, width: 0.8, height: 1.8 }, // controle
   passive: {
     name: 'Arrecadação',
     desc: 'Todo golpe que acerta "taxa" um pouco da barra de Ultimate do rival para ele.',
-    tax: { meter: 2, text: 'ARRECADOU!' },
+    tax: { meter: 3, text: 'ARRECADOU!' },
   },
   moves: {},
   specials: {
@@ -36,8 +36,8 @@ export default {
     },
     // CARIMBO DO IMPOSTO: avança com o carimbo gigante; quem leva fica +IMPOSTO (40% mais lento por 3 s)
     down: {
-      name: 'Carimbo do Imposto', kind: 'strike', startup: 11, active: 5, recovery: 20, cooldown: 220, lunge: 0.16,
-      damage: 5.5, hitstun: 20, push: 0.1, slow: { frames: 180, mult: 0.6, text: '+IMPOSTO' },
+      name: 'Carimbo do Imposto', kind: 'strike', startup: 11, active: 5, recovery: 18, cooldown: 200, lunge: 0.16,
+      damage: 5.5, hitstun: 27, push: 0.1, slow: { frames: 180, mult: 0.6, text: '+IMPOSTO' }, // +2 no acerto (antes −5)
       box: { x: 0.1, y: 0.4, w: 1.25, h: 1.4 }, text: 'CARIMBADO!',
     },
   },
@@ -47,7 +47,7 @@ export default {
     name: 'TAXAÇÃO SUPREMA', hits: 6, interval: 12, damage: 3, finisher: 13, range: 5, text: 'LEÃO!',
     finalHit: { meterSteal: 80 },
   },
-  ai: { aggression: 0.45, keepDistance: 2.6, specialBias: 0.5, throwBias: 0.12, blockChance: 0.5, jumpChance: 0.05 },
+  ai: { aggression: 0.5, keepDistance: 2.2, specialBias: 0.5, throwBias: 0.12, blockChance: 0.4, jumpChance: 0.05 },
   lines: {
     intro: ['Tudo tem imposto. Inclusive essa surra.'],
     win: ['Arrecadação recorde!', 'Vitória declarada. Agora paga o carnê.'],

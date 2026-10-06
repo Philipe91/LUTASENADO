@@ -8,7 +8,7 @@ export default {
   name: 'AGENTE DUVALL',
   title: 'O Operador de Arquivos',
   archetype: 'Trap / Técnico',
-  stats: { hp: 100, walk: 1.0, jump: 1.0, width: 0.8, height: 1.82 },
+  stats: { hp: 106, walk: 1.0, dash: 1.15, backdash: 1.25, jump: 1.0, gravity: 1.0, width: 0.8, height: 1.82 }, // técnico: dash bom pra entrar e sair
   passive: {
     name: 'Arquivo Confidencial',
     desc: 'Bloquear um especial enche bem mais a barra de Ultimate.',

@@ -3,7 +3,7 @@ export default {
   name: 'DINO SUPREMO',
   title: 'O Jurássico Togado',
   archetype: 'Tank / Bruiser',
-  stats: { hp: 115, walk: 0.72, jump: 0.85, width: 1.1, height: 1.8, damage: 1.0, defense: 0.95 },
+  stats: { hp: 122, walk: 0.72, dash: 0.75, backdash: 0.7, jump: 0.85, gravity: 1.2, width: 1.1, height: 1.8, damage: 1.0, defense: 0.92 }, // tanque: lento, cai firme, aguenta
   passive: {
     name: 'Couro Jurássico',
     desc: 'Toma 5% menos dano. Chute, soco forte e especiais aguentam 1 golpe sem parar.',
@@ -11,7 +11,7 @@ export default {
   moves: { kick: { armor: true }, punch3: { armor: true } },
   specials: {
     neutral: {
-      name: 'Rugido Togado', kind: 'strike', startup: 14, active: 10, recovery: 20,
+      name: 'Rugido Togado', kind: 'strike', startup: 14, active: 10, recovery: 16,
       damage: 7, hitstun: 10, stun: 30, push: 0.3, armor: true, cooldown: 170,
       box: { x: -0.2, y: 0.3, w: 2.4, h: 1.6 }, text: 'ROAAAR!',
     },
