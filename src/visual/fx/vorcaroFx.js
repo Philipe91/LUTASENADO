@@ -7,6 +7,7 @@
 //   Corpo (VORCARO_FX, registrados no SpecialFx):
 //     caseHand     — maleta na mão até o frame do arremesso · coinFlick — moeda no polegar, sobe girando
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Puffs, Rings, std, canvasTex, textSprite, add, flat, bodyPoint, clamp01, easeOut, smooth } from './common.js';
 import { PlaceholderModel } from '../models/PlaceholderModel.js';
 import { GLBModel } from '../models/GLBModel.js';
@@ -70,6 +71,9 @@ export function makeBriefcase({ color = 0x151515, trim = GOLD, hinge = 'bottom' 
   g.add(base, money, handle, pivot);
   const OPEN = hinge === 'bottom' ? 1.95 : -1.75;
   g.userData.open = (k) => { pivot.rotation.x = OPEN * k; };
+  // 2 peças: corpo (o dinheiro de canvas fica) + tampa no pivô (continua abrindo)
+  swapToGLB(g, PROP_GLB.maletaCorpo, { keep: [money, pivot] });
+  swapToGLB(pivot, PROP_GLB.maletaTampa);
   return g;
 }
 

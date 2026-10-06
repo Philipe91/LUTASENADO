@@ -4,6 +4,7 @@
 // f.ultRes[k] === 'hit'; errou → a etiqueta cai no chão). Finalizador: o LEÃO DA RECEITA gigante (cabeça de
 // primitivas com juba) surge atrás dele, avança e MORDE o rival — o golpe rouba a barra de ultimate dele (lógica).
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Rings, Puffs, Shards, std, canvasTex, clamp01, easeIn, easeOut, smooth, bodyPoint, textSprite } from '../fx/common.js';
 import { stamp, SHEET } from '../fx/haddadFx.js';
 
@@ -44,6 +45,9 @@ function makeLion() {
   g.add(mane, face, muzzle, nose, ...eyes, ...brows, jaw, ...upper, badge);
   for (const m of [face, muzzle]) m.castShadow = true;
   g.userData.jaw = jaw;
+  // 2 peças: cabeça (juba, rosto, dentes de cima) + mandíbula móvel; o crachá RECEITA continua decal
+  swapToGLB(g, PROP_GLB.leaoCabeca, { keep: [jaw, badge] });
+  swapToGLB(jaw, PROP_GLB.leaoMandibula);
   return g;
 }
 

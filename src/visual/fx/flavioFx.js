@@ -6,6 +6,7 @@
 //                faíscas nas rodinhas, linhas de velocidade; no fim a cadeira segue sozinha, tomba e some
 // Visuais de Hitter: crack (rachadura correndo pelo chão) e eruption (chão explode em coluna de pedras)
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Puffs, Rings, Shards, std, bodyPoint, canvasTex, textSprite, clamp01, easeOut, easeIn, smooth, add, flat } from './common.js';
 
 const AMBER = 0xd9a441, EARTH = 0x7a5a3a, HOLO = 0x8cff9a;
@@ -110,6 +111,7 @@ function makeChair() {
   }
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   g.userData.wheels = wheels;
+  swapToGLB(g, PROP_GLB.cadeira);
   return g;
 }
 

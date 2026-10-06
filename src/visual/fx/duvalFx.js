@@ -4,6 +4,7 @@
 // Visuais de Hitter: pendrive (voa girando com rastro de pixels; ao acertar explode em cubos ciano e sobe o letreiro
 // glitchado "ARQUIVO CORROMPIDO"), vazamento (pasta CONFIDENCIAL abre no ar e os arquivos caem em sequência)
 import * as THREE from 'three';
+import { swapToGLB, PROP_GLB } from '../propModel.js';
 import { Puffs, Rings, Shards, std, bodyPoint, canvasTex, textSprite, clamp01, easeOut, easeIn, add, flat } from './common.js';
 import { makeGhost } from './cloneFx.js';
 
@@ -20,6 +21,7 @@ export function makePendrive(scale = 1.6) {
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   g.scale.setScalar(scale);
   g.userData.led = led;
+  swapToGLB(g, PROP_GLB.pendrive, { keep: [led] }); // LED continua emissivo procedural
   return g;
 }
 
