@@ -5,7 +5,7 @@
 const BUTTONS = [
   { id: 'punch', label: 'SOCO', cls: 'b-punch' },
   { id: 'kick', label: 'CHUTE', cls: 'b-kick' },
-  { id: 'special', label: 'ESPECIAL', cls: 'b-special' },
+  { id: 'special', label: 'ESP', cls: 'b-special' },
   { id: 'ultimate', label: 'ULT', cls: 'b-ult' },
 ];
 const DEAD = 0.28; // zona morta do direcional (fração do raio)
@@ -19,7 +19,7 @@ export class TouchControls {
     this.el = document.createElement('div');
     this.el.className = 'touch hidden';
     this.el.innerHTML = `<div class="tpad"><div class="tring"></div><div class="tknob"></div></div>
-      <div class="tbtns">${BUTTONS.map((b) => `<button class="tbtn ${b.cls}" data-b="${b.id}">${b.label}</button>`).join('')}</div>`;
+      <div class="tbtns">${BUTTONS.map((b) => `<button class="tbtn ${b.cls}" data-b="${b.id}" aria-label="${b.label}"><span>${b.label}</span></button>`).join('')}</div>`;
     root.appendChild(this.el);
     this.pad = this.el.querySelector('.tpad');
     this.knob = this.el.querySelector('.tknob');

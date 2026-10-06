@@ -63,9 +63,9 @@ Céu `#2a1b5e → #b8457a → #ff7a3d → #ffc46b` (de cima para baixo), névoa 
 - Ultimate = **transformação visível**: escala, cor extra, luz própria, selo/overlay. Contato só quando a lógica confirma (`ultRes`).
 
 ## 5. Tipografia e HUD
-- **Duas fontes, só.** `Bangers` (display: nomes, números, letreiros, botões) e `Inter` 700/900 (rótulos pequenos, listas, avisos). Nunca serifada, nunca fonte de "terror".
-- Display sempre com **contorno preto ≥ 3 px** (`-webkit-text-stroke` + `paint-order: stroke fill`) e **sombra dura** deslocada (não blur). Vermelho em baixo do gold nos letreiros grandes.
-- **HUD = plantão de telejornal premium:** barras de vida grossas e chanfradas (skew), retrato em losango com a paleta do lutador, nome em placa escura, "urninhas" de round, timer central em placa, faixa AO VIVO, barra de ultimate em 3 segmentos que vira gold/magenta pulsando quando cheia.
+- **Duas fontes, só (UI).** `Anton` (display: nomes, números, letreiros, botões) e `Barlow Condensed` 500/700/800 (rótulos, listas, avisos). `Bangers` sobrevive apenas nos letreiros 3D em canvas (faixas do cenário, VFX). Direção completa em `docs/UI_DIRECAO.md`.
+- Texto display **sobre o 3D** (letreiros, popups, combo) sempre com **contorno ≥ 3 px** (`-webkit-text-stroke` + `paint-order: stroke fill`) e **sombra dura** deslocada. Nos menus (fundo próprio) o texto é limpo, sem contorno.
+- **HUD = plantão de telejornal premium:** barras de vida chanfradas (clip-path, não skew) com faixa vermelha de dano atrasada, retrato chanfrado, nome em Barlow com aba azul/vermelha, marcadores de round, timer central em placa com filete de ouro, faixa AO VIVO, barra de ultimate em 3 segmentos que vira ouro pulsando quando cheia.
 - Hierarquia dos letreiros: **K.O. (vermelho, maior, treme) > TURNO (gold, faixa escura) > LUTEM! (branco) > nome do ultimate (gold com faixa) > SENTENÇA/texto de ultimate (carimbo vermelho sobre papel) > nome do especial (azul claro) > dano (amarelo pequeno).**
 - Celular em retrato: HUD cabe em 540 px de largura sem quebrar nome; nada abaixo de 11 px; alvos de toque ≥ 44 px.
 - Seleção: cards de "figura de ação" com a paleta do lutador, selo P1/P2, lista de golpes. O botão LUTAR é o maior elemento da tela.

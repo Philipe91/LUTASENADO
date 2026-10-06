@@ -142,6 +142,7 @@ export async function init({ params, platform, title }) {
     },
     onPick: (cfg) => { setPrefs(cfg); prefetchFight([cfg.p1, cfg.p2]); },
     onBack: title ? () => { select.hide(); title.show(); } : null,
+    sfx: (name) => audio.engine.play(name, { vol: 0.5 }), // sons de UI reaproveitam o banco (papel, carimbo, martelo)
   });
   select.hide();
 
@@ -193,7 +194,9 @@ export async function init({ params, platform, title }) {
     try {
       setPrefs({ p1: cfg.p1, p2: cfg.p2, mode: cfg.mode, ...(cfg.arena ? { arena: cfg.arena } : {}) });
       select.hide(); title?.hide(); hud.hide();
-      loading.show(getCharacter(cfg.p1), getCharacter(cfg.p2));
+      const arenaPick = urlArena || cfg.arena || getPrefs().arena;
+      const arenaInfo = ARENA_LIST.find((a) => a.id === arenaPick) || ARENA_LIST[0];
+      loading.show(getCharacter(cfg.p1), getCharacter(cfg.p2), { arena: arenaInfo ? `${arenaInfo.name} · ${arenaInfo.sub}` : '', p2who: cfg.mode === '2p' ? 'Jogador 2' : 'CPU' });
       await useArena(cfg.arena || getPrefs().arena);
       if (!params.has('placeholder')) {
         await Promise.race([preloadFight([cfg.p1, cfg.p2], (p) => loading.set(p)), new Promise((r) => setTimeout(r, 25000))]);

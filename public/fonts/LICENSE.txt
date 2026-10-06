@@ -1,2 +1,3 @@
-Bangers (Vernon Adams) e Inter (Rasmus Andersson) — SIL Open Font License 1.1 (https://openfontlicense.org).
+Anton (Vernon Adams), Barlow Condensed (Jeremy Tribby) e Bangers (Vernon Adams) — SIL Open Font License 1.1 (https://openfontlicense.org).
 Subconjunto "latin" baixado do Google Fonts e servido localmente: os portais (Poki) não aceitam requisições externas.
+UI = Anton (display) + Barlow Condensed (texto). Bangers fica só para os letreiros 3D do cenário/VFX (canvas), carregada sob demanda.
