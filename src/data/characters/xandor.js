@@ -42,6 +42,14 @@ export default {
     yaw: 0,
     // Meshy v4 (rig refeito: joelho abaixo da barra da toga, queixo no queixo) → chaves do jogo
     // movimentos de IA (Texto para Motion) vêm com o UUID como nome
+    // personalidade: magistrado contido — guarda lenta, queixo erguido, aponta o dedo; vitória de braços cruzados
+    persona: {
+      speed: { idle: 0.65, walk: 0.85 }, phase: 0.55,
+      idle: { breath: [0.02, 0.3], head: -0.12, lean: -0.04, sway: [0.015, 0.25] },
+      walk: { lean: -0.04, head: -0.08, bob: 0.005 },
+      intro: { gesture: 'point', say: 'Isso não vai ficar assim.' },
+      victory: { gesture: 'crossArms' },
+    },
     clips: {
       idle: GUARDA, intro: GUARDA, crouch: GUARDA,
       walk: 'Walking', walkBack: 'Walking', // andar original do Meshy (andar pra trás = mesmo clip de ré)
@@ -79,7 +87,7 @@ export default {
       ],
     },
     // guarda (IA) tapava o rosto com a mão direita: tira a mão do queixo só nas poses paradas
-    poseFixIdle: { keys: ['idle', 'intro', 'crouch', 'ultimate'], rots: [{ bone: 'rightforearm', axis: [0, 0, 1], ang: -0.6 }] },
+    poseFixIdle: { keys: ['idle', 'crouch', 'ultimate'], rots: [{ bone: 'rightforearm', axis: [0, 0, 1], ang: -0.6 }] },
     // robeFix DESLIGADO: nunca esteve ativo (bug de nome de osso "right…"→"ht…") e, ativo, prende as mãos ao quadril.
     // O Xandor foi aprovado sem ele (rig v5 resolveu as pernas).
     ultimateFx: 'xandorAvatar', // VFX: selo, aura, olhos, livros, canetas por hit, martelo colossal no final

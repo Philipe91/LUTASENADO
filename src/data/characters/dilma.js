@@ -57,6 +57,13 @@ export default {
     height: 1.68,
     yaw: 0,
     animations: ['assets/characters/xandor/model.glb', 'assets/characters/lulacio/model.glb'],
+    // personalidade: dilmês — guarda própria balançando a cabeça; saúda a mandioca na entrada, estoca vento na vitória
+    persona: {
+      speed: { idle: 0.9, walk: 0.85 }, phase: 0.35,
+      idle: { nod: [0.1, 0.7], sway: [0.05, 0.7], breath: [0.03, 0.5], lean: 0.04 },
+      walk: { roll: 0.1, bob: 0.02, lean: 0.04 },
+      intro: { gesture: 'mandioca', say: 'Saudo a mandioca!' },
+    },
     clips: {
       idle: GUARDA, intro: 'Talk_Passionately', crouch: GUARDA, ultimate: 'Talk_Passionately',
       walk: 'Walking', walkBack: 'Walking', jump: 'Regular_Jump',
@@ -69,7 +76,7 @@ export default {
       special1: VENTO, // estocar vento (gesto próprio gerado no Meshy)
       special2: ARREMESSO,           // mandioca (arremesso por cima)
       special3: 'Running',           // pedalada
-      victory: 'Chest_Pound_Taunt',
+      victory: VENTO, // vitória: estoca o vento (motion própria)
     },
     reverseKeys: ['walkBack'],
     specialFx: {

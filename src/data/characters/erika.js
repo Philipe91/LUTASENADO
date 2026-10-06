@@ -48,6 +48,14 @@ export default {
     height: 1.8,
     yaw: 0,
     animations: ['assets/characters/xandor/model.glb', 'assets/characters/lulacio/model.glb'],
+    // personalidade: elegante — mão na cintura, quadril gingando; discurso ao microfone na entrada, pose de capa na vitória
+    persona: {
+      speed: { idle: 0.8, walk: 1.05 }, phase: 0.9,
+      idle: { gesture: 'handOnHip', sway: [0.08, 0.5], twist: -0.08, head: -0.1, lean: -0.04, breath: [0.02, 0.5] },
+      walk: { roll: 0.12, swagger: 0.06, lean: -0.04, head: -0.08 },
+      intro: { gesture: 'micSpeech', say: 'O plenário é meu.' },
+      victory: { gesture: 'pose' },
+    },
     clips: {
       idle: GUARDA, intro: 'Talk_Passionately', crouch: GUARDA, ultimate: 'Talk_Passionately',
       walk: 'Walking', walkBack: 'Walking', jump: 'Regular_Jump',

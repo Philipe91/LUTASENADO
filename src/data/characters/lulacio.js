@@ -60,6 +60,14 @@ export default {
     height: 1.72,
     yaw: 0,
     // Meshy v2 (punhos fechados na imagem de origem) — estilo BRIGÃO DE PALANQUE, diferente do Xandor
+    // personalidade (src/visual/persona.js): brigão de palanque — balança pesado, acena no comício, V de vitória
+    persona: {
+      speed: { idle: 0.8, walk: 0.9 }, phase: 0.1,
+      idle: { breath: [0.05, 0.45], sway: [0.07, 0.55], lean: 0.08, stance: 0.06, bounce: [0.012, 0.9], head: -0.05 },
+      walk: { lean: 0.06, swagger: 0.12, roll: 0.06, bob: 0.02 },
+      intro: { gesture: 'wave', say: 'Companheirada!' },
+      victory: { gesture: 'raiseBoth' },
+    },
     clips: {
       idle: GUARDA, intro: 'Talk_Passionately', crouch: GUARDA, ultimate: 'Chest_Pound_Taunt',
       walk: 'Walk_Fight_Forward', walkBack: 'Walk_Fight_Back', jump: 'Jump_with_Arms_Open',
@@ -72,7 +80,7 @@ export default {
       special1: 'Talk_Passionately', // Discurso Interminável
       special2: PICANHA, // Picanha do Povo
       special3: 'Grip_and_Throw_Down', // Abraço do Palanque
-      victory: 'Chest_Pound_Taunt',
+      victory: 'Talk_Passionately',
     },
     // pulo: fração do clip do impulso (0.3) até a aterrissagem (0.64), guiada pela física (subida/ápice/descida)
     jumpScrub: { from: 0.3, to: 0.64 },

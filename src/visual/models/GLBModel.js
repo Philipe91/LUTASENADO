@@ -9,6 +9,7 @@ import { buildBoneIndex, hipsRestY, retargetClip } from './retarget.js';
 import { rigidifyNearBones, robeToHips } from './skinFix.js';
 import { CLIP_NAMES, ANIM_FALLBACK } from '../animKeys.js';
 import { exists, bytes, modelUrl } from '../../platform/assets.js';
+import { PersonaState } from '../persona.js';
 
 const loader = new GLTFLoader();
 const draco = new DRACOLoader();
@@ -53,6 +54,10 @@ const POSE_TIMELINES = {
   dead: { knockdown: [1.2, 2.1], ko: [1.2, 2.95], down: [2.95, 2.95] },
   'stand up1': { getup: [1.85, 6.2] },
 };
+
+const _oq = new THREE.Quaternion(), _bq = new THREE.Quaternion(), _R = new THREE.Quaternion(), _R2 = new THREE.Quaternion();
+const _ax = new THREE.Vector3(), _p0 = new THREE.Vector3(), _p1 = new THREE.Vector3(), _cur = new THREE.Vector3(), _tgt = new THREE.Vector3();
+const _X = new THREE.Vector3(1, 0, 0), _Y = new THREE.Vector3(0, 1, 0), _Z = new THREE.Vector3(0, 0, 1);
 
 const normClip =(s) => s.toLowerCase().replace(/^.*\|/, '').replace(/mixamo\.com/g, '').replace(/[_-]+/g, ' ').trim();
 
@@ -201,6 +206,13 @@ export class GLBModel {
     action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
     action.clampWhenFinished = !loop;
     action.timeScale = !loop && lenFrames ? clip.duration / (lenFrames / 60) : 1;
+    // personalidade: ritmo próprio do clip em loop (guarda lenta de político × guarda saltitante de boxeador)
+    const P = this.visual.persona;
+    if (loop && P?.speed?.[key]) action.timeScale *= P.speed[key];
+    // loops começam em fase própria: dois lutadores com o mesmo clip não "dançam" sincronizados
+    if (loop && !js && (key === 'idle' || key === 'walk' || key === 'walkBack' || key === 'intro')) {
+      action.time = ((((P?.phase ?? 0) + (this.phaseOffset || 0)) % 1) + 1) % 1 * clip.duration;
+    }
     // chaves tocadas de ré (ex.: andar pra trás usando o clip de andar)
     if (this.visual.reverseKeys?.includes(key) || this.visual.reverseKeys?.includes(this.resolvedKey)) {
       action.timeScale *= -1;
@@ -232,6 +244,7 @@ export class GLBModel {
       this.current.time = (j.from + (j.to - j.from) * pose.airP) * j.dur;
     }
     this.mixer.update(dt);
+    if (this.visual.persona) (this.ps ||= new PersonaState(this.visual.persona)).update(dt, pose.key, pose.facing ?? 1);
     this.lowAmt = (this.lowAmt || 0) + ((pose.low ? 1 : 0) - (this.lowAmt || 0)) * Math.min(1, dt * 14);
     // correção de pose por chave (ex.: guarda do Xandor): visual.poseFix = { keys:[...], rots:[{bone, axis:[x,y,z], ang}] }
     const pf = this.visual.poseFix;
@@ -239,12 +252,104 @@ export class GLBModel {
     this.fixAmt = (this.fixAmt || 0) + (want - (this.fixAmt || 0)) * Math.min(1, dt * 12);
     const rots = [];
     let dy = 0;
+    if (this.ps) dy += this.applyPersona(rots);
     if (pf && this.fixAmt > 0.01) for (const r of pf.rots) this.rotBone(rots, r.bone, new THREE.Vector3(...r.axis).normalize(), r.ang * this.fixAmt);
     const pi = this.visual.poseFixIdle; // 2ª camada, só em algumas chaves (blend próprio)
     this.fixIdle = (this.fixIdle || 0) + ((pi && pi.keys.includes(pose.key) ? 1 : 0) - (this.fixIdle || 0)) * Math.min(1, dt * 12);
     if (pi && this.fixIdle > 0.01) for (const r of pi.rots) this.rotBone(rots, r.bone, new THREE.Vector3(...r.axis).normalize(), r.ang * this.fixIdle);
-    if (this.lowAmt > 0.01) dy = this.applyCrouch(rots, this.lowAmt, pose.key);
+    const low = Math.max(this.lowAmt, this.ps?.crouch || 0); // base baixa da personalidade (Duval) soma com agachar
+    if (low > 0.01) dy += this.applyCrouch(rots, low, pose.key);
     this.crouchApplied = rots.length || dy ? { rots, hips: this.bones.get('hips'), dy } : null;
+  }
+
+  // PERSONALIDADE (src/visual/persona.js): guarda/respiração no idle, passada no walk, gesto na entrada/vitória.
+  // Rotações no espaço do PERSONAGEM (independe do eixo local de cada osso do rig) — idempotente como o resto.
+  applyPersona(rots) {
+    const ps = this.ps, b = this.bones;
+    ps.crouch = 0;
+    const hips = b.get('hips');
+    if (!hips) return 0;
+    if (this.hipsRest === undefined) this.hipsRest = hipsRestY(b);
+    this.object.updateWorldMatrix(true, true);
+    this.object.getWorldQuaternion(_oq);
+    const spines = ['spine', 'spine1', 'spine2'];
+    const bend = (lean, twist, side, w) => {
+      for (const n of spines) { this.rotObj(rots, n, _X, lean * w / 3); this.rotObj(rots, n, _Y, twist * w / 3); this.rotObj(rots, n, _Z, side * w / 3); }
+    };
+    const headTurn = (pitch, yaw, roll, w) => {
+      for (const n of ['neck', 'head']) { this.rotObj(rots, n, _X, pitch * w / 2); this.rotObj(rots, n, _Y, yaw * w / 2); this.rotObj(rots, n, _Z, roll * w / 2); }
+    };
+    let lift = 0;
+    const io = ps.idleOffsets(), wi = io.w;
+    if (wi > 0.01) {
+      bend(io.lean, io.twist, io.side, wi);
+      this.rotObj(rots, 'spine2', _X, -io.chest * wi); // respiração: peito estufa e solta
+      headTurn(io.head - io.chest * 0.5, io.look, 0, wi);
+      for (const [p, sx] of [['right', -1], ['left', 1]]) {
+        this.rotObj(rots, `${p}arm`, _X, -io.guard * wi);
+        this.rotObj(rots, `${p}arm`, _Z, sx * io.elbows * wi);
+        this.rotObj(rots, `${p}upleg`, _Z, sx * io.stance * wi);
+      }
+      lift += io.bob * wi;
+      ps.crouch = io.crouch * wi;
+    }
+    const ww = ps.w.walk, W = ps.p.walk;
+    if (W && ww > 0.01 && this.current) {
+      const ph = (this.current.time / Math.max(0.01, this.current.getClip().duration)) * Math.PI * 2;
+      bend(W.lean || 0, (W.swagger || 0) * Math.sin(ph), (W.roll || 0) * Math.sin(ph), ww);
+      headTurn(W.head || 0, 0, 0, ww);
+      lift -= (W.bob || 0) * Math.abs(Math.cos(ph)) * ww;
+      ps.crouch = Math.max(ps.crouch, (W.crouch || 0) * ww);
+    }
+    const g = ps.g, wg = ps.w.g;
+    if (g && wg > 0.01) {
+      if (g.spine) bend(g.spine[0], g.spine[1], g.spine[2], wg);
+      if (g.head) headTurn(g.head[0], g.head[1], g.head[2], wg);
+      for (const [s, [up, fore]] of Object.entries(g.arms)) {
+        const p = s === 'L' ? 'left' : 'right';
+        this.aimBone(rots, `${p}arm`, `${p}forearm`, up, wg);
+        this.aimBone(rots, `${p}forearm`, `${p}hand`, fore, wg);
+      }
+      lift += g.bob * wg;
+    }
+    const dy = -lift * this.hipsRest;
+    hips.position.y -= dy;
+    return dy;
+  }
+
+  // prop da pose ativa (PersonaFx no FighterView desenha na mão)
+  personaProp() {
+    const g = this.ps?.g;
+    return g?.prop ? { ...g.prop, w: this.ps.w.g } : null;
+  }
+
+  // delta local que equivale a girar o osso por Rw no MUNDO: d = Qosso⁻¹ · Rw · Qosso
+  worldDelta(rots, bone, Rw) {
+    bone.getWorldQuaternion(_bq);
+    const d = _bq.clone().invert().multiply(Rw).multiply(_bq);
+    bone.quaternion.multiply(d);
+    rots.push({ bone, q: d });
+  }
+
+  rotObj(rots, name, axis, ang) {
+    const bone = this.bones.get(name);
+    if (!bone || Math.abs(ang) < 1e-4) return;
+    _R.setFromAxisAngle(_ax.copy(axis).applyQuaternion(_oq).normalize(), ang);
+    this.worldDelta(rots, bone, _R);
+  }
+
+  // aponta o osso (dele até o filho) para a direção `dir` do espaço do personagem, com peso w
+  aimBone(rots, name, child, dir, w) {
+    const bone = this.bones.get(name), c = this.bones.get(child);
+    if (!bone || !c) return;
+    bone.getWorldPosition(_p0); c.getWorldPosition(_p1);
+    _cur.subVectors(_p1, _p0);
+    if (_cur.lengthSq() < 1e-10) return;
+    _cur.normalize();
+    _tgt.copy(dir).applyQuaternion(_oq).normalize();
+    _R2.setFromUnitVectors(_cur, _tgt);
+    _R.identity().slerp(_R2, Math.min(1, w));
+    this.worldDelta(rots, bone, _R);
   }
 
   scrubTime(f) {

@@ -48,6 +48,14 @@ export default {
     height: 1.82,
     yaw: 0,
     animations: ['assets/characters/lulacio/model.glb', 'assets/characters/xandor/model.glb'],
+    // personalidade (vale no placeholder também): militante — gingado de ato, megafone na entrada, punho erguido na vitória
+    persona: {
+      phase: 0.15,
+      idle: { bounce: [0.03, 1.6], sway: [0.06, 0.8], lean: 0.06, guard: 0.15, stance: 0.08 },
+      walk: { bob: 0.03, swagger: 0.12, lean: 0.06 },
+      intro: { gesture: 'megafone', say: 'Ocupa!' },
+      victory: { gesture: 'fistPump' },
+    },
     clips: {
       idle: GUARDA, intro: 'Chest_Pound_Taunt', crouch: GUARDA, ultimate: 'Chest_Pound_Taunt',
       walk: 'Walk_Fight_Forward', walkBack: 'Walk_Fight_Back', jump: 'Jump_with_Arms_Open',

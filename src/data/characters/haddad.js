@@ -58,9 +58,17 @@ export default {
     height: 1.8,
     yaw: 0,
     animations: ['assets/characters/xandor/model.glb', 'assets/characters/lulacio/model.glb'],
+    // personalidade: professor-ministro — postura reta e parada; entra carimbando, vitória explicando com o dedo
+    persona: {
+      speed: { idle: 0.75, walk: 0.9 }, phase: 0.6,
+      idle: { lean: -0.03, head: 0.06, breath: [0.02, 0.35], sway: [0.02, 0.3], elbows: -0.05 },
+      walk: { lean: -0.03, head: 0.04 },
+      intro: { gesture: 'stampAir', say: 'Taxado!' },
+      victory: { gesture: 'lecture' },
+    },
     clips: {
       idle: GUARDA, intro: GUARDA, crouch: GUARDA, ultimate: 'Talk_Passionately',
-      walk: 'Walk_Fight_Forward', walkBack: 'Walk_Fight_Back', jump: 'Regular_Jump',
+      walk: 'Walking', walkBack: 'Walking', // andar reto de gabinete (o próprio GLB) jump: 'Regular_Jump',
       punch1: 'Left_Jab_from_Guard', punch2: 'Right_Jab_from_Guard', punch3: 'Punch_Forward_with_Both_Fists',
       crouchPunch: 'Left_Jab_from_Guard', airPunch: 'Right_Jab_from_Guard', throw: 'Punch_Forward_with_Both_Fists',
       kick: 'Spartan_Kick', airKick: 'Simple_Kick', sweep: 'Sweep_Kick',
@@ -70,8 +78,9 @@ export default {
       special1: ARREMESSO, // pacote
       special2: 'Block1',  // arcabouço (pose) → contra-carimbo usa o mesmo clip
       special3: CARIMBO,  // carimbada (gesto próprio gerado no Meshy)
-      victory: 'victory',
+      victory: GUARDA,
     },
+    reverseKeys: ['walkBack'], // andar pra trás = Walking de ré
     specialFx: {
       neutral: { type: 'propHand', visual: 'pacote', hand: 'righthand' },
       forward: { type: 'arcabouco' },
