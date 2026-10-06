@@ -8,7 +8,7 @@ export default {
   title: 'O Companheiro de Aço',
   audio: { voice: { set: 'senhor_rouco', pitch: 1.0 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Grappler / Brawler',
-  stats: { hp: 100, walk: 0.9, jump: 0.95, width: 0.95, height: 1.72, meterGain: 1.3 },
+  stats: { hp: 102, walk: 0.9, dash: 0.95, backdash: 0.85, jump: 0.95, gravity: 1.08, width: 0.95, height: 1.72, meterGain: 1.2 }, // grappler: pesado, dash curto, mais vida
   passive: {
     name: 'Carisma de Palanque',
     desc: 'Enche a barra 30% mais rápido. Abaixo de 30% de vida: +15% de dano.',

@@ -8,7 +8,7 @@ export default {
   title: 'A Voz do Plenário',
   audio: { voice: { set: 'mulher_jovem', pitch: 0.97 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Counter / Elegante',
-  stats: { hp: 95, walk: 1.15, jump: 1.05, width: 0.72, height: 1.8 },
+  stats: { hp: 92, walk: 1.15, dash: 1.2, backdash: 1.25, jump: 1.05, gravity: 0.95, width: 0.72, height: 1.8 }, // counter/ágil: entra e sai
   passive: {
     name: 'Presença',
     desc: '3 s sem tomar golpe: +18% de velocidade até apanhar.',
@@ -24,8 +24,8 @@ export default {
     },
     // SALTO AGULHA: dash curto + chute giratório (limpo e rápido)
     forward: {
-      name: 'Salto Agulha', kind: 'strike', startup: 7, active: 10, recovery: 16, lunge: 0.2, cooldown: 150,
-      damage: 8, hitstun: 20, push: 0.22, heavy: true,
+      name: 'Salto Agulha', kind: 'strike', startup: 7, active: 10, recovery: 14, lunge: 0.2, cooldown: 150,
+      damage: 8, hitstun: 24, push: 0.22, heavy: true, // +3 no acerto (antes −6), −12 na defesa
       box: { x: 0.0, y: 0.45, w: 1.25, h: 1.05 }, text: 'AGULHA!',
     },
     // CLOSE CERTO (meme): pose por 22 frames. Se tomar um golpe → flash, o golpe é anulado e o contra-ataque sai sozinho

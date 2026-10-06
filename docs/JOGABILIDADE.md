@@ -30,7 +30,46 @@ Todos os números ficam em `src/fight/constants.js` → `FEEL` (e no frame data 
 | **IA** | IA divertida varia, defende, pune e não repete | Reflexos com chance por nível (tech de agarrão e de queda, anti-aéreo, punição de golpe no vento), combo com *hit-confirm* (só cancela em especial se o soco entrou), anti-spam (não repete a mesma ação 3×), dash para entrar. Níveis `?ai=1|2|3` (ou `?level=easy|normal|hard`). O fácil hesita e quase não pune |
 | **Toque (celular)** | Direcional analógico com zona morta + 4 botões grandes | `src/ui/Touch.js`: aparece sozinho em tela de toque (`?touch=1` força, `?touch=0` esconde). Multitoque (andar e bater juntos); toque duplo no direcional dá dash; vibração curta no Android |
 
-## Balanceamento depois das mudanças
+## Lote 2 (05/10) — pesquisa em docs/COMBATE_PESQUISA.md, auditoria em tests/framedata.mjs
+
+| Mecânica | Referência | Aqui (tudo em `FEEL`, desliga com `null`) |
+|---|---|---|
+| **Barra de guarda / guarda quebrada** | Guilty Gear Guard Gauge, SF6 burnout: defender demais tem custo | `FEEL.guard`: 100 pontos; cada defesa gasta 11/17/22 (normal/pesado/especial); regenera 0,25/f, 20 f depois da última defesa; zerou → **GUARDA QUEBRADA** (42 f aberto, volta com 50). ~9 jabs ou ~5 especiais seguidos quebram. Barra fina azul no HUD (`src/ui/GuardHud.js`) |
+| **Raspão só de especial** | SF: normais não raspam, especiais raspam | `FEEL.chip`: normal 0 %, especial 12 % (antes todo golpe raspava 15 %). Nunca mata |
+| **Defesa na hora (just block)** | SF6 perfect parry, Garou Just Defend | `FEEL.justBlock`: começar a defender até 4 f antes do contato = **NA HORA!** — sem raspão, sem gasto de guarda, blockstun −4, +12 de barra. A passiva TÁ OK do Brasa continua como versão turbinada |
+| **Anti-aéreo** | Anti-air deve ser legível e recompensar | `FEEL.antiAir`: chute e soco 2 têm `antiAir` — no pulo do rival: derruba, ×1,15, +8 barra, **ANTI-AÉREO!**. Chute com hitbox mais alta. A IA chuta depois do ápice (antes chutava cedo e errava) |
+| **Quique na parede** | Wall bounce (Tekken/KI), 1× por queda | `FEEL.wallBounce`: queda forte (|vx| ≥ 0,3) na borda volta 45 % e sobe — **NA PAREDE!** — 1 hit extra dentro do limite do juggle |
+| **Comeback** | X-Factor/Ultra: quem perde ganha recurso | `FEEL.comeback` **DISCURSO DE REAÇÃO**: abaixo de 30 % de vida, barra ×1,35 e dano ×1,06 (1× por round) |
+| **Motion input opcional** | SF clássico × SF6 Modern | `FEEL.motion`: ↓↘→ + soco/chute = especial da frente · ↓↙← + botão = neutro · ↓,solta,↓ + botão = baixo. O botão de especial continua igual |
+| **Economia de barra** | ~1 ultimate por round, não 2 | `FEEL.meter`: ganho por dano 2,4/1,5 → 1,4/0,8; defesa 8 → 5. Ultimates/partida 5,1 → 3,2; rounds decididos por ultimate 54 % → 23 % |
+| **Chain de socos** | Target combo tem que conectar | **Bug**: o 2º/3º soco passava no vento fora da quina (empurrão do jab 0,55 m). Jab empurra 0,07; socos 2/3 dão um passo (`lunge`) |
+| **Frame data dos especiais** | Golpe que acerta não pode ser punido | Motociata, Lacração, Zero Um, Salto Agulha, Carimbo e Debate eram **negativos no acerto** (−4 a −12): corrigidos (último hit derruba / hitstun maior / recuperação menor) |
+| **Estilos** | rushdown / zoner / grappler / tanque | `stats.dash`, `stats.backdash`, `stats.gravity` novos (só o bloco `stats` de cada personagem) + vida/walk por arquétipo |
+| **IA** | Meaty/oki, agarrar tartaruga, anti-aéreo certo, cuidar da guarda | `LEVELS.oki`, `throwTurtle`, `guardCare` por nível; difícil vence a normal ~90 % e a fácil 100 % |
+| **Determinismo** | Rollback exige simulação determinista | `src/fight/Rng.js`: a partida recebe semente; KO/empate/IA sorteiam por `match.rng`. `tests/sim.mjs` e `tests/framedata.mjs` reproduzem a mesma luta |
+
+### Controles (o que o jogador precisa saber)
+- **Especial**: botão de especial (L / C / toque) sozinho, +frente ou +baixo — como antes. **Opcional**: ↓↘→ + soco ou chute
+  também solta o especial da frente (↓↙← = neutro, ↓↓ = baixo), inclusive como cancel de um soco que acertou.
+- **Agarrão**: frente + soco colado. Escapa com soco em até 7 f (**ESCAPOU!**). Agarra quem fica só defendendo.
+- **Defesa**: segurar para trás. Defender demais esvazia a barra azul de **GUARDA** → **GUARDA QUEBRADA** (fica aberto).
+  Defender no último instante = **NA HORA!** (sem raspão, sai antes, ganha barra). Especial defendido raspa 12 %.
+- **Anti-aéreo**: chute (ou 2º soco) quando o rival está descendo do pulo → **ANTI-AÉREO!** derruba com dano extra.
+- **Vida baixa**: abaixo de 30 % entra o **DISCURSO DE REAÇÃO** (barra enche mais rápido).
+- Queda forte na borda: **NA PAREDE!** — quem bateu pode emendar 1 hit no ar.
+
+### Números do lote 2 (antes → depois, `node tests/sim.mjs 10`, IA normal, 1560 partidas)
+- Vitórias por personagem: 40–58 % → **46–56 %** (Brasa 40→55, Flavão 42→56, Renan 43→46, Vorcaro 58→50, Xandor 57→50).
+  IA difícil (`node tests/sim.mjs 6 hard`): 40–60 %.
+- Ultimates por partida 5,08 → **3,3**; rounds decididos por ultimate 54 % → **27 %**; round médio 46 s (timer de 60 s).
+- IA difícil × normal (espelho): 90 % · difícil × fácil: 100 %. Maior combo 13 hits (especial multi-hit), combo médio 3,4.
+- Golpes que não acertam colado: nenhum (os `hits:0` do `tests/specials.mjs` eram só alcance: agarrão/selfie/discurso
+  não chegam a 3,5 m — o teste agora mede colado). Especiais ainda muito negativos na defesa, de propósito (alto
+  risco/alta recompensa): Discurso −18 (atordoa), Rugido −16 (armadura), Lacração −20 (reflete projétil).
+- Pares além de 70/30 com 20 partidas: ruído de ±10 pontos; os piores de verdade (Boulos × Dino, Dilma × Erika) são
+  arquétipo contra arquétipo (zona × tanque, zoner × counter) — pendência de ajuste fino por par.
+
+## Balanceamento depois das mudanças (lote 1)
 A punição da IA expôs golpes muito inseguros. Ajustes pequenos (só recuperação ou passiva):
 - Renan: Lacração Reversa (recuperação 16→11) e Debate Relâmpago (20→14).
 - Boulos: Marcha (22→18) e Megafone do Ato (18→15).

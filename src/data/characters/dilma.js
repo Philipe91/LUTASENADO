@@ -11,7 +11,7 @@ export default {
   title: 'A Estocadora de Vento',
   audio: { voice: { set: 'mulher_firme', pitch: 1.0 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Zoner / Confusa',
-  stats: { hp: 96, walk: 0.92, jump: 0.95, width: 0.8, height: 1.68 },
+  stats: { hp: 100, walk: 0.92, dash: 0.95, backdash: 1.2, jump: 0.95, gravity: 0.9, width: 0.8, height: 1.68 }, // zoner: recuo bom, flutua
   passive: {
     name: 'Dobrar a Meta',
     desc: 'Acertar um especial deixa o PRÓXIMO especial com dano dobrado (uma vez).',

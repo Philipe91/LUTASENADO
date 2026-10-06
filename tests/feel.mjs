@@ -217,5 +217,87 @@ const runUntil = (m, pred, max = 400, onEv) => { for (let i = 0; i < max; i++) {
   check('interpolação: px/py = frame lógico anterior', f.px !== undefined && Math.abs(f.x - f.px - f.vx) < 1e-9, `px=${f.px.toFixed(3)} x=${f.x.toFixed(3)}`);
 }
 
+// ---------- mecânicas novas (docs/COMBATE_PESQUISA.md) ----------
+const holdBack = script((k, s) => ({ [s.facing > 0 ? 'left' : 'right']: true }));
+
+// 13) BARRA DE GUARDA: defender sem parar gasta a guarda até QUEBRAR; normal defendido não raspa vida
+{
+  // defensor encostado na quina (senão vai andando para trás e o soco passa no vento)
+  const m = setup('xandor', 'lulacio', script((k, s, o) => (s.state === 'idle' || s.state === 'walk' ? (s.distTo(o) > 0.95 ? { [s.facing > 0 ? 'right' : 'left']: true } : { punch: true }) : {})), holdBack, 1.0, ARENA_HALF - 0.5);
+  const [a, d] = m.fighters;
+  d.x = ARENA_HALF;
+  const g0 = d.guard, hp0 = d.hp;
+  let broke = false, blocks = 0;
+  const n = runUntil(m, () => broke, 1200, (e) => { if (e.type === 'guardBreak') broke = true; if (e.type === 'block') blocks++; });
+  check('guarda: socos defendidos gastam a barra e quebram a guarda', broke && d.state === 'hitstun' && d.animKey === 'dizzy', `${blocks} defesas em ${n}f (guarda ${g0}→${FEEL.guard.max * FEEL.guard.refill})`);
+  check('guarda: normal defendido não raspa a vida', d.hp === hp0, `hp=${d.hp}`);
+  void a;
+}
+// 14) RASPÃO: especial defendido raspa um pouco (nunca mata); DEFESA NA HORA (just block) não raspa e dá barra
+{
+  const special = () => script((k, s) => (k === 1 ? { special: true } : {}));
+  const m = setup('erika', 'xandor', special(), holdBack, 1.5);
+  const d = m.fighters[1], hp0 = d.hp;
+  run(m, 90);
+  check('raspão: especial defendido tira um pouco de vida', d.hp < hp0 && d.hp > hp0 - 2, `${hp0}→${d.hp.toFixed(2)}`);
+  // defesa começada 2 frames antes do contato = NA HORA
+  let justEv = false;
+  const m2 = setup('erika', 'xandor', special(), script((k, s, o) => (o.state === 'special' && o.t >= o.sp.startup - 2 ? { [s.facing > 0 ? 'left' : 'right']: true } : {})), 1.5);
+  const d2 = m2.fighters[1], hp2 = d2.hp, mt = d2.meter;
+  run(m2, 90, (e) => { if (e.type === 'justBlock') justEv = true; });
+  check('defesa na hora: sem raspão, com barra extra', justEv && d2.hp === hp2 && d2.meter > mt + FEEL.justBlock.meter * 0.9, `hp=${d2.hp} barra +${(d2.meter - mt).toFixed(0)}`);
+}
+// 15) ANTI-AÉREO: chute pegando o rival no pulo derruba com bônus
+{
+  // anti-aéreo de verdade: chuta logo depois do ápice (o chute leva 9 frames para ficar ativo)
+  const m = setup('xandor', 'lulacio', script((k, s, o) => (o.state === 'jump' && o.vy < 0 && o.y > 1.75 ? { kick: true } : {})),
+    script((k) => (k <= 2 ? { up: true } : {})), 1.6);
+  const d = m.fighters[1], hp0 = d.hp;
+  let aa = false;
+  run(m, 120, (e) => { if (e.type === 'antiAir') aa = true; });
+  const kickDmg = m.fighters[0].moves.kick.damage;
+  check('anti-aéreo: chute no pulo derruba com dano extra', aa && (d.state === 'knockdown' || d.state === 'down' || d.state === 'getup' || d.state === 'idle') && hp0 - d.hp > kickDmg * 1.05, `dano ${(hp0 - d.hp).toFixed(1)} (chute ${kickDmg})`);
+}
+// 16) QUIQUE NA PAREDE: queda forte contra a borda volta e sobe (1× por queda)
+{
+  const m = setup('xandor', 'lulacio', idle, idle, 1.0, ARENA_HALF - 1.2);
+  const [a, d] = m.fighters;
+  d.x = ARENA_HALF - 0.4;
+  applyHit(m, a, d, { damage: 6, knockdown: true, heavy: true, push: 0.3, launch: 0.12 }, a.x);
+  let bounced = false, maxBack = d.x;
+  run(m, 40, (e) => { if (e.type === 'wallBounce') bounced = true; });
+  for (let i = 0; i < 30; i++) { m.step(); m.drainEvents(); maxBack = Math.min(maxBack, d.x); }
+  check('quique na parede: volta para o meio e só uma vez', bounced && d.wallBounced && maxBack < ARENA_HALF - 0.6, `x mín=${maxBack.toFixed(2)}`);
+}
+// 17) MOTION INPUT: ↓↘→ + soco vira o especial da frente; soco sozinho continua soco
+{
+  const seq = [{ down: true }, { down: true, fwd: true }, { fwd: true }, { fwd: true, punch: true }];
+  const m = setup('erika', 'xandor', script((k, s) => { const F = s.facing > 0 ? 'right' : 'left'; const c = seq[k - 1]; return c ? { down: !!c.down, [F]: !!c.fwd, punch: !!c.punch } : {}; }), idle, 3);
+  const f = m.fighters[0];
+  let name = '';
+  run(m, 20, (e) => { if (e.type === 'special') name = e.name; });
+  check('motion: ↓↘→ + soco = especial da frente', name === getCharacter('erika').specials.forward.name, name || f.state);
+  const m2 = setup('erika', 'xandor', script((k) => (k === 1 ? { punch: true } : {})), idle, 3);
+  run(m2, 6);
+  check('motion: soco sozinho é só soco', m2.fighters[0].state === 'attack' && m2.fighters[0].move.id === 'punch1');
+}
+// 18) DISCURSO DE REAÇÃO: abaixo de 30% a barra enche mais rápido (uma vez por round)
+{
+  const m = setup('xandor', 'lulacio');
+  const d = m.fighters[1];
+  d.meter = 0; d.gainMeter(10); const before = d.meter;
+  d.hp = d.maxHp * 0.25; run(m, 2);
+  d.meter = 0; d.gainMeter(10);
+  check('comeback: vida baixa enche a barra mais rápido', d.comebackOn && d.meter > before * 1.2, `${before}→${d.meter.toFixed(1)}`);
+}
+// 19) CHAIN: soco, soco, soco conectam de perto (fora da quina)
+{
+  const m = setup('xandor', 'lulacio', script((k, s) => (k === 1 || (s.state === 'attack' && s.move.chain && s.t === s.move.startup + s.move.active) ? { punch: true } : {})), idle, 1.0);
+  const d = m.fighters[1];
+  let combo = 0;
+  run(m, 90, (e) => { if (e.type === 'hit' && e.fighter === d) combo = Math.max(combo, e.combo); });
+  check('chain: soco→soco→soco conecta (3 hits)', combo >= 3, `combo=${combo}`);
+}
+
 console.log(ok ? '\nOK' : '\nFALHOU');
 process.exit(ok ? 0 : 1);

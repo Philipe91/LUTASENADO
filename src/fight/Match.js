@@ -4,13 +4,16 @@ import { Fighter } from './Fighter.js';
 import { resolveHits } from './Combat.js';
 import { Hitter } from './Hitter.js';
 import { MAX_SEP, ARENA_HALF, ROUND_FRAMES, NEUTRAL } from './constants.js';
+import { Rng } from './Rng.js';
 
 export const ROUND_NAMES = ['PRIMEIRO TURNO', 'SEGUNDO TURNO', 'TERCEIRO TURNO?!'];
 const KO_TEXTS = ['CASSADO!', 'VETADO!', 'ARQUIVADO!', 'INELEGÍVEL!', 'RENUNCIOU!'];
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 export class Match {
-  constructor(dataA, dataB, controllers) {
+  // seed: semente do sorteio da partida (textos, empate, IA). Mesma semente + mesmos inputs = mesma luta (determinismo).
+  constructor(dataA, dataB, controllers, seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0) {
+    this.rng = new Rng(seed);
+    this.seed = seed;
     this.fighters = [new Fighter(dataA, 0), new Fighter(dataB, 1)];
     this.fighters[0].opponent = this.fighters[1];
     this.fighters[1].opponent = this.fighters[0];
@@ -53,7 +56,7 @@ export class Match {
     this.phase = 'ko'; this.phaseT = 0;
     this.winner = atk; this.loser = def;
     this.timeScale = 0.3;
-    const text = byUltimate ? 'MEDIDA PROVISÓRIA!' : pick([...KO_TEXTS, ...(atk.data.koTexts || [])]);
+    const text = byUltimate ? 'MEDIDA PROVISÓRIA!' : this.rng.pick([...KO_TEXTS, ...(atk.data.koTexts || [])]);
     this.emit({ type: 'ko', text, winner: atk, loser: def, byUltimate });
   }
 
@@ -61,7 +64,7 @@ export class Match {
     const [a, b] = this.fighters;
     const ra = a.hp / a.maxHp, rb = b.hp / b.maxHp;
     const tie = Math.abs(ra - rb) < 0.001;
-    this.winner = tie ? pick([a, b]) : ra > rb ? a : b;
+    this.winner = tie ? this.rng.pick([a, b]) : ra > rb ? a : b;
     this.loser = this.winner.opponent;
     this.phase = 'ko'; this.phaseT = 40;
     this.emit({ type: 'ko', text: tie ? 'EMPATE TÉCNICO!' : 'FIM DO MANDATO!', winner: this.winner, loser: this.loser, timeUp: true });
@@ -106,7 +109,7 @@ export class Match {
           if (Math.max(...this.wins) >= 2) {
             this.phase = 'matchEnd';
             const lines = this.winner.data.lines?.win || ['...'];
-            this.emit({ type: 'matchEnd', winner: this.winner, line: pick(lines) });
+            this.emit({ type: 'matchEnd', winner: this.winner, line: this.rng.pick(lines) });
           } else this.startRound();
         }
         break;

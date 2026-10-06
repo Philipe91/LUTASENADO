@@ -38,7 +38,12 @@ for (const c of CHARACTERS) {
   if (only && c.id !== only) continue;
   for (const dir of ['neutral', 'forward', 'down']) {
     if (onlyDir && dir !== onlyDir) continue;
-    const r = measure(c, dir);
-    console.log(`${c.id.padEnd(14)} ${dir.padEnd(8)} ${c.specials[dir].name.padEnd(24)} ${r.secs}s  hits:${r.hits}  dano:${r.dmg}  alvo:${r.knockdown}  objetos simultâneos:${r.maxHitters}`);
+    let r = measure(c, dir), at = '3.5m';
+    // golpe curto (agarrão, selfie, carimbo, megafone...) não chega a 3,5 m: mede de novo colado. Pose de counter
+    // (Close Certo, Arcabouço) e reflexo (Lacração) só reagem a golpe do rival: 0 hits contra boneco parado é esperado.
+    if (r.hits === 0) { r = measure(c, dir, 1.15); at = '1.1m'; }
+    const kind = c.specials[dir].kind;
+    const note = r.hits === 0 ? (kind === 'counter' ? '(pose de counter: só reage a golpe)' : c.specials[dir].reflect ? '(reflete projétil; golpe colado)' : 'SEM HIT!') : '';
+    console.log(`${c.id.padEnd(14)} ${dir.padEnd(8)} ${c.specials[dir].name.padEnd(24)} ${r.secs}s  hits:${r.hits}  dano:${r.dmg}  alvo:${r.knockdown}  objetos simultâneos:${r.maxHitters}  @${at} ${note}`);
   }
 }

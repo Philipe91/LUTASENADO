@@ -8,7 +8,7 @@ export default {
   title: 'O Mobilizador',
   audio: { voice: { set: 'gritao', pitch: 1.08 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Zona / Mobilização',
-  stats: { hp: 100, walk: 1.0, jump: 1.0, width: 0.82, height: 1.82 },
+  stats: { hp: 112, walk: 1.0, dash: 1.05, backdash: 0.95, jump: 1.0, gravity: 1.0, width: 0.82, height: 1.82 }, // mobilização: avança
   passive: {
     name: 'Mobilização',
     desc: 'Perto do rival (até 2,2 m) a barra de Ultimate enche 25% mais rápido.',
@@ -24,7 +24,7 @@ export default {
     },
     // MEGAFONE DO ATO: cone de onda sonora na frente (2,7 m) — 3 pulsos; o último empurra longe
     forward: {
-      name: 'Megafone do Ato', kind: 'strike', startup: 10, active: 18, rehit: 6, recovery: 15, cooldown: 170,
+      name: 'Megafone do Ato', kind: 'strike', startup: 10, active: 18, rehit: 6, recovery: 13, cooldown: 140,
       damage: 1.8, hitstun: 12, push: 0.12, final: { damage: 3, hitstun: 22, push: 0.42, text: 'ATO!' },
       box: { x: 0.3, y: 0.45, w: 2.4, h: 1.35 }, text: 'MEGAFONE!',
     },

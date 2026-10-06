@@ -6,7 +6,7 @@ export default {
   title: 'O Magistrado Supremo',
   audio: { voice: { set: 'grave_autoritario', pitch: 1.0 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Zoner / Controle',
-  stats: { hp: 100, walk: 0.85, jump: 0.95, width: 0.8, height: 1.95 },
+  stats: { hp: 106, walk: 0.85, dash: 0.9, backdash: 1.2, jump: 0.95, gravity: 0.92, width: 0.8, height: 1.95, meterGain: 1.15 }, // zoner: recuo bom, pulo flutuante, enche a barra zoneando (o Avatar é o plano dele)
   passive: {
     name: 'Jurisdição',
     desc: 'Inimigo dentro do círculo ao redor dele enche a barra 30% mais devagar.',
@@ -15,8 +15,8 @@ export default {
   moves: {},
   specials: {
     neutral: {
-      name: 'Intimação', kind: 'projectile', startup: 12, recovery: 18, cooldown: 150,
-      speed: 0.16, damage: 4, hitstun: 18, pull: true, life: 70,
+      name: 'Intimação', kind: 'projectile', startup: 12, recovery: 16, cooldown: 120,
+      speed: 0.16, damage: 5, hitstun: 18, pull: true, life: 70,
       box: { y: 1.0, w: 0.5, h: 0.4 }, visual: 'paper', color: 0xfaf6e8, text: 'INTIMADO!',
     },
     forward: {
@@ -25,13 +25,13 @@ export default {
       box: { y: 0, w: 1.1, h: 2.0 }, visual: 'stamp', color: 0xd62828, text: 'BLOQUEADO!',
     },
     down: {
-      name: 'Canetada', kind: 'zone', atOpponent: true, startup: 10, recovery: 16, cooldown: 180,
+      name: 'Canetada', kind: 'zone', atOpponent: true, startup: 10, recovery: 14, cooldown: 150,
       delay: 36, activeFrames: 10, linger: 18, damage: 9, knockdown: true, push: 0.12,
       box: { y: 0, w: 0.8, h: 2.2 }, visual: 'pen', color: 0x1a1a1a, text: 'CANETADA!',
     },
   },
   ultimate: { name: 'AVATAR DA CONSTITUIÇÃO', hits: 5, interval: 16, damage: 5, finisher: 13, range: 6, text: 'SENTENÇA: DERROTA' },
-  ai: { aggression: 0.3, keepDistance: 4, specialBias: 0.6, throwBias: 0.1, blockChance: 0.5 },
+  ai: { aggression: 0.3, keepDistance: 4, specialBias: 0.6, throwBias: 0.1, blockChance: 0.4 },
   lines: {
     intro: ['Isso não vai ficar assim.'],
     win: ['Caso encerrado. Arquive-se.'],

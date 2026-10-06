@@ -75,6 +75,10 @@ export class Fighter {
     this.invertT = 0; this.slowT = 0; this.slowMult = 1; this.slowText = '';
     this.doubleReady = false; this.charged = 0; // passiva doubleNext (DOBRAR A META) · carga do especial (charge)
     this.ultRes = []; // resultado de cada hit da ultimate ('hit'|'miss'): o visual só mostra contato quando acertou
+    this.guard = FEEL.guard?.max ?? 100; this.guardCd = 0; // barra de guarda (FEEL.guard): zera → GUARDA QUEBRADA
+    this.wallBounced = false; // quique na parede já usado nesta queda
+    this.comebackOn = false; // DISCURSO DE REAÇÃO (FEEL.comeback) já disparou neste round
+    this.dirHist = []; this.motion = null; // motion input opcional (↓↘→ etc.)
     this.setState('intro', 'intro');
   }
 
@@ -93,6 +97,36 @@ export class Fighter {
       if (cmd[d] && !this.prevCmd[d]) { tp.prev = tp.at; tp.prevHeld = tp.rel - tp.prev; tp.at = this.frameCount; }
       if (!cmd[d] && this.prevCmd[d]) tp.rel = this.frameCount;
     }
+    this.readMotion(cmd);
+  }
+  // MOTION INPUT opcional (FEEL.motion): direções em notação numérica relativa ao lado que olha (2=↓ 3=↘ 6=→ 1=↙ 4=←).
+  // ↓↘→ (ou ↓→) = 'forward' · ↓↙← (ou ↓←) = 'neutral' · ↓,solta,↓ = 'down'. O padrão fica "armado" `link` frames
+  // esperando soco/chute (motionSpecial). Determinista: só lê o histórico de direções.
+  readMotion(cmd) {
+    const M = FEEL.motion;
+    if (!M?.enabled) return;
+    const fwd = this.facing > 0 ? cmd.right : cmd.left, back = this.facing > 0 ? cmd.left : cmd.right;
+    const d = cmd.down ? (fwd ? 3 : back ? 1 : 2) : fwd ? 6 : back ? 4 : 5;
+    const h = this.dirHist;
+    if (h.length && h[h.length - 1].d === d) return;
+    h.push({ d, f: this.frameCount });
+    if (h.length > 6) h.shift();
+    const p1 = h[h.length - 2], p2 = h[h.length - 3];
+    const fresh = (e) => !!e && this.frameCount - e.f <= M.window;
+    const from2 = (diag) => (p1?.d === 2 && fresh(p1)) || (p1?.d === diag && p2?.d === 2 && fresh(p2));
+    let dir = null;
+    if (d === 6 && from2(3)) dir = 'forward';
+    else if (d === 4 && from2(1)) dir = 'neutral';
+    else if (d === 2 && p1?.d === 5 && p2?.d === 2 && fresh(p2)) dir = 'down';
+    if (dir) this.motion = { dir, at: this.frameCount };
+  }
+  // motion armado + soco/chute no buffer → { dir, button }
+  motionSpecial() {
+    const mo = this.motion, M = FEEL.motion;
+    if (!mo || !M?.enabled) return null;
+    if (this.frameCount - mo.at > M.link) { this.motion = null; return null; }
+    const b = ['punch', 'kick'].find((k) => this.buffered(k) && (this.pressedAt[k] ?? -999) >= mo.at - 2);
+    return b ? { dir: mo.dir, button: b } : null;
   }
   // direção valendo para um botão: a segurada agora OU a do instante do aperto (aperto no hitstop não perde a direção)
   dirFor(b, fwdNow) {
@@ -133,7 +167,7 @@ export class Fighter {
     if (o && o.x !== this.x) this.facing = o.x > this.x ? 1 : -1;
   }
   toNeutral() {
-    this.move = null; this.sp = null; this.comboTaken = 0; this.hardKD = false; this.juggle = 0; this.juggleG = 1;
+    this.move = null; this.sp = null; this.comboTaken = 0; this.hardKD = false; this.juggle = 0; this.juggleG = 1; this.wallBounced = false;
     if (!this.grounded) return this.setState('jump', 'jump');
     this.setState(this.cmd.down ? 'crouch' : 'idle', this.cmd.down ? 'crouch' : 'idle');
   }
@@ -186,6 +220,7 @@ export class Fighter {
     const low = this.passive.lowHp;
     if (low?.damage && this.lowHpOn) m *= low.damage;
     if (this.buffT > 0) m *= this.buffSpec?.damage ?? 1;
+    if (this.comebackOn && FEEL.comeback) m *= FEEL.comeback.damage ?? 1;
     return m;
   }
   // multiplicador de dano RECEBIDO (<1 = aguenta mais): passiva de vida baixa com `defense` (ex.: CLÃ do Flavão)
@@ -202,6 +237,7 @@ export class Fighter {
     // passiva MOBILIZAÇÃO (Boulos): perto do rival a barra enche mais rápido
     const near = this.passive.nearMeter;
     if (near && this.opponent && this.distTo(this.opponent) <= near.radius) g *= near.mult;
+    if (this.comebackOn && FEEL.comeback) g *= FEEL.comeback.meter ?? 1; // DISCURSO DE REAÇÃO: barra enche mais rápido
     this.meter = Math.min(METER_MAX, this.meter + v * g);
   }
   gainRes(v) { if (this.resource) this.res = Math.min(this.resource.max, this.res + v); }
@@ -229,6 +265,17 @@ export class Fighter {
     if (this.slowT > 0) this.slowT--;
     if (this.wakeT > 0) this.wakeT--;
     this.sinceHit++;
+    // barra de guarda regenera fora da defesa (FEEL.guard.regen por frame)
+    const G = FEEL.guard;
+    if (this.guardCd > 0) this.guardCd--;
+    if (G && this.state !== 'blockstun' && this.guardCd <= 0 && this.guard < G.max) this.guard = Math.min(G.max, this.guard + G.regen);
+    // DISCURSO DE REAÇÃO (comeback universal): ao cruzar FEEL.comeback.below da vida, avisa uma vez por round
+    const CB = FEEL.comeback;
+    if (CB && !this.comebackOn && this.hp > 0 && this.hp / this.maxHp <= CB.below) {
+      this.comebackOn = true;
+      match.emit({ type: 'comeback', fighter: this, text: CB.text });
+      match.emit({ type: 'text', fighter: this, text: CB.text, cls: 'buff' });
+    }
     // passiva de vida baixa com aviso: avisa UMA vez ao cruzar o limite (ex.: CLÃ!)
     const low = this.passive.lowHp;
     if (low?.text && !this.lowHpShown && this.lowHpOn && this.hp > 0) { this.lowHpShown = true; match.emit({ type: 'text', fighter: this, text: low.text, cls: 'buff' }); }
@@ -302,6 +349,8 @@ export class Fighter {
       if (this.canSpecial(dir)) return this.startSpecial(dir, match);
       if (this.lockT > 0) match.emit({ type: 'text', fighter: this, text: 'BLOQUEADO!', cls: 'lock' });
     }
+    const mo = this.motionSpecial(); // ↓↘→ + soco/chute (opcional)
+    if (mo && this.canSpecial(mo.dir)) { this.consume(mo.button); this.motion = null; return this.startSpecial(mo.dir, match); }
     if (this.buffered('punch')) {
       const d = this.dirFor('punch', fwd);
       this.consume('punch');
@@ -356,14 +405,16 @@ export class Fighter {
     this.dashDir = dir;
     this.taps.left.at = this.taps.right.at = -999; // consome o toque
     this.setState('dash', dir > 0 ? 'dash' : 'backdash', d.frames);
-    this.vx = dir * d.v * this.stats.walk * this.facing * this.speedMult();
+    this.vx = dir * d.v * this.dashMult(dir) * this.facing * this.speedMult();
     match.emit({ type: 'dash', fighter: this, dir, x: this.x });
   }
+  // estilo por personagem: stats.dash (frente) e stats.backdash (recuo) multiplicam o dash; sem eles vale o andar
+  dashMult(dir) { const s = this.stats; return dir > 0 ? (s.dash ?? s.walk) : (s.backdash ?? s.dash ?? s.walk); }
   updateDash(match, fwd, back) {
     const d = this.dashDir > 0 ? DASH.fwd : DASH.back;
     const k = this.t / d.frames;
     // perfil: arranque forte, freio no final (1 - k²)
-    this.vx = this.dashDir * d.v * this.stats.walk * this.facing * this.speedMult() * Math.max(0, 1 - k * k);
+    this.vx = this.dashDir * d.v * this.dashMult(this.dashDir) * this.facing * this.speedMult() * Math.max(0, 1 - k * k);
     if (this.t >= d.cancel && (this.buffered('punch') || this.buffered('kick') || this.buffered('special'))) {
       this.setState('idle', 'idle');
       return this.groundControl(match, fwd, back);
@@ -410,6 +461,14 @@ export class Fighter {
         this.cancelInfo = { frame: match.frame, from: m.id, to: 'special' };
         return true;
       }
+    }
+    const mo = C.special ? this.motionSpecial() : null; // cancel por motion (↓↘→ + botão)
+    if (mo && this.canSpecial(mo.dir)) {
+      this.consume(mo.button); this.motion = null;
+      this.faceOpponent();
+      this.startSpecial(mo.dir, match);
+      this.cancelInfo = { frame: match.frame, from: m.id, to: 'special' };
+      return true;
     }
     const into = C.into[m.id];
     if (into && this.buffered('kick')) {
@@ -639,13 +698,23 @@ export class Fighter {
       // arco do pulo: flutua um pouco no ápice e cai mais firme (só pulo/golpe aéreo; queda de golpe segue a física pura)
       const jumping = this.state === 'jump' || (this.state === 'attack' && this.move?.air);
       // juggle: cada hit tomado no ar aumenta a gravidade da queda (juggleG) — combos aéreos curtos, nunca infinitos
-      const g = !jumping ? (this.state === 'knockdown' ? this.juggleG : 1) : Math.abs(this.vy) < 0.05 ? 0.62 : this.vy < 0 ? 1.12 : 1;
+      // stats.gravity: peso do pulo por personagem (tanque cai firme, zoner flutua) — só no pulo, não na queda de golpe
+      const g = !jumping ? (this.state === 'knockdown' ? this.juggleG : 1) : (Math.abs(this.vy) < 0.05 ? 0.62 : this.vy < 0 ? 1.12 : 1) * (this.stats.gravity ?? 1);
       this.vy -= GRAVITY * g;
       this.y += this.vy;
       if (this.y <= 0) { const vLand = this.vy; this.y = 0; this.vy = 0; this.land(match, vLand); }
     }
     this.x += this.vx;
     if (!airborne && FRICTION.has(this.state)) this.vx *= 0.82;
+    // QUIQUE NA PAREDE (FEEL.wallBounce): queda forte que bate na borda volta e sobe um pouco (1× por queda)
+    const WB = FEEL.wallBounce;
+    if (WB && this.state === 'knockdown' && !this.wallBounced && Math.abs(this.x) >= ARENA_HALF && Math.abs(this.vx) >= WB.minVx && Math.sign(this.vx) === Math.sign(this.x)) {
+      this.wallBounced = true;
+      this.vx = -this.vx * WB.bounce;
+      this.vy = Math.max(this.vy, WB.launch); this.y = Math.max(this.y, 0.001);
+      match?.emit({ type: 'wallBounce', fighter: this, x: this.x, y: this.y + this.stats.height * 0.5, text: WB.text });
+      match?.emit({ type: 'text', fighter: this, text: WB.text, cls: 'lock' });
+    }
     this.x = Math.max(-ARENA_HALF, Math.min(ARENA_HALF, this.x));
   }
   land(match, vLand = 0) {
