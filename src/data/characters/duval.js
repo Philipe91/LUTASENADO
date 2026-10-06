@@ -7,6 +7,7 @@ export default {
   id: 'duval',
   name: 'AGENTE DUVALL',
   title: 'O Operador de Arquivos',
+  audio: { voice: { set: 'meia_idade_calmo', pitch: 0.92 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Trap / Técnico',
   stats: { hp: 100, walk: 1.0, jump: 1.0, width: 0.8, height: 1.82 },
   passive: {

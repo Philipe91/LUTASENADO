@@ -9,6 +9,11 @@ import { EventBus } from '../src/core/EventBus.js';
 import { SoundDirector } from '../src/audio/SoundDirector.js';
 import { SFX } from '../src/audio/sfxBank.js';
 import { render } from '../src/audio/synth.js';
+import { existsSync } from 'node:fs';
+
+// vozes: todo personagem tem audio.voice.set e o arquétipo tem pelo menos 2 variações de cada evento (ogg + mp3)
+const VOICE_EVENTS = ['attack', 'hurt', 'jump', 'special', 'ultimate', 'ko', 'win', 'lose', 'taunt'];
+const voiceFile = (set, ev, n, ext) => new URL(`../public/assets/audio/voices/${set}/${ev}_${n}.${ext}`, import.meta.url);
 
 const args = process.argv.slice(2);
 const log = args.includes('--log');
@@ -17,7 +22,7 @@ const pairs = ids.length >= 2
   ? [[getCharacter(ids[0]), getCharacter(ids[1])]]
   : CHARACTERS.flatMap((a) => CHARACTERS.filter((b) => b !== a).map((b) => [a, b]));
 
-const total = { sfx: {}, say: {}, music: {} };
+const total = { sfx: {}, say: {}, music: {}, voice: {} };
 const missing = new Set();
 let fails = 0;
 
@@ -31,7 +36,8 @@ for (const [a, b] of pairs) {
     if (kind === 'sfx' && !SFX[key]) missing.add(key);
     if (log) timeline.push(`${String(m?.frame ?? 0).padStart(5)}  ${kind.padEnd(5)} ${key}`);
   };
-  new SoundDirector({ sfx: rec('sfx'), say: rec('say'), music: rec('music') }).attach(bus);
+  const recVoice = (f, ev) => { rec('voice')(`${f.data.audio?.voice?.set}/${ev}`); };
+  new SoundDirector({ sfx: rec('sfx'), say: rec('say'), music: rec('music'), voice: recVoice }).attach(bus);
 
   // mesmo fluxo do main.js: matchStart → eventos drenados → 'frame'
   m = new Match(a, b, [new AIController(a.ai), new AIController(b.ai)]);
@@ -55,6 +61,15 @@ console.log(`${pairs.length} partida(s) simulada(s)`);
 show('SFX disparados:', total.sfx);
 show('Locutor:', total.say);
 show('Música:', total.music);
+show('Vozes (arquétipo/evento):', total.voice);
+for (const c of CHARACTERS) {
+  const set = c.audio?.voice?.set;
+  if (!set) { console.error('sem audio.voice:', c.id); fails++; continue; }
+  for (const ev of VOICE_EVENTS) for (const ext of ['ogg', 'mp3']) {
+    if (!existsSync(voiceFile(set, ev, 1, ext)) || !existsSync(voiceFile(set, ev, 2, ext))) { console.error('voz faltando:', set, ev, ext); fails++; }
+  }
+}
+for (const ev of ['attack', 'hurt', 'ko', 'win', 'taunt']) if (!Object.keys(total.voice).some((k) => k.endsWith('/' + ev))) { console.error('nenhuma voz de', ev); fails++; }
 
 const never = Object.keys(SFX).filter((k) => !total.sfx[k]);
 if (never.length) console.log(`\nSFX do banco que não tocaram nesta simulação (dependem de situação/sorte da IA): ${never.join(', ')}`);

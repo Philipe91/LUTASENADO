@@ -6,6 +6,7 @@
 //   out.sfx(nome, { vol, pitch, pan, delay })   efeito sonoro (variação leve de pitch/volume fica no motor)
 //   out.say(texto, { priority })                locutor (speechSynthesis)
 //   out.music('start' | 'stop' | 'duck' | 'win')
+//   out.voice(fighter, evento, { priority, pan, delay })   (opcional) grito do lutador: attack|hurt|jump|special|ultimate|ko|win|lose|taunt
 import { METER_MAX, ARENA_HALF } from '../fight/constants.js';
 
 const PUNCH_LIGHT = new Set(['punch1', 'punch2', 'crouchPunch', 'airPunch']);
@@ -38,6 +39,19 @@ const HITTER_ARMED = { stamp: 'stamp', pen: 'gavel', assist: 'poof' };
 const ULT_HIT = { lulacio: 'tentacle', xandor: 'gavel', 'capitao-brasa': 'chomp', 'dino-supremo': 'roarHit', nikolas: 'buff', erika: 'mic', vorcaro: 'paper' };
 const ULT_START = { lulacio: 'tentacle', xandor: 'gavel', 'capitao-brasa': 'motos', 'dino-supremo': 'roar', nikolas: 'cheer', erika: 'mic', vorcaro: 'bell' };
 
+// vozes dos lutadores: cooldown (quadros) depois de cada fala e chance de falar (golpe normal não grita sempre)
+const VOICE = {
+  attack: { chance: 0.3, heavyChance: 0.6, cooldown: 40, priority: 1 },
+  jump: { chance: 0.35, cooldown: 50, priority: 1 },
+  hurt: { chance: 0.4, heavyChance: 0.75, cooldown: 45, priority: 2 },
+  special: { chance: 0.6, cooldown: 60, priority: 2 },
+  taunt: { chance: 1, cooldown: 0, priority: 2 },
+  ultimate: { chance: 1, cooldown: 0, priority: 3 },
+  win: { chance: 1, cooldown: 0, priority: 3 },
+  lose: { chance: 1, cooldown: 0, priority: 3 },
+  ko: { chance: 1, cooldown: 0, priority: 4 },
+};
+
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const panOf = (x) => clamp((x ?? 0) / ARENA_HALF, -1, 1) * 0.6;
 const titleCase = (s) => s.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (m, sep, ch) => sep + ch.toUpperCase());
@@ -48,6 +62,8 @@ export class SoundDirector {
     this.watch = new Map(); // fighter → estado observado
     this.hitters = new Map(); // id do Hitter → { armed }
     this.match = null;
+    this.voiceT = new Map(); // fighter → quadro em que pode falar de novo
+    this.rand = Math.random;
   }
 
   // Liga ao barramento do jogo (src/core/EventBus.js)
@@ -65,11 +81,25 @@ export class SoundDirector {
     this.match = match;
     this.watch.clear();
     this.hitters.clear();
+    this.voiceT.clear();
     this.out.music(match ? 'start' : 'stop');
   }
 
   sfx(name, opts = {}) { this.out.sfx(name, opts); }
   say(text, priority = 1) { this.out.say(text, { priority }); }
+
+  // grito do lutador f (com chance e cooldown por lutador; prioridade alta fura o cooldown)
+  voice(f, event, { heavy = false, delay = 0 } = {}) {
+    if (!f || !this.out.voice) return;
+    const r = VOICE[event];
+    const chance = heavy && r.heavyChance != null ? r.heavyChance : r.chance;
+    if (chance < 1 && this.rand() >= chance) return;
+    const now = this.match?.frame ?? 0;
+    const until = this.voiceT.get(f);
+    if (until && now < until.t && r.priority <= until.priority) return;
+    this.voiceT.set(f, { t: now + r.cooldown, priority: r.priority });
+    this.out.voice(f, event, { priority: r.priority, pan: panOf(f.x), delay });
+  }
 
   // ---------- eventos emitidos pela partida ----------
   onEvent(e, match) {
@@ -80,7 +110,12 @@ export class SoundDirector {
         this.sfx('cheer', { vol: 0.5 });
         break;
       case 'banner':
-        if (e.cls === 'fight') { this.say(e.text, 2); this.sfx('bell'); }
+        if (e.cls === 'fight') {
+          this.say(e.text, 2); this.sfx('bell');
+          // provocação curta de um dos lutadores (alterna por round), logo depois do "LUTEM!"
+          const fs = (match || this.match)?.fighters;
+          if (fs) this.voice(fs[((match || this.match).round + 1) % 2], 'taunt', { delay: 0.75 });
+        }
         break;
       case 'hit': this.onHit(e); break;
       case 'block': this.sfx('block', { pan: panOf(e.x) }); this.markLanded(e.fighter?.opponent); break;
@@ -90,6 +125,7 @@ export class SoundDirector {
       case 'special': {
         const cues = SPECIAL_CUES[e.name] || ['whooshHeavy'];
         for (const c of cues) this.sfx(c, { pan: panOf(e.fighter?.x) });
+        this.voice(e.fighter, 'special');
         break;
       }
       case 'spawn': // o som do que nasceu (multidão...) vem da observação dos Hitters; aqui só o "puf" + torcida
@@ -110,6 +146,7 @@ export class SoundDirector {
         if (ULT_START[id]) this.sfx(ULT_START[id], { delay: 0.45 });
         this.sfx('cheer', { vol: 0.9, delay: 0.2 });
         this.say(e.name, 3);
+        this.voice(e.fighter, 'ultimate', { delay: 0.1 });
         this.out.music('duck');
         break;
       }
@@ -117,11 +154,14 @@ export class SoundDirector {
         if (e.timeUp) { this.sfx('bell'); this.say(e.text.replace('!', ''), 3); }
         else { this.sfx('ko'); this.say('K.O.!', 3); }
         this.sfx('cheer', { vol: 1, delay: 0.35 });
+        if (e.timeUp) { if (e.loser) this.voice(e.loser, 'lose', { delay: 0.3 }); }
+        else this.voice(e.loser, 'ko');
         this.out.music('duck');
         break;
-      case 'roundWin': this.sfx('cheer', { vol: 0.6 }); break;
+      case 'roundWin': this.sfx('cheer', { vol: 0.6 }); this.voice(e.winner, 'win'); break;
       case 'matchEnd':
         this.say(`VITÓRIA DE ${titleCase(e.winner?.data?.name || '')}!`, 3);
+        this.voice(e.winner?.opponent, 'lose', { delay: 1.6 });
         this.out.music('win');
         break;
       default: break;
@@ -132,6 +172,7 @@ export class SoundDirector {
     const atk = e.attacker;
     const pan = panOf(e.x);
     this.markLanded(atk);
+    if (!e.ko) this.voice(e.fighter, 'hurt', { heavy: e.heavy || e.ultimate });
     if (e.ultimate) {
       this.sfx(ULT_HIT[atk?.data?.id] || 'punchHeavy', { pan });
       this.sfx('punchHeavy', { pan, vol: 0.55 });
@@ -171,13 +212,16 @@ export class SoundDirector {
       const pan = panOf(f.x);
       const grounded = f.y <= 0;
       // novo golpe normal
-      if (f.state === 'attack' && f.hitId !== w.hitId) { w.hitId = f.hitId; w.whooshed = false; }
+      if (f.state === 'attack' && f.hitId !== w.hitId) {
+        w.hitId = f.hitId; w.whooshed = false;
+        this.voice(f, 'attack', { heavy: !!f.move?.heavy }); // esforço "rá!" (nem todo golpe)
+      }
       if (f.state === 'attack' && f.move && !w.whooshed && f.t >= f.move.startup + f.move.active) {
         w.whooshed = true;
         if (w.landedHit !== f.hitId) this.sfx(f.move.heavy ? 'whooshHeavy' : 'whoosh', { pan, vol: 0.8 });
       }
       if (f.state !== w.state) {
-        if (f.state === 'jump' && w.state !== 'attack' && w.grounded) this.sfx('jump', { pan, vol: 0.7 });
+        if (f.state === 'jump' && w.state !== 'attack' && w.grounded) { this.sfx('jump', { pan, vol: 0.7 }); this.voice(f, 'jump'); }
         if (f.state === 'down' && w.state === 'knockdown') this.sfx('fall', { pan });
       }
       if (grounded && !w.grounded) {

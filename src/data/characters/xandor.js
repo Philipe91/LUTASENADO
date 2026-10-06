@@ -4,6 +4,7 @@ export default {
   id: 'xandor',
   name: 'XANDOR',
   title: 'O Magistrado Supremo',
+  audio: { voice: { set: 'grave_autoritario', pitch: 1.0 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Zoner / Controle',
   stats: { hp: 100, walk: 0.85, jump: 0.95, width: 0.8, height: 1.95 },
   passive: {

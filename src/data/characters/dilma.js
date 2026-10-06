@@ -9,6 +9,7 @@ export default {
   id: 'dilma',
   name: 'DILMA',
   title: 'A Estocadora de Vento',
+  audio: { voice: { set: 'mulher_firme', pitch: 1.0 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Zoner / Confusa',
   stats: { hp: 96, walk: 0.92, jump: 0.95, width: 0.8, height: 1.68 },
   passive: {

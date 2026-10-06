@@ -6,6 +6,7 @@ export default {
   id: 'nikolas',
   name: 'NIKOLAS',
   title: 'O Nikolinha Viral',
+  audio: { voice: { set: 'jovem_animado', pitch: 1.04 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Rushdown / Troll',
   stats: { hp: 88, walk: 1.35, jump: 1.1, width: 0.72, height: 1.78, meterGain: 1.1 },
   passive: {

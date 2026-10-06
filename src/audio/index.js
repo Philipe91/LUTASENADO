@@ -7,6 +7,7 @@ import { Announcer } from './Announcer.js';
 import { Music } from './Music.js';
 import { SoundDirector } from './SoundDirector.js';
 import { SFX_NAMES } from './sfxBank.js';
+import { VoiceBank, voiceOf } from './Voices.js';
 
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
@@ -25,6 +26,8 @@ export function setupAudio(bus, params = new URLSearchParams()) {
   const engine = new AudioEngine({ muted, sfxVolume: num(params.get('sfx'), 1), musicVolume: musicOn ? musicVolume : 0 });
   const voice = new Announcer({ muted });
   const music = new Music(engine);
+  const voices = new VoiceBank(engine); // gritos dos lutadores (arquétipos genéricos), só dos 2 da luta
+  if (params.has('voice')) voices.volume = num(params.get('voice'), 0.9); // ?voice=0..1
   let wantMusic = false;
 
   const out = {
@@ -36,7 +39,10 @@ export function setupAudio(bus, params = new URLSearchParams()) {
       else if (cmd === 'duck') engine.duck(0.3, 2.2);
       else if (cmd === 'win') { wantMusic = false; music.fanfare(); }
     },
+    voice: (f, event, o) => voices.play(f.slot ?? f, voiceOf(f.data), event, o),
   };
+  // a luta começou: garante as vozes dos 2 lutadores (normalmente já vieram na tela de carregamento)
+  bus.on('matchStart', (m) => { if (m?.fighters) voices.load(m.fighters.map((f) => f.data.id)); });
   const director = new SoundDirector(out).attach(bus);
 
   // ---- pausa geral do som (aba escondida, anúncio, pausa do jogo): hold(motivo, true|false) ----
@@ -120,5 +126,5 @@ export function setupAudio(bus, params = new URLSearchParams()) {
     document.body.appendChild(panel);
   }
 
-  return { engine, voice, music, director, setMuted, toggleMusic, hold, box };
+  return { engine, voice, voices, music, director, setMuted, toggleMusic, hold, box };
 }
