@@ -44,8 +44,16 @@ export default {
     yaw: 0,
     // estilo tank: base larga de brigão, martelada, pisão, chute frontal pesado (Walking próprio do GLB, lento)
     animations: ['assets/characters/lulacio/model.glb', 'assets/characters/xandor/model.glb'],
+    // personalidade: professor jurássico — curvado e lento, apoiado na bengala; vitória erguendo o Vade Mecum
+    persona: {
+      speed: { idle: 0.55, walk: 0.75 }, phase: 0.75,
+      idle: { lean: 0.2, head: -0.15, breath: [0.04, 0.3], sway: [0.03, 0.3], stance: 0.08, guard: -0.1 },
+      walk: { lean: 0.18, head: -0.12, roll: 0.08, bob: 0.03 },
+      intro: { gesture: 'cane', say: 'Aula de hoje: extinção.' },
+      victory: { gesture: 'raiseBook' },
+    },
     clips: {
-      idle: '01a0efe2-f57c-765f-996c-8b479826fa21', intro: 'Chest_Pound_Taunt', crouch: '01a0efe2-f57c-765f-996c-8b479826fa21',
+      idle: '01a0ef76-3fa8-73be-8e95-94acb4b40424', intro: '01a0ef76-3fa8-73be-8e95-94acb4b40424', crouch: '01a0efe2-f57c-765f-996c-8b479826fa21', // idle: guarda fechada (IA, GLB do Xandor), curvada pela persona
       walk: 'Walking', walkBack: 'Walking', jump: 'Jump_with_Arms_Open',
       punch1: 'Left_Hook_from_Guard', punch2: 'Right_Uppercut_from_Guard', punch3: 'Heavy_Hammer_Swing',
       crouchPunch: 'Left_Hook_from_Guard', airPunch: 'Heavy_Hammer_Swing', throw: 'Grip_and_Throw_Down',
@@ -56,7 +64,7 @@ export default {
       special1: 'Chest_Pound_Taunt', // Rugido Togado
       special2: '01a0efe4-99e1-76ec-90af-8512dfe57528', // Meteoro Didático: arremesso por cima do ombro
       special3: 'Angry_Ground_Stomp', // Pisão Cretáceo
-      ultimate: 'Chest_Pound_Taunt', victory: 'Chest_Pound_Taunt',
+      ultimate: 'Chest_Pound_Taunt', victory: 'Talk_Passionately',
     },
     reverseKeys: ['walkBack'],
     jumpScrub: { from: 0.3, to: 0.64 },

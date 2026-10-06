@@ -123,14 +123,16 @@ export class Hud {
     this.cineTitle.classList.remove('on'); void this.cineTitle.offsetWidth; this.cineTitle.classList.add('on');
   }
 
-  pop(x, y, text, cls = '') {
+  pop(x, y, text, cls = '', ms = 950) {
     this.v.set(x, y, 0).project(this.stage.camera);
-    const px = (this.v.x * 0.5 + 0.5) * innerWidth, py = (-this.v.y * 0.5 + 0.5) * innerHeight;
+    let px = (this.v.x * 0.5 + 0.5) * innerWidth;
+    const py = (-this.v.y * 0.5 + 0.5) * innerHeight;
+    if (cls === 'say') px = Math.max(text.length * 5.5 + 16, Math.min(innerWidth - text.length * 5.5 - 16, px)); // balão não sai da tela
     const p = el('div', `pop ${cls}`, text);
     p.style.left = px + 'px'; p.style.top = py + 'px';
     p.style.setProperty('--r', ((Math.random() - 0.5) * 16).toFixed(1) + 'deg');
     this.popups.appendChild(p);
-    this.later(950, () => p.remove());
+    this.later(ms, () => p.remove());
   }
 
   // timers em tempo de JOGO (não setTimeout): ficam certos em câmera lenta e na gravação quadro a quadro

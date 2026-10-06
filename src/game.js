@@ -269,6 +269,19 @@ export async function init({ params, platform, title }) {
       { note, onShare: vsCpu && e.winner === match.fighters[0] ? () => share(e.winner, loser) : null });
   }
 
+  // balão da entrada do round (visual.persona.intro.say): P1 logo no começo, P2 logo depois — antes do "LUTEM!"
+  const said = new WeakMap(); // lutador → round em que já falou
+  function introSay(m) {
+    if (m.phase !== 'intro') return;
+    for (const f of m.fighters) {
+      const say = f.data.visual?.persona?.intro?.say;
+      const at = 8 + f.slot * 26;
+      if (!say || m.phaseT < at || said.get(f) === m.round) continue;
+      said.set(f, m.round);
+      hud.pop(f.x, f.stats.height + 0.55, say, 'say', 1700);
+    }
+  }
+
   function handleEvents(events) {
     for (const e of events) {
       gameBus.emit(e.type, e, match);
@@ -375,6 +388,7 @@ export async function init({ params, platform, title }) {
       const alpha = match.hitstop > 0 || match.cinematic ? 1 : Math.min(1, acc / STEP);
       for (const f of match.fighters) { f.rx = f.px + (f.x - f.px) * alpha; f.ry = f.py + (f.y - f.py) * alpha; }
       handleEvents(match.drainEvents());
+      introSay(match);
       gameBus.emit('frame', match);
       const frozen = match.hitstop > 0;
       const vdt = frozen ? 0 : dt * match.timeScale * GAME_SPEED;

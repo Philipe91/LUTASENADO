@@ -58,8 +58,15 @@ export default {
     animations: ['assets/characters/lulacio/model.glb', 'assets/characters/xandor/model.glb'],
     height: 1.85,
     yaw: 0,
+    // personalidade: brigão de clã — base larga e baixa, cotovelos abertos; entra pisando (Rachadinha)
+    persona: {
+      speed: { idle: 1.1, walk: 0.85, intro: 0.6 }, phase: 0.45,
+      idle: { lean: 0.14, stance: 0.12, elbows: 0.15, crouch: 0.12, sway: [0.06, 0.9], breath: [0.04, 0.7] },
+      walk: { lean: 0.1, swagger: 0.15, roll: 0.08, bob: 0.02, crouch: 0.1 },
+      intro: { say: 'Coisa de família.' },
+    },
     clips: {
-      idle: GUARDA, intro: 'Chest_Pound_Taunt', crouch: GUARDA, ultimate: 'Chest_Pound_Taunt',
+      idle: GUARDA, intro: 'Angry_Ground_Stomp', crouch: GUARDA, // entrada: pisão (Rachadinha) em câmera lenta ultimate: 'Chest_Pound_Taunt',
       walk: 'Walk_Fight_Forward', walkBack: 'Walk_Fight_Back', jump: 'Jump_with_Arms_Open',
       punch1: 'Left_Hook_from_Guard', punch2: 'Right_Uppercut_from_Guard', punch3: 'Heavy_Hammer_Swing',
       crouchPunch: 'Left_Hook_from_Guard', airPunch: 'Heavy_Hammer_Swing', throw: 'Grip_and_Throw_Down',

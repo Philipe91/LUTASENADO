@@ -64,9 +64,17 @@ export default {
     height: 1.85,
     yaw: 0,
     animations: ['assets/characters/xandor/model.glb', 'assets/characters/lulacio/model.glb'],
+    // personalidade: banqueiro — peito estufado, esfregando as mãos; mostra a maleta na entrada, gargalhada na vitória
+    persona: {
+      speed: { idle: 0.5, walk: 0.8 }, phase: 0.2,
+      idle: { gesture: 'rubHands', lean: -0.06, head: -0.1, breath: [0.03, 0.35], sway: [0.03, 0.4] },
+      walk: { lean: -0.06, head: -0.1, roll: 0.05, bob: 0.01 },
+      intro: { gesture: 'showCase', say: 'Tudo tem um preço.' },
+      victory: { gesture: 'openArms' },
+    },
     clips: {
-      idle: XANDOR_GUARDA, intro: 'Talk_Passionately', crouch: XANDOR_GUARDA,
-      walk: 'Walk_Fight_Forward', walkBack: 'Walk_Fight_Back', jump: 'Regular_Jump',
+      idle: XANDOR_GUARDA, intro: XANDOR_GUARDA, crouch: XANDOR_GUARDA,
+      walk: 'Walking', walkBack: 'Walking', // passeio calmo (o próprio GLB), não a guarda de briga jump: 'Regular_Jump',
       punch1: 'Left_Jab_from_Guard', punch2: 'Right_Jab_from_Guard', punch3: 'Heavy_Hammer_Swing',
       crouchPunch: 'Left_Jab_from_Guard', airPunch: 'Right_Jab_from_Guard', throw: 'Grip_and_Throw_Down',
       kick: 'Simple_Kick', airKick: 'Simple_Kick', sweep: 'Sweep_Kick',
@@ -74,8 +82,9 @@ export default {
       hit: 'Face_Punch_Reaction', dizzy: 'Face_Punch_Reaction',
       knockdown: 'Fall_Down', down: 'Dead', ko: 'Dead', getup: 'Stand_Up1',
       special1: LULA_ARREMESSO, special2: XANDOR_INTIMACAO, special3: 'Grip_and_Throw_Down',
-      ultimate: 'Chest_Pound_Taunt', victory: 'Chest_Pound_Taunt',
+      ultimate: 'Chest_Pound_Taunt', victory: 'victory',
     },
+    reverseKeys: ['walkBack'], // andar pra trás = Walking de ré
     // efeitos presos ao corpo: maleta na mão (Maleta Voadora / Mala de Contatos), moeda no polegar (Juros)
     specialFx: {
       neutral: { type: 'caseHand' },

@@ -1,6 +1,7 @@
 // MARCOS DUVAL / "AGENTE DUVALL" — trap / técnico / contra-ataque. Sátira absurda: arquivos digitais, nada real.
 // Clips emprestados dos GLBs do Xandor (preciso) e do Lulácio (arremesso) até o model.glb próprio chegar.
 const GUARDA = '01a0ef75-1fd9-7538-9154-0af77913ed07'; // guarda de boxe (GLB do Xandor)
+const FECHADA = '01a0ef76-3fa8-73be-8e95-94acb4b40424'; // guarda fechada, mãos no rosto (IA, GLB do Xandor)
 const ARREMESSO = '01a0efe4-99e1-76ec-90af-8512dfe57528'; // lula_picanha: arremesso por cima do ombro (GLB do Lulácio)
 
 export default {
@@ -52,8 +53,16 @@ export default {
     animations: ['assets/characters/xandor/model.glb', 'assets/characters/lulacio/model.glb'],
     height: 1.82,
     yaw: 0,
+    // personalidade: agente tático — base baixa, cabeça varrendo o ambiente; ponto no ouvido na entrada
+    persona: {
+      speed: { idle: 1, walk: 1.15 }, phase: 0.65,
+      idle: { crouch: 0.22, lean: 0.12, look: [0.35, 0.3], breath: [0.02, 0.6], stance: 0.07 },
+      walk: { crouch: 0.25, lean: 0.15, bob: 0.01 },
+      intro: { gesture: 'earpiece', say: 'Sem rastros.' },
+      victory: { gesture: 'pendriveUp' },
+    },
     clips: {
-      idle: GUARDA, intro: GUARDA, crouch: GUARDA, ultimate: GUARDA,
+      idle: FECHADA, intro: FECHADA, crouch: GUARDA, ultimate: GUARDA,
       walk: 'Walking', walkBack: 'Walking', jump: 'Regular_Jump',
       punch1: 'Left_Jab_from_Guard', punch2: 'Right_Jab_from_Guard', punch3: 'Punch_Forward_with_Both_Fists',
       crouchPunch: 'Left_Jab_from_Guard', airPunch: 'Right_Jab_from_Guard', throw: 'Punch_Forward_with_Both_Fists',

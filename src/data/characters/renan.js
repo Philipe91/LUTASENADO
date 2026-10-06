@@ -55,6 +55,14 @@ export default {
     height: 1.8,
     yaw: 0,
     animations: ['assets/characters/xandor/model.glb', 'assets/characters/lulacio/model.glb'],
+    // personalidade (vale no placeholder também): streamer — curvado pra câmera, cabeça no ritmo; "fala, chat!" na entrada
+    persona: {
+      phase: 0.5,
+      idle: { lean: 0.12, nod: [0.12, 1.8], sway: [0.03, 0.9], guard: 0.3, elbows: 0.15 },
+      walk: { lean: 0.1, bob: 0.02, swagger: 0.08 },
+      intro: { gesture: 'pointCamera', say: 'Fala, chat!' },
+      victory: { gesture: 'heartHands' },
+    },
     clips: {
       idle: GUARDA, intro: 'Talk_Passionately', crouch: GUARDA, ultimate: 'Chest_Pound_Taunt',
       walk: 'Walking', walkBack: 'Walking', jump: 'Regular_Jump',

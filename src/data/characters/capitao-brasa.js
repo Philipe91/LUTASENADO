@@ -47,8 +47,16 @@ export default {
     yaw: 0,
     // estilo rushdown militar: guarda de boxe reta, jabs rápidos, andar marchando (Walking/Running próprios do GLB)
     animations: ['assets/characters/xandor/model.glb', 'assets/characters/lulacio/model.glb'],
+    // personalidade: capitão — guarda saltitante de quartel, continência na entrada, arminha pro alto na vitória
+    persona: {
+      speed: { idle: 1.2, walk: 1.15 }, phase: 0.3,
+      idle: { bounce: [0.025, 2.1], lean: 0.1, head: -0.08, stance: 0.05, elbows: 0.08, breath: [0.02, 0.8] },
+      walk: { lean: 0.02, head: -0.1, bob: 0.025 },
+      intro: { gesture: 'salute', say: 'Talkei?' },
+      victory: { gesture: 'arminhaSky' },
+    },
     clips: {
-      idle: '01a0ef75-1fd9-7538-9154-0af77913ed07', intro: 'Chest_Pound_Taunt', crouch: '01a0ef75-1fd9-7538-9154-0af77913ed07',
+      idle: '01a0ef77-7fa0-7299-9226-4499bc71bda8', intro: '01a0ef77-7fa0-7299-9226-4499bc71bda8', crouch: '01a0ef75-1fd9-7538-9154-0af77913ed07', // idle: guarda saltitante (IA, GLB do Xandor)
       walk: 'Walking', walkBack: 'Walking', jump: 'Regular_Jump',
       punch1: 'Left_Jab_from_Guard', punch2: 'Right_Jab_from_Guard', punch3: 'Punch_Forward_with_Both_Fists',
       crouchPunch: 'Left_Jab_from_Guard', airPunch: 'Right_Jab_from_Guard', throw: 'Punch_Forward_with_Both_Fists',
@@ -59,7 +67,7 @@ export default {
       special1: 'Right_Jab_from_Guard', // Arminha de Energia: braço estendido apontando
       special2: 'Running', // Motociata: arrancada
       special3: 'Talk_Passionately', // Patriota no Para-brisa: grito
-      ultimate: 'Chest_Pound_Taunt', victory: 'Chest_Pound_Taunt',
+      ultimate: 'Chest_Pound_Taunt', victory: '01a0ef77-7fa0-7299-9226-4499bc71bda8',
     },
     reverseKeys: ['walkBack'],
     jumpScrub: { from: 0.28, to: 0.62 },

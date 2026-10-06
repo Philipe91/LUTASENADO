@@ -1,6 +1,7 @@
 // PLACEHOLDER DE COMBATE — boneco de primitivas, só para testar a luta enquanto o GLB não chega.
 // Não invista tempo aqui. Implementa a mesma interface do GLBModel: object, play(), update(), setFlash(), dispose().
 import * as THREE from 'three';
+import { PersonaState } from '../persona.js';
 
 function nameSprite(text, color) {
   const c = document.createElement('canvas');
@@ -18,7 +19,7 @@ function nameSprite(text, color) {
 
 // Alvos de pose por chave de animação. k = progresso 0..1 do golpe; time = segundos.
 function targetPose(key, k, time) {
-  const T = { armR: -1.2, armL: -1.0, armRz: 0, armLz: 0, legR: 0, legL: 0, lean: 0.08, low: 0, lay: 0, twist: 0, head: 0 };
+  const T = { armR: -1.2, armL: -1.0, armRz: 0, armLz: 0, legR: 0, legL: 0, legZ: 0, lean: 0.08, low: 0, lay: 0, twist: 0, side: 0, head: 0, headYaw: 0 };
   const strike = (a, b) => (k < 0.3 ? a + (a - b) * 0.25 * (k / 0.3) : k < 0.55 ? b : b + (a - b) * ((k - 0.55) / 0.45));
   switch (key) {
     case 'idle': case 'intro': T.low = Math.sin(time * 4) * 0.03; T.armR += Math.sin(time * 4) * 0.08; break;
@@ -106,7 +107,7 @@ export class PlaceholderModel {
       const pivot = new THREE.Group(); pivot.position.set(s * (W / 2 + 0.08), torsoH - 0.06, 0); this.hips.add(pivot);
       const arm = box(0.15 * Math.sqrt(P.girth), H * 0.32, 0.15, P.suit); arm.position.y = -H * 0.16; pivot.add(arm);
       const fist = mesh(new THREE.SphereGeometry(0.09, 10, 8), P.skin); fist.position.y = -H * 0.34; pivot.add(fist);
-      this.arms[name] = pivot;
+      this.arms[name] = pivot; this.fists = { ...this.fists, [name]: fist };
     }
     this.legs = {};
     for (const [name, s] of [['R', -1], ['L', 1]]) {
@@ -120,27 +121,70 @@ export class PlaceholderModel {
     label.position.y = H + 0.45;
     this.object.add(label);
 
+    // "ossos" para efeitos presos ao corpo (bodyPoint: props na mão, estrelinhas na cabeça)
+    this.bones = new Map([['righthand', this.fists.R], ['lefthand', this.fists.L], ['rightforearm', this.arms.R], ['leftforearm', this.arms.L], ['head', this.head]]);
+    if (data.visual?.persona) this.ps = new PersonaState(data.visual.persona);
     this.cur = targetPose('idle', 0, 0);
     this.key = 'idle'; this.len = 0; this.elapsed = 0; this.time = 0;
   }
 
   play(key, len) { this.key = key; this.len = len; this.elapsed = 0; }
 
-  update(dt) {
+  update(dt, pose = {}) {
     this.time += dt; this.elapsed += dt;
     const k = this.len ? Math.min(1, this.elapsed / (this.len / 60)) : 0;
     const T = targetPose(this.key, k, this.time);
+    if (this.ps) this.applyPersona(T, dt, pose.facing ?? 1);
     const a = dt > 0 ? 1 - Math.pow(0.0005, dt) : 0;
     for (const p in T) this.cur[p] += (T[p] - this.cur[p]) * a;
     const c = this.cur;
     this.arms.R.rotation.set(c.armR, 0, c.armRz);
     this.arms.L.rotation.set(c.armL, 0, c.armLz);
-    this.legs.R.rotation.x = c.legR;
-    this.legs.L.rotation.x = c.legL;
+    this.legs.R.rotation.set(c.legR, 0, -c.legZ);
+    this.legs.L.rotation.set(c.legL, 0, c.legZ);
     this.hips.position.y = this.baseHipY + c.low;
-    this.hips.rotation.set(c.lean, c.twist, 0);
-    this.head.rotation.x = c.head;
+    this.hips.rotation.set(c.lean, c.twist, c.side);
+    this.head.rotation.set(c.head, c.headYaw, 0);
     this.body.rotation.x = -c.lay * Math.PI / 2;
+  }
+
+  // mesma personalidade do GLB (persona.js) traduzida para o boneco: guarda, respiração, gingado e gestos
+  applyPersona(T, dt, fc) {
+    const ps = this.ps.update(dt, this.key, fc);
+    const io = ps.idleOffsets(), wi = io.w;
+    if (wi > 0.01) {
+      T.low += (io.bob * this.baseHipY - io.crouch * 0.18) * wi;
+      T.lean += io.lean * wi; T.twist += io.twist * wi; T.side += io.side * wi;
+      T.head += (io.head - io.chest * 0.5) * wi; T.headYaw += io.look * wi;
+      T.armR -= io.guard * wi; T.armL -= io.guard * wi;
+      T.armRz -= io.elbows * wi; T.armLz += io.elbows * wi;
+      T.legZ += io.stance * wi;
+    }
+    const W = ps.p.walk, ww = ps.w.walk;
+    if (W && ww > 0.01) {
+      const ph = this.time * 5.5;
+      T.lean += (W.lean || 0) * ww; T.twist += (W.swagger || 0) * Math.sin(ph) * ww; T.side += (W.roll || 0) * Math.sin(ph) * ww;
+      T.head += (W.head || 0) * ww; T.low -= (W.bob || 0) * this.baseHipY * Math.abs(Math.cos(ph)) * ww + (W.crouch || 0) * 0.18 * ww;
+    }
+    const g = ps.g, wg = ps.w.g;
+    if (!g || wg < 0.01) return;
+    if (g.spine) { T.lean += g.spine[0] * wg; T.twist += g.spine[1] * wg; T.side += g.spine[2] * wg; }
+    if (g.head) { T.head += g.head[0] * wg; T.headYaw += g.head[1] * wg; }
+    T.low += g.bob * this.baseHipY * wg;
+    for (const [s, [up, fore]] of Object.entries(g.arms)) {
+      // braço inteiro (sem cotovelo): direção média braço/antebraço → ângulos do pivô do ombro (ordem XYZ)
+      const d = up.clone().add(fore).normalize();
+      const phi = Math.asin(Math.max(-1, Math.min(1, d.x)));
+      let th = Math.atan2(-d.z, -d.y);
+      if (th > 0.5) th -= Math.PI * 2; // contínuo com a guarda (−1.2): erguer passa pela frente, não por trás
+      const kx = `arm${s}`, kz = `arm${s}z`;
+      T[kx] += (th - T[kx]) * wg; T[kz] += (phi - T[kz]) * wg;
+    }
+  }
+
+  personaProp() {
+    const g = this.ps?.g;
+    return g?.prop ? { ...g.prop, w: this.ps.w.g } : null;
   }
 
   setFlash(on) {

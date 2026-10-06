@@ -1,6 +1,7 @@
 // NIKOLAS / "NIKOLINHA" — rushdown troll: rápido, vida menor, barra enche provocando com selfie.
 // Golpe meme: SELFIE DO DANO (flash + moldura de celular; PERFECT SELFIE se pegar o inimigo no meio do golpe).
 const GUARDA = '01a0ef75-1fd9-7538-9154-0af77913ed07'; // guarda de boxe (GLB do Xandor)
+const SALTITANTE = '01a0ef77-7fa0-7299-9226-4499bc71bda8'; // guarda saltitante (IA, GLB do Xandor)
 
 export default {
   id: 'nikolas',
@@ -49,8 +50,16 @@ export default {
     yaw: 0,
     // clips emprestados dos GLBs já rigados (entram quando o model.glb chegar)
     animations: ['assets/characters/xandor/model.glb', 'assets/characters/lulacio/model.glb'],
+    // personalidade: troll rápido — guarda saltitante e debochada, selfie na entrada, filmando o corte na vitória
+    persona: {
+      speed: { idle: 1.45, walk: 1.25 }, phase: 0.85,
+      idle: { bounce: [0.03, 2.6], lean: -0.05, head: -0.15, sway: [0.05, 1.3], nod: [0.08, 1.3], twist: 0.1 },
+      walk: { bob: 0.035, lean: -0.03, swagger: 0.1 },
+      intro: { gesture: 'selfie', say: 'Olha o engajamento!' },
+      victory: { gesture: 'selfieHigh' },
+    },
     clips: {
-      idle: GUARDA, intro: 'Chest_Pound_Taunt', crouch: GUARDA, ultimate: 'Chest_Pound_Taunt',
+      idle: SALTITANTE, intro: SALTITANTE, crouch: GUARDA, ultimate: 'Chest_Pound_Taunt',
       walk: 'Walk_Fight_Forward', walkBack: 'Walk_Fight_Back', jump: 'Regular_Jump',
       punch1: 'Left_Jab_from_Guard', punch2: 'Right_Jab_from_Guard', punch3: 'Right_Uppercut_from_Guard',
       crouchPunch: 'Left_Jab_from_Guard', airPunch: 'Right_Jab_from_Guard', throw: 'Grip_and_Throw_Down',
@@ -61,7 +70,7 @@ export default {
       special1: 'Right_Jab_from_Guard', // chupeta (arremesso curto)
       special2: 'Heavy_Hammer_Swing',   // mamadeira (arremesso por cima)
       special3: 'Talk_Passionately',    // selfie (braço erguido)
-      victory: 'Chest_Pound_Taunt',
+      victory: SALTITANTE,
     },
     // efeitos presos ao corpo: chupeta/mamadeira na mão até o arremesso; celular + flash + moldura na Selfie
     specialFx: {

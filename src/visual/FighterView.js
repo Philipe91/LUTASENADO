@@ -22,6 +22,7 @@ import { BoulosAto } from './ultimates/BoulosAto.js';
 import { RenanCancelamento } from './ultimates/RenanCancelamento.js';
 import { SpecialFx } from './SpecialFx.js';
 import { StatusFx } from './StatusFx.js';
+import { PersonaFx } from './persona.js';
 
 const ULTIMATE_FX = { xandorAvatar: XandorAvatar, lulacioPolvo: LulacioPolvo, brasaJacare: BrasaJacare, dinoTrex: DinoTrex, nikolasViral: NikolasViral, erikaPlenario: ErikaPlenario, vorcaroCapital: VorcaroCapital, flavioDinastia: FlavioDinastia, duvalBackup: DuvalBackup, dilmaDilmes: DilmaDilmes, haddadTaxacao: HaddadTaxacao, boulosAto: BoulosAto, renanCancelamento: RenanCancelamento };
 
@@ -92,6 +93,7 @@ export class FighterView {
 
     const visual = fighter.data.visual || {};
     this.base = new PlaceholderModel(fighter.data);
+    this.base.phaseOffset = (fighter.slot || 0) * 0.37; // espelho (mesmo lutador dos dois lados): fases diferentes
     this.group.add(this.base.object);
     this.source = 'placeholder';
 
@@ -101,6 +103,7 @@ export class FighterView {
         .catch(() => console.info(`[visual] ${fighter.data.id}: sem GLB em ${visual.model}, usando placeholder`));
     }
     if (visual.specialFx) this.spFx = new SpecialFx(scene, visual.specialFx);
+    if (visual.persona) this.personaFx = new PersonaFx(scene); // props das poses de entrada/vitória (celular, bengala…)
     this.status = new StatusFx(scene); // estrelinhas (atordoado) e cadeado (BLOQUEADO)
     // VFX da ultimate (composição por personagem)
     if (visual.ultimateFx && ULTIMATE_FX[visual.ultimateFx]) this.ultFx = new ULTIMATE_FX[visual.ultimateFx](scene);
@@ -136,6 +139,7 @@ export class FighterView {
   }
 
   swapBase(model) {
+    model.phaseOffset = this.base.phaseOffset;
     this.group.remove(this.base.object);
     this.base.dispose();
     this.base = model;
@@ -188,7 +192,7 @@ export class FighterView {
     // progresso de queda/levantar (frames da lógica): knockdown ≈ duração do voo, ko tomba em ~40, getup = animLen
     const prog = f.animKey === 'knockdown' ? f.t / 24 : f.animKey === 'ko' ? f.t / 40 : f.animKey === 'down' ? 1
       : f.animKey === 'getup' ? f.t / Math.max(1, f.animLen || 18) : undefined;
-    model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' || f.state === 'special' ? f.t : undefined, airP, prog });
+    model.update(dt, { low: f.isLow, key: f.animKey, moveT: f.state === 'attack' || f.state === 'special' ? f.t : undefined, airP, prog, facing: f.facing });
     // GLB sem animação de queda/KO: deita o modelo proceduralmente (nunca fica em pé nocauteado)
     const lying = LYING.has(f.animKey) && model.hasClip && !model.hasClip(f.animKey === 'getup' ? 'getup' : 'ko');
     let layTarget = lying ? (f.animKey === 'getup' ? Math.max(0, 1 - f.t / 18) : 1) : 0;
@@ -214,6 +218,7 @@ export class FighterView {
     this.ultFx?.update(dt, f, match, model);
     this.spFx?.update(dt, f, model);
     this.status.update(dt, f, model, this.formScale);
+    this.personaFx?.update(dt, f, model);
     if (this.ultFx) model.object.visible = !this.ultFx.hideBase; // polvo substitui o corpo
 
     this.blob.position.set(X, 0.012, heldZ);
@@ -327,5 +332,6 @@ export class FighterView {
     this.ultFx?.dispose();
     this.spFx?.dispose();
     this.status.dispose();
+    this.personaFx?.dispose();
   }
 }
