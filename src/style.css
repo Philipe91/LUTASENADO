@@ -207,9 +207,34 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #140d24; col
   .pick li small { display: none; }
   .opts .go { font-size: 30px; padding: 7px 36px 5px; }
   .opts button.mode { font-size: 20px; }
+  .select .arena { min-height: 34px; padding: 2px 10px 2px 3px; box-shadow: 0 3px 0 #000; } .select .athumb { height: 24px; width: 38px; } .select .aname { font-size: 15px; } .select .asub { font-size: 9.5px; }
+  .select .sfoot { flex-direction: row; justify-content: center; gap: 18px; }
+  .select .arenas { width: auto; flex-wrap: nowrap; }
+  .select .alabel small { display: none; }
   .keys { font-size: 11px; line-height: 1.4; } .keys div { display: inline; } .keys div + div::before { content: ' · '; }
   .disclaimer { display: none; }
 }
+/* rodapé da seleção: cenário + botões (lado a lado na paisagem baixa, empilhados no resto) */
+.sfoot { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+/* cenário: 4 cartões compactos (miniatura em CSS, sem imagem) */
+.arenas { display: flex; gap: 8px; align-items: stretch; justify-content: center; flex-wrap: wrap; width: min(1000px, 100%); }
+.alabel { align-self: center; font-size: 12px; font-weight: 900; letter-spacing: 2px; margin-right: 4px; }
+.alabel small { display: block; font-size: 10px; letter-spacing: .5px; opacity: .6; font-weight: 700; }
+.arena { position: relative; display: grid; grid-template-columns: 44px auto; grid-template-rows: auto auto; column-gap: 8px; align-items: center; text-align: left;
+  padding: 5px 12px 5px 5px; min-height: 48px; border: 3px solid #000; border-radius: 6px; background: var(--ink); color: #fff; box-shadow: 0 4px 0 #000; font-family: var(--ui) !important; cursor: pointer; }
+.arena:hover { transform: translateY(-2px); }
+.arena:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.arena.on { outline: 3px solid var(--gold); outline-offset: 2px; background: #2a1f05; }
+.arena:disabled { opacity: .45; cursor: default; transform: none; }
+.athumb { grid-row: 1 / span 2; width: 44px; height: 34px; border: 2px solid #000; border-radius: 3px; }
+.aname { font-family: var(--display); font-size: 17px; letter-spacing: 1px; line-height: 1; -webkit-text-stroke: 1.5px #000; paint-order: stroke fill; }
+.asub { font-size: 10.5px; font-weight: 800; text-transform: uppercase; opacity: .75; line-height: 1.1; }
+.arena.on .aname { color: var(--gold); }
+.a-brasilia .athumb { background: linear-gradient(#5a58b0, #e0685a 45%, #f29a5a 60%, #7d8a32 61%, #d9d1c1 80%); }
+.a-noite .athumb { background: radial-gradient(circle at 75% 25%, #fff6 0 3px, #0000 4px), linear-gradient(#050820, #3c2c62 58%, #4a4c5e 60%, #8e8c98 80%); }
+.a-plenario .athumb { background: linear-gradient(#0000 18%, #13a24b 18% 34%, #d42828 34% 50%, #0000 50%), linear-gradient(90deg, #0000 22%, #061331 22% 78%, #0000 78%), linear-gradient(#6e3a1e 60%, #2f8a4e 60% 75%, #c99a68 75%); }
+.a-random .athumb { background: repeating-linear-gradient(135deg, #ffd400 0 6px, #e0262b 6px 12px); display: grid; place-items: center; }
+.a-random .athumb::after { content: '?'; font-family: var(--display); font-size: 24px; color: #fff; -webkit-text-stroke: 2px #000; paint-order: stroke fill; }
 .opts { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 4px; }
 .opts .go { font-size: 40px; padding: 10px 48px 8px; box-shadow: 0 6px 0 #000, 0 0 24px #ffd40066; }
 .keys { font-size: 12.5px; opacity: .8; text-align: center; line-height: 1.7; max-width: 900px; }
@@ -273,6 +298,10 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #140d24; col
   .opts .go { font-size: 30px; padding: 8px 32px 6px; }
   .btns button, .opts button { font-size: 20px; padding: 8px 14px 6px; }
   .keys { font-size: 11px; line-height: 1.5; }
+  .arenas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
+  .alabel { grid-column: 1 / -1; text-align: center; margin: 0; } .alabel small { display: inline; margin-left: 6px; }
+  .arena { grid-template-columns: 38px minmax(0, 1fr); padding: 3px 8px 3px 4px; min-height: 44px; } .athumb { width: 38px; height: 30px; }
+  .aname { font-size: 15px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .asub { font-size: 9.5px; }
 }
 
 /* barra extra de recurso (CAPITAL do Vorcaro): medidor fino com cifrão sob a barra de ultimate */

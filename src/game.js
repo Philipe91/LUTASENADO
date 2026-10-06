@@ -1,7 +1,7 @@
 // O JOGO (pacote carregado sob demanda pelo boot em main.js, junto com three.js).
 // init(ctx) monta palco/HUD/som e devolve a API usada pelo boot: quickPlay, openSelect, autostart, prefetchQuick.
 import { Stage } from './visual/Stage.js';
-import { buildArena } from './visual/arena/index.js';
+import { buildArena, resolveArena, disposeArena, ARENA_LIST, ARENAS } from './visual/arena/index.js';
 import { Look } from './visual/Look.js';
 import { FighterView } from './visual/FighterView.js';
 import { Vfx } from './visual/Vfx.js';
@@ -47,7 +47,9 @@ export async function init({ params, platform, title }) {
   const q0 = quality.cfg;
   const lookOn = params.get('look') !== '0';
   const stage = new Stage(document.getElementById('game'), { antialias: !lookOn, maxPixelRatio: q0.pr });
-  const arena = stage.setArena(buildArena(stage.scene, params.get('arena'))); // ?arena=noite
+  // arena: ?arena= tem prioridade; senão a escolhida na seleção (prefs.arena, 'random' sorteia a cada luta)
+  const urlArena = params.get('arena');
+  let arena = stage.setArena(buildArena(stage.scene, resolveArena(urlArena || getPrefs().arena)));
   await breathe();
   const look = new Look(stage, params, q0); // ARTE.md §3 — tone mapping, rim, bloom, vinheta (?look=0 desliga)
   const input = new Input();
@@ -111,10 +113,26 @@ export async function init({ params, platform, title }) {
 
   const sys = systemButtons(audio.box, { onPause: userPause, fullscreen, allowFullscreen: platform.fullscreenButton });
 
+  // troca de cenário entre lutas: descarta a arena anterior (geometria, materiais, texturas, luzes) e monta a nova
+  async function useArena(choice) {
+    const id = resolveArena(urlArena || choice, arena.id);
+    if (id === arena.id) return;
+    disposeArena(stage.scene, arena);
+    arena = stage.setArena(buildArena(stage.scene, id));
+    look.adopt?.(arena.root);
+    if (!manual) { // compila os shaders novos durante a tela de carregamento (sem engasgo no 1º quadro da luta)
+      if (look.enabled) { look.rimify(stage.scene); stage.renderer.setRenderTarget(look.rt); }
+      await stage.renderer.compileAsync(stage.scene, stage.camera).catch(() => {});
+      stage.renderer.setRenderTarget(null);
+    }
+  }
+
   // ---------- seleção ----------
   const prefs = getPrefs();
   const select = new SelectScreen(ui, (cfg) => launch(cfg), {
     initial: prefs,
+    arenas: ARENA_LIST,
+    arenaLocked: !!ARENAS[urlArena],
     isLocked: (id) => unlocks.isLocked(id),
     onUnlock: async (id) => {
       const ok = await platform.rewardedBreak('unlock');
@@ -173,9 +191,10 @@ export async function init({ params, platform, title }) {
     if (launching) return;
     launching = true;
     try {
-      setPrefs({ p1: cfg.p1, p2: cfg.p2, mode: cfg.mode });
+      setPrefs({ p1: cfg.p1, p2: cfg.p2, mode: cfg.mode, ...(cfg.arena ? { arena: cfg.arena } : {}) });
       select.hide(); title?.hide(); hud.hide();
       loading.show(getCharacter(cfg.p1), getCharacter(cfg.p2));
+      await useArena(cfg.arena || getPrefs().arena);
       if (!params.has('placeholder')) {
         await Promise.race([preloadFight([cfg.p1, cfg.p2], (p) => loading.set(p)), new Promise((r) => setTimeout(r, 25000))]);
       }
@@ -325,7 +344,7 @@ export async function init({ params, platform, title }) {
       else if (e.code === 'Escape' && select.visible && title) { select.hide(); title.show(); }
     }
     if (e.code === 'Enter' && holds.has('user')) setHold('user', false);
-    else if (e.code === 'Enter' && select.visible && !launching) select.start();
+    else if (e.code === 'Enter' && select.visible && !launching && !e.target?.closest?.('.select button:not(.go)')) select.start(); // Enter num botão focado = clique nele
   });
 
   let acc = 0, last = performance.now(), time = 0;
@@ -361,7 +380,7 @@ export async function init({ params, platform, title }) {
       hud.update(match);
     }
     debug.update(match);
-    arena.update(dt, time);
+    arena.update(dt, time, match);
     stage.updateCamera(match, dt);
     stage.render();
     if (animLabel && match) animLabel.textContent = match.controllers[0] instanceof FeelTestP1
@@ -417,7 +436,7 @@ export async function init({ params, platform, title }) {
   }
 
   const api = {
-    get match() { return match; }, views: () => views, startMatch, advance, audio, stage, hud, launch, platform, quality,
+    get match() { return match; }, get arena() { return arena; }, useArena, views: () => views, startMatch, advance, audio, stage, hud, launch, platform, quality,
     get paused() { return [...holds]; }, setHold,
     autostart, quickPlay, prefetchQuick,
     openSelect: () => { title?.hide(); select.show(); },
