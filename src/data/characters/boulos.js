@@ -6,6 +6,7 @@ export default {
   id: 'boulos',
   name: 'BOULOS',
   title: 'O Mobilizador',
+  audio: { voice: { set: 'gritao', pitch: 1.08 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Zona / Mobilização',
   stats: { hp: 100, walk: 1.0, jump: 1.0, width: 0.82, height: 1.82 },
   passive: {

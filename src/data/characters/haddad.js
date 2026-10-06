@@ -10,6 +10,7 @@ export default {
   id: 'haddad',
   name: 'TAXADD',
   title: 'O Arrecadador',
+  audio: { voice: { set: 'meia_idade_calmo', pitch: 1.05 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Controle / Recursos',
   stats: { hp: 100, walk: 0.95, jump: 0.95, width: 0.8, height: 1.8 },
   passive: {

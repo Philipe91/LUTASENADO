@@ -2,6 +2,7 @@ export default {
   id: 'dino-supremo',
   name: 'DINO SUPREMO',
   title: 'O Jurássico Togado',
+  audio: { voice: { set: 'brutamontes', pitch: 0.94 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Tank / Bruiser',
   stats: { hp: 115, walk: 0.72, jump: 0.85, width: 1.1, height: 1.8, damage: 1.0, defense: 0.95 },
   passive: {

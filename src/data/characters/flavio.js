@@ -6,6 +6,7 @@ export default {
   id: 'flavio',
   name: 'FLAVÃO',
   title: 'O Herdeiro Sísmico',
+  audio: { voice: { set: 'brutamontes', pitch: 1.12 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Bruiser / Impacto',
   stats: { hp: 100, walk: 0.95, jump: 0.95, width: 0.9, height: 1.85 },
   passive: {

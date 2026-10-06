@@ -6,6 +6,7 @@ export default {
   id: 'lulacio',
   name: 'LULÁCIO',
   title: 'O Companheiro de Aço',
+  audio: { voice: { set: 'senhor_rouco', pitch: 1.0 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Grappler / Brawler',
   stats: { hp: 100, walk: 0.9, jump: 0.95, width: 0.95, height: 1.72, meterGain: 1.3 },
   passive: {

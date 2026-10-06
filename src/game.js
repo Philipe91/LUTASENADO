@@ -176,6 +176,7 @@ export async function init({ params, platform, title }) {
       setPrefs({ p1: cfg.p1, p2: cfg.p2, mode: cfg.mode });
       select.hide(); title?.hide(); hud.hide();
       loading.show(getCharacter(cfg.p1), getCharacter(cfg.p2));
+      audio.voices.load([cfg.p1, cfg.p2]); // vozes dos 2 lutadores (poucos KB) junto com a pré-carga
       if (!params.has('placeholder')) {
         await Promise.race([preloadFight([cfg.p1, cfg.p2], (p) => loading.set(p)), new Promise((r) => setTimeout(r, 25000))]);
       }

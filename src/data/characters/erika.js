@@ -6,6 +6,7 @@ export default {
   id: 'erika',
   name: 'ERIKA HILTON',
   title: 'A Voz do Plenário',
+  audio: { voice: { set: 'mulher_jovem', pitch: 0.97 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Counter / Elegante',
   stats: { hp: 95, walk: 1.15, jump: 1.05, width: 0.72, height: 1.8 },
   passive: {

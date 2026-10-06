@@ -10,6 +10,7 @@ export default {
   id: 'vorcaro',
   name: 'VORCASH',
   title: 'O Banqueiro do Caos',
+  audio: { voice: { set: 'gordo_ofegante', pitch: 1.0 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Summoner / Recursos',
   stats: { hp: 100, walk: 0.88, jump: 0.9, width: 0.95, height: 1.85, damage: 1.0 },
   passive: {

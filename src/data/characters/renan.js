@@ -7,6 +7,7 @@ export default {
   id: 'renan',
   name: 'RENAN SANTOS',
   title: 'O Streamer do Caos',
+  audio: { voice: { set: 'jovem_animado', pitch: 0.94 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Contra-ataque / Streamer',
   stats: { hp: 102, walk: 1.12, jump: 1.05, width: 0.78, height: 1.8 },
   passive: {

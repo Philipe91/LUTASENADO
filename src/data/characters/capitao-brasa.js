@@ -2,6 +2,7 @@ export default {
   id: 'capitao-brasa',
   name: 'CAPITÃO BRASA',
   title: 'O Motociclista do Caos',
+  audio: { voice: { set: 'gritao', pitch: 1.0 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Rushdown / Pressão',
   stats: { hp: 100, walk: 1.3, jump: 1.05, width: 0.75, height: 1.85, damage: 1.1 },
   // TÁ OK: defesa PERFEITA = começar a segurar pra trás no máximo `window` frames antes do golpe chegar.
