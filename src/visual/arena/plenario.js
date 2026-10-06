@@ -29,6 +29,7 @@ const PANELS = { main: [0, 4.55, BACK_Z + 0.42, 8.8, 3.3, 0], left: [-8.2, 4.1, 
 function panelFrames(B, haze) {
   for (const k of ['main', 'left', 'right']) {
     const [x, y, z, w, h, ry] = PANELS[k];
+    if (w < 0.01) continue; // painel lateral desligado
     B.box(w + 0.6, h + 0.6, 0.3, C.panelFrame, { pos: [x, y, z - 0.18], rot: [0, ry, 0], haze, ao: 0 });
   }
   const [, y, z, , h] = PANELS.main;
@@ -192,7 +193,7 @@ const NAMES = [
 const PARTIES = ['PKB', 'PVZ', 'PDT?', 'PQP', 'PFF', 'PSS', 'PZM', 'PRK'];
 const TICKER = ['ORDEM DO DIA: PANCADARIA', 'SESSÃO DELIBERATIVA EXTRAORDINÁRIA', 'PEDIDO DE VISTA NEGADO', 'QUESTÃO DE ORDEM: SOCO OU CHUTE?'];
 
-function makePanel({ lite }) {
+function makePanel({ lite, base = 1.15 }) {
   const S = lite ? 0.5 : 1, W = 1024, H = 640, MAIN = 384;
   const st = { mode: 'idle', sim: 0, nao: 0, abs: 513, t: 0, p1: '', p2: '', combo: 0, comboWho: 0, ult: '', blink: 0, tick: 0, msg: 0, votes: NAMES.map(() => 2) };
   const tex = canvasTex(W * S, H * S, (g) => drawPanel(g, st, S), { mips: false });
@@ -224,7 +225,7 @@ function makePanel({ lite }) {
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   const mat = new THREE.MeshBasicMaterial({ map: tex, fog: false });
-  const BASE = 1.15; // um pouco acima de 1: o painel "acende" (pega bloom de leve)
+  const BASE = base; // >1: o painel "acende" (pega bloom de leve); com fundo pintado fica mais discreto
   mat.color.setScalar(BASE);
   const mesh = new THREE.Mesh(geo, mat);
   mesh.renderOrder = 1;
@@ -346,6 +347,12 @@ export function buildPlenario(scene) {
   const U = { time: { value: 0 } };
   const r = rng(1988);
   const painted = exists(BACKDROP);
+  // com o fundo pintado (que já tem o painel gigante), o placar 3D fica menor, mais alto e sem os painéis laterais:
+  // menos coisa piscando atrás dos lutadores
+  if (painted) Object.assign(PANELS, {
+    main: [0, 5.6, BACK_Z + 0.42, 6.2, 2.33, 0],
+    left: [-8.2, 4.1, BACK_Z + 0.9, 0, 0, 0.28], right: [8.2, 4.1, BACK_Z + 0.9, 0, 0, -0.28],
+  });
 
   scene.background = new THREE.Color(0x2a1c18);
   scene.fog = new THREE.Fog(0x2a1c18, 70, 420);
@@ -465,10 +472,10 @@ export function buildPlenario(scene) {
     }
     B.add(new THREE.SphereGeometry(Rd - 0.25, 24, 1, 0, Math.PI * 2, 0, Math.asin(2.2 / Rd)), C.ceilLight, { ...dp, emissive: 1, haze: 0 }); // óculo
   } else {
-    root.add(makeBackdrop(BACKDROP, { D: 210, horizonV: 0.5, centerU: 0.5, sat: 0.9, bright: 0.95 }));
+    root.add(makeBackdrop(BACKDROP, { D: 210, horizonV: 0.5, centerU: 0.5, sat: 0.55, bright: 0.62, tint: 0x2a1c18, tintAmt: 0.22 }));
     panelFrames(B, 0); // sem a casca, o painel fica com a moldura própria
   }
-  for (const [x, y, z] of HELD) for (const s of [-1, 1]) B.box(0.04, 1.3, 0.04, 0x6a4a2a, { pos: [x + s * 2.0, y - 0.4, z - 0.02], ao: 0 }); // varetas das faixas
+  if (false) for (const [x, y, z] of HELD) for (const s of [-1, 1]) B.box(0.04, 1.3, 0.04, 0x6a4a2a, { pos: [x + s * 2.0, y - 0.4, z - 0.02], ao: 0 }); // varetas das faixas
   // friso de latão separando o poço (taco) do carpete
   for (const z of [-9.02, 9.02]) B.box(60, 0.05, 0.12, C.brass, { pos: [0, 0.02, z], ao: 0, emissive: 0.25 });
   root.add(B.build());
@@ -502,9 +509,9 @@ export function buildPlenario(scene) {
     const c = lin(suitCols[Math.floor(r() * suitCols.length)]).lerp(hazeC, p.haze ?? 0);
     return { x: p.x, y: p.y, z: p.z, s: 0.92 + r() * 0.14, color: c, flip: r() < 0.5, dim: 1 - (p.haze ?? 0) * 0.8, variant: Math.floor(r() * 3), ...extra };
   };
-  const seats = deputies.map((p) => seat(p));
+  const seats = deputies.map((p) => seat({ ...p, haze: Math.min(0.6, (p.haze ?? 0) + 0.28) }));
   // em pé no poço, na frente da Mesa (respiro no meio para a tribuna)
-  for (let row = 0; row < 3; row++) {
+  for (let row = 0; row < 0; row++) { // desligado: a fileira em pé no poço poluía a leitura dos lutadores
     const z = -9.9 - row * 0.75;
     for (let x = -9.5; x <= 9.5; x += 0.95 + r() * 0.3) {
       if (Math.abs(x) < 1.5 + row * 0.25) continue;
@@ -533,7 +540,7 @@ export function buildPlenario(scene) {
   }
 
   // ---- painel eletrônico ----
-  const panel = makePanel({ lite });
+  const panel = makePanel({ lite, base: painted ? 0.82 : 1.15 });
   root.add(panel.mesh);
 
   // ---- panos: bandeiras do Brasil dos lados da Mesa + faixas na galeria ----
@@ -551,7 +558,7 @@ export function buildPlenario(scene) {
     cloth.push({ type: 'banner', idx: 1, w: 6, h: 0.75, pos: [9.5, GAL + 0.65, BACK_Z + 0.36], amp: 0.03, haze: 0.12 });
   }
   // faixas seguradas por deputados nas pontas do poço
-  for (const [x, y, z] of HELD) cloth.push({ type: 'banner', idx: x < 0 ? 2 : 3, w: 4.2, h: 0.55, pos: [x, y, z], amp: 0.1, haze: 0.04 });
+  if (false) for (const [x, y, z] of HELD) cloth.push({ type: 'banner', idx: x < 0 ? 2 : 3, w: 4.2, h: 0.55, pos: [x, y, z], amp: 0.1, haze: 0.04 });
   root.add(makeCloth(cloth, atlas, U));
 
   // ---- halos: brilho do painel, luminárias da galeria e refletores sobre a Mesa ----
