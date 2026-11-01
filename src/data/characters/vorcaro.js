@@ -101,7 +101,7 @@ export default {
         placeholder: { skin: 0xf0c4a0, suit: 0xffd400, pants: 0x1fa34a, accent: 0x1fa34a, shirt: 0xffd400, hair: 0x2a2018, headScale: 1.3, girth: 1.25 },
       },
       nikolas: {
-        name: 'NIKOLAS', height: 1.8, model: 'assets/characters/nikolas/model.glb',
+        name: 'NIKOLINHA', height: 1.8, model: 'assets/characters/nikolas/model.glb',
         placeholder: { skin: 0xf3cfb0, suit: 0x1f4fb8, accent: 0x0d1a3a, hair: 0xf0d878, headScale: 1.3, girth: 0.82 },
       },
     },

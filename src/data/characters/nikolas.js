@@ -5,7 +5,7 @@ const SALTITANTE = '01a0ef77-7fa0-7299-9226-4499bc71bda8'; // guarda saltitante 
 
 export default {
   id: 'nikolas',
-  name: 'NIKOLAS',
+  name: 'NIKOLINHA',
   title: 'O Nikolinha Viral',
   audio: { voice: { set: 'jovem_animado', pitch: 1.04 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Rushdown / Troll',

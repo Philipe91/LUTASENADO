@@ -5,7 +5,7 @@ const INTIMACAO = '01a0ef6c-ccbe-7482-9941-fb408750d7e7'; // golpe rápido de br
 
 export default {
   id: 'renan',
-  name: 'RENAN SANTOS',
+  name: 'RENAN LIVE',
   title: 'O Streamer do Caos',
   audio: { voice: { set: 'jovem_animado', pitch: 0.94 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Contra-ataque / Streamer',

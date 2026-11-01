@@ -5,6 +5,7 @@
 //      (servidor: npm run dev  ou  npx vite preview --port 5228 para testar o build)
 import puppeteer from 'puppeteer-core';
 import { mkdirSync } from 'node:fs';
+import { LOCK_ORDER } from '../src/platform/unlocks.js';
 
 const [W = '540', H = '960', OUT = 'videos/snap/publish'] = process.argv.slice(2);
 const BASE = process.env.RK_URL || 'http://localhost:5228/';
@@ -49,7 +50,7 @@ const bytesTitle = bytes;
 await page.click('.tchoose');
 await waitFor(() => document.querySelector('.select:not(.hidden)'));
 const locked = await page.$$eval('.char.locked', (els) => els.map((e) => e.dataset.id));
-check('4 lutadores bloqueados com ?locks=1', locked.length === 4, locked.join(','));
+check('lutadores novos bloqueados com ?locks=1', locked.join() === LOCK_ORDER.join(), locked.join(','));
 await page.click(`.char[data-id="${locked[0]}"]`);
 await waitFor(() => document.querySelector('.unlockAsk'));
 await shot('02_bloqueado');

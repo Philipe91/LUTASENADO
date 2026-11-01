@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve, join, relative } from 'node:path';
-import { readdirSync, statSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readdirSync, statSync, readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 
 // só ignora as worktrees ABAIXO desta pasta (dentro de uma worktree o próprio root fica em .claude/)
 const slash = (p) => p.split('\\').join('/');
@@ -52,6 +52,7 @@ function rkServiceWorker() {
     apply: 'build',
     configResolved(c) { outDir = resolve(c.root, c.build.outDir); },
     closeBundle() {
+      rmSync(join(outDir, 'assets/test'), { recursive: true, force: true }); // GLBs de teste (?glbtest) só no dev: fora do site
       const sw = join(outDir, 'sw.js');
       if (!existsSync(sw)) return;
       const files = [];

@@ -1,10 +1,10 @@
-// ERIKA HILTON — counter / elegante / sônica. Golpe meme: CLOSE CERTO (pose de fração de segundo; se o inimigo
+// ÉRIKA DIVA — counter / elegante / sônica. Golpe meme: CLOSE CERTO (pose de fração de segundo; se o inimigo
 // atacar, flash de câmera e contra-ataque automático). Ultimate PLENÁRIO É MEU: luz apaga, spotlight, ondas sonoras.
 const GUARDA = '01a0ef75-1fd9-7538-9154-0af77913ed07'; // guarda de boxe (GLB do Xandor)
 
 export default {
   id: 'erika',
-  name: 'ERIKA HILTON',
+  name: 'ÉRIKA DIVA',
   title: 'A Voz do Plenário',
   audio: { voice: { set: 'mulher_jovem', pitch: 0.97 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Counter / Elegante',

@@ -7,7 +7,7 @@ const ARREMESSO = '01a0efe4-99e1-76ec-90af-8512dfe57528'; // arremesso por cima 
 
 export default {
   id: 'dilma',
-  name: 'DILMA',
+  name: 'DILMÃE',
   title: 'A Estocadora de Vento',
   audio: { voice: { set: 'mulher_firme', pitch: 1.0 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Zoner / Confusa',

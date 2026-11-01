@@ -5,7 +5,7 @@
 //   · "assistir anúncio" libera um lutador SÓ NESTA SESSÃO
 import { storage } from './storage.js';
 
-export const LOCK_ORDER = ['dilma', 'haddad', 'boulos', 'renan']; // os 4 mais novos, nesta ordem de liberação
+export const LOCK_ORDER = ['dilma', 'haddad']; // os mais novos, nesta ordem de liberação (Boulão e Renan Live voltam aqui quando tiverem modelo)
 const session = new Set();
 let enabled = false;
 

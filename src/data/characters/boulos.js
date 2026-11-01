@@ -4,7 +4,7 @@ const GUARDA = '01a0efe2-f57c-765f-996c-8b479826fa21'; // guarda de brigão (Lul
 
 export default {
   id: 'boulos',
-  name: 'BOULOS',
+  name: 'BOULÃO',
   title: 'O Mobilizador',
   audio: { voice: { set: 'gritao', pitch: 1.08 } }, // grito de ARQUÉTIPO genérico (src/audio/Voices.js) — não imita voz real
   archetype: 'Zona / Mobilização',
