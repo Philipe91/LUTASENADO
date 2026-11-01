@@ -3,6 +3,13 @@
 > Rodar o jogo: `cd D:\projetos\GAMELUTA` → `npx vite --port 5199` → http://localhost:5199/?p1=lulacio&p2=xandor&mode=cpu
 > Controles P1: A/D andar · W pular · S agachar · J soco · K chute · L especial (+frente/baixo) · U ultimate (barra cheia). `&meter=1` começa com barra cheia.
 
+## Estado (01/11 noite) — LANÇAMENTO WEB
+- Plano completo: `docs/PLANO_LANCAMENTO.md` (site próprio + AdSense/H5 Games Ads) e kit `publicacao/` (páginas legais, ads.txt). Build de anúncio: `VITE_ADSENSE_CLIENT=ca-pub-... npm run build:google`.
+- Decisões do dono (01/11): nomes de paródia (Boulão, Dilmãe, Érika Diva, Nikolinha, Renan Live); LANÇAR COM as falas de voz clonada (avisado do risco jurídico/AdSense); Boulão e Renan fora até ter modelo 3D (`src/data/characters/index.js`).
+- Leveza: título com ~0,5 MB; 1ª luta ~3–4 MB (só 2 lutadores, .m.glb). Build tira `assets/test`. `tests/publish.mjs` passando (34665c8).
+- FALTA (dono): domínio (registro.br), conta Cloudflare (Pages), conta AdSense, e-mail de contato para sobre/privacidade/termos.
+- ATENÇÃO: retratos da seleção são fotos realistas dos políticos — o plano pedia caricatura.
+
 ## Estado (01/11) — FALAS dos personagens
 - Dono gerou 1 mp3 de falas por personagem (roteiros feitos na conversa; ≤500 caracteres cada). `tools/voices/cortar_falas.py`
   transcreve/alinha/corta → `public/assets/audio/voices/falas_<id>/<evento>_<n>.ogg|mp3` + `falas.json` (arquivo → texto).
