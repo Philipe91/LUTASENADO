@@ -1,0 +1,100 @@
+[
+ {
+  "arquivo": "taunt_1",
+  "texto": "Chegou o capitão, talkei?",
+  "ouvido": "Chegou o capitão, tá ok?",
+  "ini": 0,
+  "fim": 1.47
+ },
+ {
+  "arquivo": "taunt_2",
+  "texto": "Missão dada é missão cumprida!",
+  "ouvido": "Missão dada é missão cumprida.",
+  "ini": 1.41,
+  "fim": 3.93
+ },
+ {
+  "arquivo": "taunt_3",
+  "texto": "Eu tenho histórico de atleta, talkei?",
+  "ouvido": "Eu tenho histórico de atleta, tá ok?",
+  "ini": 3.87,
+  "fim": 6.51
+ },
+ {
+  "arquivo": "taunt_4",
+  "texto": "Deixa eu tirar a tornozeleira aqui rapidinho...",
+  "ouvido": "Deixa eu tirar a tornozeleira aqui rapidinho.",
+  "ini": 6.45,
+  "fim": 9.37
+ },
+ {
+  "arquivo": "taunt_5",
+  "texto": "Fala baixo que é o presidente... ex... tanto faz!",
+  "ouvido": "Fala abaixo que é o presidente. Eis tanto faz.",
+  "ini": 9.31,
+  "fim": 12.99
+ },
+ {
+  "arquivo": "taunt_6",
+  "texto": "Bora, que a motociata tá esperando lá fora!",
+  "ouvido": "Bora, que a motocicleta tá esperando lá fora.",
+  "ini": 12.93,
+  "fim": 16.37
+ },
+ {
+  "arquivo": "win_1",
+  "texto": "E daí? Ganhei, pô!",
+  "ouvido": "E daí? Ganhei, pô!",
+  "ini": 16.31,
+  "fim": 18.79
+ },
+ {
+  "arquivo": "win_2",
+  "texto": "Imbrochável, imorrível e invencível!",
+  "ouvido": "Embrochável, imorrível e invencível.",
+  "ini": 18.73,
+  "fim": 22.74
+ },
+ {
+  "arquivo": "win_3",
+  "texto": "Acabou! Ganhei no primeiro turno!",
+  "ouvido": "Acabou. Ganhei no primeiro turno.",
+  "ini": 22.68,
+  "fim": 25.46
+ },
+ {
+  "arquivo": "win_4",
+  "texto": "Essa urna eu confio!",
+  "ouvido": "Essa urna eu confio.",
+  "ini": 25.4,
+  "fim": 27.62
+ },
+ {
+  "arquivo": "win_5",
+  "texto": "Missão cumprida. Agora vou pro cercadinho.",
+  "ouvido": "Missão cumprida. Agora vou para o cercadinho",
+  "ini": 27.56,
+  "fim": 30.99
+ },
+ {
+  "arquivo": "lose_1",
+  "texto": "Essa luta foi fraudada!",
+  "ouvido": "Essa luta foi fraudada",
+  "ini": 30.93,
+  "fim": 33.27
+ },
+ {
+  "arquivo": "lose_2",
+  "texto": "Quero ver o código-fonte desse juiz!",
+  "ouvido": "Quero ver o código fonte desse juiz",
+  "ini": 33.21,
+  "fim": 36.17
+ },
+ {
+  "arquivo": "lose_3",
+  "texto": "Inelegível até 2030... de novo?",
+  "ouvido": "Inelegível até 2030 De novo",
+  "ini": 36.11,
+  "fim": 40.01
+ }
+]

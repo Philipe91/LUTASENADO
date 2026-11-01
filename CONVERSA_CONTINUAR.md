@@ -3,6 +3,15 @@
 > Rodar o jogo: `cd D:\projetos\GAMELUTA` → `npx vite --port 5199` → http://localhost:5199/?p1=lulacio&p2=xandor&mode=cpu
 > Controles P1: A/D andar · W pular · S agachar · J soco · K chute · L especial (+frente/baixo) · U ultimate (barra cheia). `&meter=1` começa com barra cheia.
 
+## Estado (01/11) — FALAS dos personagens
+- Dono gerou 1 mp3 de falas por personagem (roteiros feitos na conversa; ≤500 caracteres cada). `tools/voices/cortar_falas.py`
+  transcreve/alinha/corta → `public/assets/audio/voices/falas_<id>/<evento>_<n>.ogg|mp3` + `falas.json` (arquivo → texto).
+  Eventos: taunt (início do round), win, lose, ko, hurt ("ai/ui"), attack, ultimate, `sp-<golpe>` (fala do especial).
+- Feitos: Brasa (sem golpes/ai-ui: o áudio não tinha; "Tá OK" não saiu), Flávio e Lula (sem ai/ui), Nikolas, Xandor, Dilma, Erika, Haddad.
+  FALTAM áudios: Dino, Vorcaro, Boulos, Duval, Renan; ai/ui do Brasa, Flávio e Lula (roteiros já entregues).
+- `?falas=0` desliga (volta ao arquétipo). Aviso no CREDITOS.md: vozes podem soar como as pessoas reais → checar política do portal antes de publicar.
+- Vídeo com som: `node tools/record_som.mjs "p1=lulacio&p2=xandor&mode=demo&meter=1" 30 videos/x.mp4 960 540 24` (refaz falas+SFX fora do headless; sem locutor/música).
+
 ## Estado (30/09 tarde)
 - Poderes novos: Abraço giratório (3 voltas + arremesso), Discurso que atordoa (estrelinhas), Xandor com Intimação/BLOQUEADO/Canetada legíveis. Ultimates só mostram contato quando acerta. Enquadramento do Avatar corrigido. Provas em `canal_ia/evidencias/poderes_30-09/`.
 - Servidor: janela própria do cmd minimizada ("GAMELUTA servidor"); `node tools/snap.mjs "<query>" "t1,t2" videos/snap/x 540 960 [gap]` tira fotos em instantes exatos.

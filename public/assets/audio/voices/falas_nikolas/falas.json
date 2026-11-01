@@ -1,0 +1,149 @@
+[
+ {
+  "arquivo": "taunt_1",
+  "texto": "Olha o engajamento subindo!",
+  "ouvido": "Olha o engajamento subindo,",
+  "ini": 0,
+  "fim": 1.7
+ },
+ {
+  "arquivo": "taunt_2",
+  "texto": "Grava aí, que isso vai viralizar!",
+  "ouvido": "grava aí que isso vai viralizar,",
+  "ini": 1.64,
+  "fim": 3.82
+ },
+ {
+  "arquivo": "win_1",
+  "texto": "Isso vai dar um milhão de views!",
+  "ouvido": "isso vai dar um milhão de views,",
+  "ini": 3.76,
+  "fim": 5.79
+ },
+ {
+  "arquivo": "sp-chupeta-teleguiada_1",
+  "texto": "Chupeta!",
+  "ouvido": "chupeta,",
+  "ini": 5.73,
+  "fim": 6.81
+ },
+ {
+  "arquivo": "sp-mamadeira-turbo_1",
+  "texto": "Mamadeira!",
+  "ouvido": "mamadeira,",
+  "ini": 6.75,
+  "fim": 7.91
+ },
+ {
+  "arquivo": "sp-selfie-do-dano_1",
+  "texto": "Click! Sorria, você tá no meu feed!",
+  "ouvido": "clique, sorria, você tá no meu feed,",
+  "ini": 7.85,
+  "fim": 10.99
+ },
+ {
+  "arquivo": "sp-selfie-do-dano_2",
+  "texto": "Perfect selfie!",
+  "ouvido": "perfect selfie,",
+  "ini": 10.93,
+  "fim": 12.41
+ },
+ {
+  "arquivo": "attack_1",
+  "texto": "Engajou!",
+  "ouvido": "engajou,",
+  "ini": 12.35,
+  "fim": 13.3
+ },
+ {
+  "arquivo": "ultimate_1",
+  "texto": "Viralizou!",
+  "ouvido": "viralizou,",
+  "ini": 13.24,
+  "fim": 14.38
+ },
+ {
+  "arquivo": "ultimate_2",
+  "texto": "Um milhão!",
+  "ouvido": "um milhão,",
+  "ini": 14.32,
+  "fim": 15.54
+ },
+ {
+  "arquivo": "taunt_3",
+  "texto": "Já tô fazendo o vídeo da sua derrota!",
+  "ouvido": "já tô fazendo o vídeo da sua derrota,",
+  "ini": 15.48,
+  "fim": 17.93
+ },
+ {
+  "arquivo": "taunt_4",
+  "texto": "Fala do Pix agora, fala!",
+  "ouvido": "fala do pix agora, fala,",
+  "ini": 17.87,
+  "fim": 19.85
+ },
+ {
+  "arquivo": "win_2",
+  "texto": "Cancelado!",
+  "ouvido": "cancelado,",
+  "ini": 19.79,
+  "fim": 21.09
+ },
+ {
+  "arquivo": "hurt_1",
+  "texto": "Ai!",
+  "ouvido": "ai,",
+  "ini": 21.03,
+  "fim": 21.79
+ },
+ {
+  "arquivo": "hurt_2",
+  "texto": "Ui!",
+  "ouvido": "ui,",
+  "ini": 21.73,
+  "fim": 22.43
+ },
+ {
+  "arquivo": "hurt_3",
+  "texto": "Aiii!",
+  "ouvido": "ai,",
+  "ini": 22.37,
+  "fim": 23.47
+ },
+ {
+  "arquivo": "hurt_4",
+  "texto": "Ai, meu celular!",
+  "ouvido": "ai meu celular,",
+  "ini": 23.41,
+  "fim": 25.12
+ },
+ {
+  "arquivo": "hurt_5",
+  "texto": "Ui, isso vai sair no story!",
+  "ouvido": "ui, isso vai sair no story,",
+  "ini": 25.06,
+  "fim": 27.49
+ },
+ {
+  "arquivo": "lose_1",
+  "texto": "Ai, ai, ai!",
+  "ouvido": "ai, ai, ai,",
+  "ini": 27.43,
+  "fim": 28.61
+ },
+ {
+  "arquivo": "hurt_6",
+  "texto": "Para, que tá gravando!",
+  "ouvido": "para, Que tá gravando",
+  "ini": 28.55,
+  "fim": 30.35
+ },
+ {
+  "arquivo": "ko_1",
+  "texto": "Nãooo!",
+  "ouvido": "Não",
+  "ini": 30.29,
+  "fim": 32.32
+ }
+]

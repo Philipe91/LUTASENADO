@@ -1,0 +1,121 @@
+[
+ {
+  "arquivo": "taunt_1",
+  "texto": "Companheiros e companheiras, hoje vai ter porrada!",
+  "ouvido": "Companheiros e companheiras, hoje vai ter porrada,",
+  "ini": 0,
+  "fim": 3.57
+ },
+ {
+  "arquivo": "win_1",
+  "texto": "Nunca antes na história desse ringue!",
+  "ouvido": "nunca antes na história desse ringue,",
+  "ini": 3.51,
+  "fim": 6.33
+ },
+ {
+  "arquivo": "taunt_2",
+  "texto": "Faz o L!",
+  "ouvido": "faz o L,",
+  "ini": 6.27,
+  "fim": 7.7
+ },
+ {
+  "arquivo": "win_2",
+  "texto": "Quarto mandato, companheiro!",
+  "ouvido": "quarto mandato companheiro,",
+  "ini": 7.64,
+  "fim": 9.9
+ },
+ {
+  "arquivo": "sp-picanha-do-povo_1",
+  "texto": "Picanha do povo!",
+  "ouvido": "picanha do povo,",
+  "ini": 9.84,
+  "fim": 11.84
+ },
+ {
+  "arquivo": "sp-picanha-do-povo_2",
+  "texto": "Toma picanha com cervejinha!",
+  "ouvido": "toma picanha com cervejinha,",
+  "ini": 11.78,
+  "fim": 14.58
+ },
+ {
+  "arquivo": "sp-picanha-do-povo_3",
+  "texto": "O povo chegou!",
+  "ouvido": "o povo chegou,",
+  "ini": 14.52,
+  "fim": 16.41
+ },
+ {
+  "arquivo": "sp-abraco-do-palanque_1",
+  "texto": "Abraço! Vem cá, companheiro!",
+  "ouvido": "abraço, vem cá companheiro,",
+  "ini": 16.35,
+  "fim": 19.39
+ },
+ {
+  "arquivo": "sp-abraco-do-palanque_2",
+  "texto": "Voou!",
+  "ouvido": "voou,",
+  "ini": 19.33,
+  "fim": 20.63
+ },
+ {
+  "arquivo": "sp-discurso-interminavel_1",
+  "texto": "Discurso interminável... e tem mais!",
+  "ouvido": "discurso interminável, e tem mais,",
+  "ini": 20.57,
+  "fim": 24.23
+ },
+ {
+  "arquivo": "sp-discurso-interminavel_2",
+  "texto": "Deixa eu terminar de falar!",
+  "ouvido": "deixa eu terminar de falar.",
+  "ini": 24.17,
+  "fim": 25.97
+ },
+ {
+  "arquivo": "taunt_3",
+  "texto": "Não existe alma viva mais forte que eu!",
+  "ouvido": "Não existe alma viva mais forte que eu!",
+  "ini": 25.91,
+  "fim": 29.8
+ },
+ {
+  "arquivo": "taunt_4",
+  "texto": "Tenho oitenta anos e energia de trinta!",
+  "ouvido": "Tenho 80 anos e energia de 30!",
+  "ini": 29.74,
+  "fim": 33.24
+ },
+ {
+  "arquivo": "ultimate_1",
+  "texto": "Polvão!",
+  "ouvido": "Polvão!",
+  "ini": 33.18,
+  "fim": 35.04
+ },
+ {
+  "arquivo": "taunt_5",
+  "texto": "Janja, segura minha bolsa!",
+  "ouvido": "Janja, segura minha bolsa!",
+  "ini": 34.98,
+  "fim": 37.88
+ },
+ {
+  "arquivo": "lose_1",
+  "texto": "Isso é golpe!",
+  "ouvido": "Isso é golpe!",
+  "ini": 37.82,
+  "fim": 39.78
+ },
+ {
+  "arquivo": "win_3",
+  "texto": "Companheirada!",
+  "ouvido": "Companheirada!",
+  "ini": 39.72,
+  "fim": 41.8
+ }
+]

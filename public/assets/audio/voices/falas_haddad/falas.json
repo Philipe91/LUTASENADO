@@ -1,0 +1,156 @@
+[
+ {
+  "arquivo": "taunt_1",
+  "texto": "Tudo tem imposto. Inclusive essa surra.",
+  "ouvido": "Tudo tem imposto, inclusive essa surra.",
+  "ini": 0,
+  "fim": 3.3
+ },
+ {
+  "arquivo": "win_1",
+  "texto": "Arrecadação recorde!",
+  "ouvido": "Arrecadação recorde.",
+  "ini": 3.24,
+  "fim": 5.31
+ },
+ {
+  "arquivo": "win_2",
+  "texto": "Vitória declarada. Agora paga o carnê.",
+  "ouvido": "Vitória declarada. Agora paga o carnê.",
+  "ini": 5.25,
+  "fim": 9.08
+ },
+ {
+  "arquivo": "sp-taxa-das-blusinhas_1",
+  "texto": "Taxado!",
+  "ouvido": "Taxado.",
+  "ini": 9.02,
+  "fim": 10.26
+ },
+ {
+  "arquivo": "sp-taxa-das-blusinhas_2",
+  "texto": "Taxa das blusinhas!",
+  "ouvido": "Taxa das blusinhas.",
+  "ini": 10.2,
+  "fim": 12.1
+ },
+ {
+  "arquivo": "sp-arcabouco-fiscal_1",
+  "texto": "Arcabouço!",
+  "ouvido": "Arcabouço.",
+  "ini": 12.04,
+  "fim": 13.48
+ },
+ {
+  "arquivo": "sp-arcabouco-fiscal_2",
+  "texto": "Teto de gastos!",
+  "ouvido": "Teto de gastos.",
+  "ini": 13.42,
+  "fim": 15.02
+ },
+ {
+  "arquivo": "sp-carimbo-do-imposto_1",
+  "texto": "Carimbado!",
+  "ouvido": "Carimbado.",
+  "ini": 14.96,
+  "fim": 16.22
+ },
+ {
+  "arquivo": "sp-carimbo-do-imposto_2",
+  "texto": "Mais imposto!",
+  "ouvido": "Mais imposto.",
+  "ini": 16.16,
+  "fim": 17.82
+ },
+ {
+  "arquivo": "attack_1",
+  "texto": "Arrecadou!",
+  "ouvido": "Arrecadou.",
+  "ini": 17.76,
+  "fim": 19.09
+ },
+ {
+  "arquivo": "ultimate_1",
+  "texto": "Leão!",
+  "ouvido": "Leão.",
+  "ini": 19.03,
+  "fim": 20.13
+ },
+ {
+  "arquivo": "win_3",
+  "texto": "Malha fina!",
+  "ouvido": "Malha fina.",
+  "ini": 20.07,
+  "fim": 21.53
+ },
+ {
+  "arquivo": "taunt_2",
+  "texto": "Esse soco veio da Shein? Taxado!",
+  "ouvido": "Esse soco veio da Shein? Taxado.",
+  "ini": 21.47,
+  "fim": 25.0
+ },
+ {
+  "arquivo": "taunt_3",
+  "texto": "Declara esse golpe no imposto de renda!",
+  "ouvido": "Declara esse golpe no imposto de renda.",
+  "ini": 24.94,
+  "fim": 28.07
+ },
+ {
+  "arquivo": "taunt_4",
+  "texto": "Fecha a conta, que eu fecho a sua cara!",
+  "ouvido": "Feche a conta, que eu fecho a sua cara.",
+  "ini": 28.01,
+  "fim": 31.59
+ },
+ {
+  "arquivo": "hurt_1",
+  "texto": "Ai!",
+  "ouvido": "Ai,",
+  "ini": 31.53,
+  "fim": 32.5
+ },
+ {
+  "arquivo": "hurt_2",
+  "texto": "Ui!",
+  "ouvido": "ui,",
+  "ini": 32.44,
+  "fim": 33.33
+ },
+ {
+  "arquivo": "hurt_3",
+  "texto": "Aiii!",
+  "ouvido": "ai,",
+  "ini": 33.27,
+  "fim": 34.3
+ },
+ {
+  "arquivo": "hurt_4",
+  "texto": "Ai, meu arcabouço!",
+  "ouvido": "ai meu arcabouço,",
+  "ini": 34.24,
+  "fim": 36.3
+ },
+ {
+  "arquivo": "hurt_5",
+  "texto": "Ui, isso não tava no orçamento!",
+  "ouvido": "ui, isso não estava no orçamento.",
+  "ini": 36.24,
+  "fim": 39.31
+ },
+ {
+  "arquivo": "lose_1",
+  "texto": "Ai, ai, ai!",
+  "ouvido": "Ai, ai, ai,",
+  "ini": 39.25,
+  "fim": 41.38
+ },
+ {
+  "arquivo": "ko_1",
+  "texto": "Nãooo!",
+  "ouvido": "não.",
+  "ini": 41.32,
+  "fim": 42.82
+ }
+]

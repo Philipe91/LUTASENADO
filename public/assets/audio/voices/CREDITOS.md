@@ -1,6 +1,6 @@
 # Vozes dos lutadores — origem e licença
 
-**Nenhuma voz deste pacote clona ou imita a voz de pessoa real.** São vozes de ARQUÉTIPO genérico e caricato
+**As pastas de arquétipo (abaixo) não clonam nem imitam voz de pessoa real.** As pastas `falas_<id>/` são outra coisa — ver o fim deste arquivo. São vozes de ARQUÉTIPO genérico e caricato
 (senhor rouco, grave autoritário, brutamontes, gritão, jovem animado, ofegante, meia-idade calmo, mulher firme,
 mulher jovem). Nada foi gravado, amostrado ou treinado a partir de áudio de políticos ou de qualquer pessoa.
 
@@ -28,3 +28,12 @@ mulher jovem). Nada foi gravado, amostrado ou treinado a partir de áudio de pol
 
 `<arquétipo>/<evento>_<n>.ogg|mp3`, eventos: `attack`, `hurt`, `jump`, `special`, `ultimate`, `ko`, `win`, `lose`, `taunt`
 (2–4 variações cada). O personagem escolhe o arquétipo em `audio.voice = { set, pitch }` (src/data/characters/*.js).
+
+
+## Pastas `falas_<id>/` (01/11/2026)
+
+Falas por personagem enviadas pelo dono do projeto (um mp3 por personagem, gerado por ele em serviço de TTS externo),
+cortadas por `tools/voices/cortar_falas.py` (transcrição faster-whisper → alinhamento com o roteiro → corte, loudnorm −16).
+`falas.json` em cada pasta lista arquivo → texto. **Origem/licença das vozes: responsabilidade do dono; podem soar como as
+pessoas satirizadas.** Antes de publicar em portal (CrazyGames, Poki, YouTube) conferir a política de voz sintética de
+pessoa real. Desligar sem apagar nada: `?falas=0` na URL (ou remover as pastas `falas_*`).

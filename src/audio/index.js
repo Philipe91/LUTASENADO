@@ -31,7 +31,10 @@ export function setupAudio(bus, params = new URLSearchParams()) {
   let wantMusic = false;
 
   const out = {
-    sfx: (name, o) => engine.play(name, o),
+    sfx: (name, o) => {
+      if (window.__rkSfxLog) window.__rkSfxLog.push({ name, vol: o?.vol ?? 1, delay: o?.delay ?? 0, f: window.__rkFrame }); // tools/record_som.mjs
+      return engine.play(name, o);
+    },
     say: (text, o) => { voice.say(text, o); engine.duck(0.55, 1.2); },
     music: (cmd) => {
       if (cmd === 'start') { wantMusic = true; music.start(); }

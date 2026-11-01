@@ -44,7 +44,7 @@ const VOICE = {
   attack: { chance: 0.3, heavyChance: 0.6, cooldown: 40, priority: 1 },
   jump: { chance: 0.35, cooldown: 50, priority: 1 },
   hurt: { chance: 0.4, heavyChance: 0.75, cooldown: 45, priority: 2 },
-  special: { chance: 0.6, cooldown: 60, priority: 2 },
+  special: { chance: 0.8, cooldown: 60, priority: 2 },
   taunt: { chance: 1, cooldown: 0, priority: 2 },
   ultimate: { chance: 1, cooldown: 0, priority: 3 },
   win: { chance: 1, cooldown: 0, priority: 3 },
@@ -52,6 +52,9 @@ const VOICE = {
   ko: { chance: 1, cooldown: 0, priority: 4 },
 };
 
+// nome do golpe → evento de voz próprio ("Picanha do Povo" → "sp-picanha-do-povo"; ver tools/voices/cortar_falas.py)
+const specialEvent = (name) => 'sp-' + String(name || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const panOf = (x) => clamp((x ?? 0) / ARENA_HALF, -1, 1) * 0.6;
 const titleCase = (s) => s.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (m, sep, ch) => sep + ch.toUpperCase());
@@ -89,7 +92,7 @@ export class SoundDirector {
   say(text, priority = 1) { this.out.say(text, { priority }); }
 
   // grito do lutador f (com chance e cooldown por lutador; prioridade alta fura o cooldown)
-  voice(f, event, { heavy = false, delay = 0 } = {}) {
+  voice(f, event, { heavy = false, delay = 0, sub = null } = {}) {
     if (!f || !this.out.voice) return;
     const r = VOICE[event];
     const chance = heavy && r.heavyChance != null ? r.heavyChance : r.chance;
@@ -98,7 +101,7 @@ export class SoundDirector {
     const until = this.voiceT.get(f);
     if (until && now < until.t && r.priority <= until.priority) return;
     this.voiceT.set(f, { t: now + r.cooldown, priority: r.priority });
-    this.out.voice(f, event, { priority: r.priority, pan: panOf(f.x), delay });
+    this.out.voice(f, event, { priority: r.priority, pan: panOf(f.x), delay, sub });
   }
 
   // ---------- eventos emitidos pela partida ----------
@@ -125,7 +128,7 @@ export class SoundDirector {
       case 'special': {
         const cues = SPECIAL_CUES[e.name] || ['whooshHeavy'];
         for (const c of cues) this.sfx(c, { pan: panOf(e.fighter?.x) });
-        this.voice(e.fighter, 'special');
+        this.voice(e.fighter, 'special', { sub: specialEvent(e.name) }); // fala do golpe (sp-<golpe>), senão grito genérico
         break;
       }
       case 'spawn': // o som do que nasceu (multidão...) vem da observação dos Hitters; aqui só o "puf" + torcida

@@ -1,0 +1,149 @@
+[
+ {
+  "arquivo": "taunt_1",
+  "texto": "Isso não vai ficar assim.",
+  "ouvido": "Isso não vai ficar assim,",
+  "ini": 0,
+  "fim": 1.81
+ },
+ {
+  "arquivo": "win_1",
+  "texto": "Caso encerrado. Arquive-se.",
+  "ouvido": "caso encerrado, arquive -se,",
+  "ini": 1.75,
+  "fim": 4.77
+ },
+ {
+  "arquivo": "sp-intimacao_1",
+  "texto": "Intimado!",
+  "ouvido": "intimado,",
+  "ini": 4.71,
+  "fim": 6.0
+ },
+ {
+  "arquivo": "sp-bloqueado_1",
+  "texto": "Bloqueado!",
+  "ouvido": "bloqueado,",
+  "ini": 5.94,
+  "fim": 7.21
+ },
+ {
+  "arquivo": "sp-canetada_1",
+  "texto": "Canetada!",
+  "ouvido": "canetada,",
+  "ini": 7.15,
+  "fim": 8.57
+ },
+ {
+  "arquivo": "sp-bloqueado_2",
+  "texto": "Conta suspensa por tempo indeterminado!",
+  "ouvido": "conta suspensa por tempo indeterminado,",
+  "ini": 8.51,
+  "fim": 11.91
+ },
+ {
+  "arquivo": "win_2",
+  "texto": "Decisão monocrática: você perdeu!",
+  "ouvido": "decisão monocrática, você perdeu,",
+  "ini": 11.85,
+  "fim": 15.49
+ },
+ {
+  "arquivo": "ultimate_1",
+  "texto": "Sentença: derrota!",
+  "ouvido": "sentença, derrota,",
+  "ini": 15.43,
+  "fim": 17.89
+ },
+ {
+  "arquivo": "win_3",
+  "texto": "Sem recurso!",
+  "ouvido": "sem recurso,",
+  "ini": 17.83,
+  "fim": 19.45
+ },
+ {
+  "arquivo": "taunt_2",
+  "texto": "Inquérito aberto contra o seu soco!",
+  "ouvido": "inquérito aberto contra o seu soco,",
+  "ini": 19.39,
+  "fim": 22.53
+ },
+ {
+  "arquivo": "taunt_3",
+  "texto": "Tá no meu círculo, tá na minha jurisdição!",
+  "ouvido": "tá no meu círculo, tá na minha jurisdição,",
+  "ini": 22.47,
+  "fim": 26.09
+ },
+ {
+  "arquivo": "sp-intimacao_2",
+  "texto": "Tornozeleira nele!",
+  "ouvido": "Tornozeleira nele",
+  "ini": 26.03,
+  "fim": 28.21
+ },
+ {
+  "arquivo": "taunt_4",
+  "texto": "Careca é o seu argumento!",
+  "ouvido": "Careca é o seu argumento",
+  "ini": 28.15,
+  "fim": 30.69
+ },
+ {
+  "arquivo": "taunt_5",
+  "texto": "Pede pra sair, que eu bloqueio!",
+  "ouvido": "Pede pra sair Que eu bloqueio",
+  "ini": 30.63,
+  "fim": 33.51
+ },
+ {
+  "arquivo": "hurt_1",
+  "texto": "Ai!",
+  "ouvido": "Ai,",
+  "ini": 33.45,
+  "fim": 34.64
+ },
+ {
+  "arquivo": "hurt_2",
+  "texto": "Ui!",
+  "ouvido": "ui,",
+  "ini": 34.58,
+  "fim": 35.37
+ },
+ {
+  "arquivo": "hurt_3",
+  "texto": "Aiii!",
+  "ouvido": "ai",
+  "ini": 35.31,
+  "fim": 36.05
+ },
+ {
+  "arquivo": "hurt_4",
+  "texto": "Ai, isso é desacato!",
+  "ouvido": "Ai, isso é desacato",
+  "ini": 35.99,
+  "fim": 38.11
+ },
+ {
+  "arquivo": "hurt_5",
+  "texto": "Ui, vou abrir inquérito!",
+  "ouvido": "Ui, vou abrir inquérito",
+  "ini": 38.05,
+  "fim": 40.55
+ },
+ {
+  "arquivo": "lose_1",
+  "texto": "Ai, ai, ai!",
+  "ouvido": "Ai, ai, ai",
+  "ini": 40.49,
+  "fim": 42.73
+ },
+ {
+  "arquivo": "ko_1",
+  "texto": "Nãooo!",
+  "ouvido": "Não",
+  "ini": 42.67,
+  "fim": 44.36
+ }
+]

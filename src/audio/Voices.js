@@ -1,22 +1,39 @@
-// Vozes dos lutadores: gritos/interjeições de ARQUÉTIPO genérico (senhor rouco, grave autoritário, jovem animado...).
-// Nunca imitam a voz de pessoa real — ver public/assets/audio/voices/CREDITOS.md e tools/voices/gen_voices.py.
+// Vozes dos lutadores: gritos/interjeições de ARQUÉTIPO genérico (senhor rouco, grave autoritário, jovem animado...)
+// — ver public/assets/audio/voices/CREDITOS.md e tools/voices/gen_voices.py — e, por cima, as FALAS (abaixo).
 //
 // Dados: personagem.audio.voice = { set: '<arquétipo>', pitch: 1.0 }  (pasta public/assets/audio/voices/<set>/<evento>_<n>.ogg|mp3)
 // Carrega SÓ os arquétipos dos 2 lutadores da luta (load(ids)); só pede arquivo que está no catálogo (exists → sem 404).
 // Toca pelo mixer do AudioEngine (barramento de SFX: volume de efeitos e mudo valem), uma voz por lutador por vez:
 // voz nova de prioridade menor que a que está tocando é descartada; maior/igual corta a anterior.
-import { exists } from '../platform/assets.js';
+//
+// FALAS (01/11/2026, decisão do dono): pasta voices/falas_<id>/ com falas faladas por personagem
+// (taunt|win|lose|ko|hurt|attack|ultimate|sp-<golpe>_<n>), cortadas por tools/voices/cortar_falas.py.
+// Quando existe, substitui o arquétipo evento a evento (o que faltar continua no arquétipo). Desliga com ?falas=0.
+import { exists, listDir } from '../platform/assets.js';
 import { getCharacter } from '../data/characters/index.js';
 
 export const VOICE_EVENTS = ['attack', 'hurt', 'jump', 'special', 'ultimate', 'ko', 'win', 'lose', 'taunt'];
 const DIR = 'assets/audio/voices';
 const MAX_VARIANTS = 6;
 export const DEFAULT_VOICE = { set: 'meia_idade_calmo', pitch: 1 };
+const FALAS = !(typeof location !== 'undefined' && /[?&]falas=0\b/.test(location.search));
 
 export function voiceOf(charOrId) {
   const c = typeof charOrId === 'string' ? getCharacter(charOrId) : charOrId;
   const v = c?.audio?.voice;
-  return { set: v?.set || DEFAULT_VOICE.set, pitch: v?.pitch || 1 };
+  const set = v?.set || DEFAULT_VOICE.set;
+  const falas = FALAS && c?.id && listDir(`${DIR}/falas_${c.id}`).length ? `falas_${c.id}` : null;
+  return { set, pitch: v?.pitch || 1, falas, bank: falas ? `${falas}+${set}` : set };
+}
+
+// falas de um personagem: { evento: [url, ...] } (qualquer evento, inclusive sp-<golpe>)
+function falasOf(dir, ext) {
+  const out = {};
+  for (const u of listDir(`${DIR}/${dir}`).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))) {
+    const m = u.match(/\/([a-z0-9-]+)_\d+\.(ogg|mp3)$/);
+    if (m && m[2] === ext) (out[m[1]] ||= []).push(u);
+  }
+  return out;
 }
 
 // formato: Opus em OGG onde o navegador decodifica; senão MP3 (Safari antigo)
@@ -62,13 +79,18 @@ export class VoiceBank {
     if (!this.engine.available) return Promise.resolve();
     const jobs = [];
     for (const id of ids) {
-      const { set } = voiceOf(id);
-      if (!this.sets.has(set)) {
+      const { set, falas, bank } = voiceOf(id);
+      if (!this.sets.has(bank)) {
         let files = filesOf(set, this.ext);
         if (!Object.keys(files).length && this.ext !== 'mp3') files = filesOf(set, 'mp3');
-        this.sets.set(set, files);
+        if (falas) {
+          let own = falasOf(falas, this.ext);
+          if (!Object.keys(own).length && this.ext !== 'mp3') own = falasOf(falas, 'mp3');
+          files = { ...files, ...own }; // a fala do personagem substitui o grito genérico daquele evento
+        }
+        this.sets.set(bank, files);
       }
-      for (const list of Object.values(this.sets.get(set))) for (const u of list) jobs.push(this.fetch(u));
+      for (const list of Object.values(this.sets.get(bank))) for (const u of list) jobs.push(this.fetch(u));
     }
     return Promise.all(jobs).then(() => this.decodeAll());
   }
@@ -110,11 +132,13 @@ export class VoiceBank {
     return list[i];
   }
 
-  // key: identifica o lutador (1 voz por vez); voice: { set, pitch }
-  play(key, voice, event, { priority = 1, pan = 0, delay = 0, vol = 1 } = {}) {
+  // key: identifica o lutador (1 voz por vez); voice: { set, pitch, bank }; sub: evento mais específico (sp-<golpe>), se houver
+  play(key, voice, event, { priority = 1, pan = 0, delay = 0, vol = 1, sub = null } = {}) {
     const eng = this.engine;
+    const bank = voice.bank || voice.set;
+    const url = (sub && this.pick(bank, sub)) || this.pick(bank, event);
+    if (url && typeof window !== 'undefined' && window.__rkVoiceLog) window.__rkVoiceLog.push({ url, delay, f: window.__rkFrame }); // tools/record.mjs (áudio do vídeo)
     if (!eng.running || eng.muted) return false;
-    const url = this.pick(voice.set, event);
     const buf = url && this.buffers.get(url);
     if (!buf) return false;
     const ctx = eng.ctx, now = ctx.currentTime, start = now + delay;
@@ -125,7 +149,8 @@ export class VoiceBank {
     }
     const src = ctx.createBufferSource();
     src.buffer = buf;
-    const rate = (voice.pitch || 1) * (1 + (Math.random() * 2 - 1) * 0.04); // ±4%
+    // grito de arquétipo: tom do personagem ±4%; fala gravada toca no tom original
+    const rate = url.includes('/falas_') ? 1 : (voice.pitch || 1) * (1 + (Math.random() * 2 - 1) * 0.04);
     src.playbackRate.value = rate;
     const g = ctx.createGain();
     g.gain.value = this.volume * vol;

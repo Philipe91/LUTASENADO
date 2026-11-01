@@ -1,0 +1,149 @@
+[
+ {
+  "arquivo": "taunt_1",
+  "texto": "O plenário é meu. E o ringue também.",
+  "ouvido": "O plenário é meu e o ringue também.",
+  "ini": 0,
+  "fim": 2.72
+ },
+ {
+  "arquivo": "win_1",
+  "texto": "Questão de ordem: encerrada.",
+  "ouvido": "Questão de ordem encerrada.",
+  "ini": 2.66,
+  "fim": 5.45
+ },
+ {
+  "arquivo": "sp-discurso-de-impacto_1",
+  "texto": "Impacto!",
+  "ouvido": "Impacto,",
+  "ini": 5.39,
+  "fim": 6.66
+ },
+ {
+  "arquivo": "sp-salto-agulha_1",
+  "texto": "Agulha!",
+  "ouvido": "agulha,",
+  "ini": 6.6,
+  "fim": 7.82
+ },
+ {
+  "arquivo": "sp-close-certo_1",
+  "texto": "Close certo!",
+  "ouvido": "close certo.",
+  "ini": 7.76,
+  "fim": 9.22
+ },
+ {
+  "arquivo": "sp-close-certo_2",
+  "texto": "Errou o close, querido!",
+  "ouvido": "Errou o close, querido.",
+  "ini": 9.16,
+  "fim": 11.25
+ },
+ {
+  "arquivo": "ultimate_1",
+  "texto": "Plenário é meu!",
+  "ouvido": "Plenário é meu,",
+  "ini": 11.19,
+  "fim": 12.85
+ },
+ {
+  "arquivo": "win_2",
+  "texto": "Silenciado!",
+  "ouvido": "silenciado.",
+  "ini": 12.79,
+  "fim": 14.32
+ },
+ {
+  "arquivo": "taunt_2",
+  "texto": "Pela ordem, senhor presidente!",
+  "ouvido": "Pela ordem, senhor presidente.",
+  "ini": 14.26,
+  "fim": 16.58
+ },
+ {
+  "arquivo": "sp-discurso-de-impacto_2",
+  "texto": "Peço a palavra... e a porrada!",
+  "ouvido": "Peço a palavra e a porrada.",
+  "ini": 16.52,
+  "fim": 19.94
+ },
+ {
+  "arquivo": "taunt_3",
+  "texto": "Fim da escala seis por um, começando pela sua cara!",
+  "ouvido": "Fim da escala 6x1, começando pela sua cara.",
+  "ini": 19.88,
+  "fim": 24.86
+ },
+ {
+  "arquivo": "win_3",
+  "texto": "Protocolei sua derrota!",
+  "ouvido": "Protocolei sua derrota.",
+  "ini": 24.8,
+  "fim": 27.18
+ },
+ {
+  "arquivo": "win_4",
+  "texto": "Aprovado em regime de urgência!",
+  "ouvido": "Aprovado em regime de urgência.",
+  "ini": 27.12,
+  "fim": 29.84
+ },
+ {
+  "arquivo": "attack_1",
+  "texto": "Não me interrompa!",
+  "ouvido": "Não me interrompa!",
+  "ini": 29.78,
+  "fim": 31.58
+ },
+ {
+  "arquivo": "hurt_1",
+  "texto": "Ai!",
+  "ouvido": "Ai!",
+  "ini": 31.52,
+  "fim": 32.52
+ },
+ {
+  "arquivo": "hurt_2",
+  "texto": "Ui!",
+  "ouvido": "Ui!",
+  "ini": 32.46,
+  "fim": 33.19
+ },
+ {
+  "arquivo": "hurt_3",
+  "texto": "Aiii!",
+  "ouvido": "Ai!",
+  "ini": 33.13,
+  "fim": 34.1
+ },
+ {
+  "arquivo": "hurt_4",
+  "texto": "Ai, meu salto!",
+  "ouvido": "Ai, meu salto!",
+  "ini": 34.04,
+  "fim": 35.76
+ },
+ {
+  "arquivo": "hurt_5",
+  "texto": "Ui, isso é quebra de decoro!",
+  "ouvido": "Ui! Isso é quebra de decoro!",
+  "ini": 35.7,
+  "fim": 38.45
+ },
+ {
+  "arquivo": "lose_1",
+  "texto": "Ai, ai, ai!",
+  "ouvido": "Ai, ai, ai!",
+  "ini": 38.39,
+  "fim": 39.68
+ },
+ {
+  "arquivo": "ko_1",
+  "texto": "Nãooo!",
+  "ouvido": "Não!",
+  "ini": 39.62,
+  "fim": 41.67
+ }
+]

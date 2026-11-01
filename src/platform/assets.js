@@ -8,6 +8,7 @@ import { quality } from './quality.js';
 const clean = (url) => String(url || '').replace(/^\.?\//, '').split('?')[0];
 export const exists = (url) => clean(url) in LIST;
 export const bytes = (url) => LIST[clean(url)] || 0;
+export const listDir = (dir) => { const p = clean(dir).replace(/\/?$/, '/'); return Object.keys(LIST).filter((k) => k.startsWith(p)); };
 // economia de dados ligada ou rede 2G/3G: modelos leves mesmo no nível alto
 const slowNet = () => { const c = navigator.connection; return !!c && (c.saveData || /(^|-)(2g|3g)$/.test(c.effectiveType || '')); };
 export function modelUrl(url) {

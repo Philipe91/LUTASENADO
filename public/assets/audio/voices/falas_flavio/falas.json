@@ -1,0 +1,121 @@
+[
+ {
+  "arquivo": "taunt_1",
+  "texto": "Zero Um chegou na área!",
+  "ouvido": "01 chegou na área,",
+  "ini": 0,
+  "fim": 2.07
+ },
+ {
+  "arquivo": "taunt_2",
+  "texto": "Herdei tudo do meu pai, inclusive a porrada!",
+  "ouvido": "herdei tudo do meu pai, inclusive a porrada,",
+  "ini": 2.01,
+  "fim": 6.21
+ },
+ {
+  "arquivo": "win_1",
+  "texto": "Tá tudo em família. Próximo!",
+  "ouvido": "tá tudo em família, próximo,",
+  "ini": 6.15,
+  "fim": 8.67
+ },
+ {
+  "arquivo": "win_2",
+  "texto": "Zero Um é o número um!",
+  "ouvido": "01 é o número 1,",
+  "ini": 8.61,
+  "fim": 10.85
+ },
+ {
+  "arquivo": "lose_1",
+  "texto": "Isso não fica assim, vou chamar meu pai!",
+  "ouvido": "isso não fica assim, vou chamar meu pai,",
+  "ini": 10.79,
+  "fim": 13.96
+ },
+ {
+  "arquivo": "lose_2",
+  "texto": "Eu quero foro privilegiado!",
+  "ouvido": "eu quero foro privilegiado,",
+  "ini": 13.9,
+  "fim": 16.25
+ },
+ {
+  "arquivo": "lose_3",
+  "texto": "Cadê o Queiroz pra me ajudar?",
+  "ouvido": "cadê o Queiroz pra me ajudar,",
+  "ini": 16.19,
+  "fim": 18.31
+ },
+ {
+  "arquivo": "taunt_3",
+  "texto": "Vem, que eu racho você!",
+  "ouvido": "vem, que eu racho você,",
+  "ini": 18.25,
+  "fim": 20.57
+ },
+ {
+  "arquivo": "sp-rachadinha-sismica_1",
+  "texto": "Rachadinha!",
+  "ouvido": "rachadinha,",
+  "ini": 20.51,
+  "fim": 22.0
+ },
+ {
+  "arquivo": "sp-rachadinha-sismica_2",
+  "texto": "Treme, treme, Brasília!",
+  "ouvido": "treme, treme Brasília,",
+  "ini": 21.94,
+  "fim": 23.93
+ },
+ {
+  "arquivo": "sp-zero-um_1",
+  "texto": "Clone? Não, assessor.",
+  "ouvido": "clone? Não, assessor.",
+  "ini": 23.87,
+  "fim": 26.08
+ },
+ {
+  "arquivo": "sp-senador-express_1",
+  "texto": "Senador Express!",
+  "ouvido": "Senador Express.",
+  "ini": 26.02,
+  "fim": 27.54
+ },
+ {
+  "arquivo": "taunt_4",
+  "texto": "Mexeu com um, mexeu com todos!",
+  "ouvido": "Mexeu com um, mexeu com todos.",
+  "ini": 27.48,
+  "fim": 30.39
+ },
+ {
+  "arquivo": "ultimate_1",
+  "texto": "Dinastia! Chama o zero dois, o zero três!",
+  "ouvido": "Dinastia. Chama o 02, o",
+  "ini": 30.33,
+  "fim": 33.96
+ },
+ {
+  "arquivo": "taunt_5",
+  "texto": "Picanha não, aqui é chocolate!",
+  "ouvido": "Picanha não. Aqui é chocolate.",
+  "ini": 33.9,
+  "fim": 37.18
+ },
+ {
+  "arquivo": "win_3",
+  "texto": "Rachou!",
+  "ouvido": "Rachou.",
+  "ini": 37.12,
+  "fim": 38.24
+ },
+ {
+  "arquivo": "win_4",
+  "texto": "Herança recebida!",
+  "ouvido": "Herança recebida.",
+  "ini": 38.18,
+  "fim": 40.18
+ }
+]

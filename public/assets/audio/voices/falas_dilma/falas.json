@@ -1,0 +1,142 @@
+[
+ {
+  "arquivo": "taunt_1",
+  "texto": "Não vamos colocar meta. Quando atingir a meta, a gente dobra a meta.",
+  "ouvido": "Não vamos colocar meta. Quando atingir a meta, a gente dobra a meta.",
+  "ini": 0,
+  "fim": 5.84
+ },
+ {
+  "arquivo": "sp-saudacao-a-mandioca_1",
+  "texto": "Eu saúdo a mandioca!",
+  "ouvido": "Eu saúdo a mandioca.",
+  "ini": 5.78,
+  "fim": 8.21
+ },
+ {
+  "arquivo": "win_1",
+  "texto": "Atrás de toda luta tem um cachorro.",
+  "ouvido": "Atrás de toda a luta tem um cachorro.",
+  "ini": 8.15,
+  "fim": 11.49
+ },
+ {
+  "arquivo": "sp-estocar-vento_1",
+  "texto": "Vento estocado!",
+  "ouvido": "Vento estocado.",
+  "ini": 11.43,
+  "fim": 13.33
+ },
+ {
+  "arquivo": "sp-estocar-vento_2",
+  "texto": "Estocou!",
+  "ouvido": "Estocou.",
+  "ini": 13.27,
+  "fim": 14.79
+ },
+ {
+  "arquivo": "sp-saudacao-a-mandioca_2",
+  "texto": "Mandiocada!",
+  "ouvido": "Mandiocada.",
+  "ini": 14.73,
+  "fim": 16.32
+ },
+ {
+  "arquivo": "sp-pedalada-fiscal_1",
+  "texto": "Pedalada fiscal!",
+  "ouvido": "Pedalada fiscal.",
+  "ini": 16.26,
+  "fim": 18.06
+ },
+ {
+  "arquivo": "sp-pedalada-fiscal_2",
+  "texto": "Pedalou!",
+  "ouvido": "Pedalou.",
+  "ini": 18.0,
+  "fim": 19.47
+ },
+ {
+  "arquivo": "attack_1",
+  "texto": "Meta batida!",
+  "ouvido": "Meta batida.",
+  "ini": 19.41,
+  "fim": 21.17
+ },
+ {
+  "arquivo": "attack_2",
+  "texto": "Dobrou a meta!",
+  "ouvido": "Dobrou a meta.",
+  "ini": 21.11,
+  "fim": 22.8
+ },
+ {
+  "arquivo": "ultimate_1",
+  "texto": "Dilmês total!",
+  "ouvido": "Dilmés total.",
+  "ini": 22.74,
+  "fim": 24.29
+ },
+ {
+  "arquivo": "taunt_2",
+  "texto": "Ninguém vai ganhar, nem perder. Vai todo mundo ganhar, ou perder.",
+  "ouvido": "Ninguém vai ganhar nem perder. Vai todo mundo ganhar ou perder",
+  "ini": 24.23,
+  "fim": 31.19
+ },
+ {
+  "arquivo": "win_2",
+  "texto": "Não acho que quem ganhar ou perder vai ganhar ou perder.",
+  "ouvido": "Não acho que quem ganhar ou perder vai ganhar ou perder",
+  "ini": 31.13,
+  "fim": 36.69
+ },
+ {
+  "arquivo": "hurt_1",
+  "texto": "Ai!",
+  "ouvido": "Ai,",
+  "ini": 36.63,
+  "fim": 38.21
+ },
+ {
+  "arquivo": "hurt_2",
+  "texto": "Ui!",
+  "ouvido": "ui,",
+  "ini": 38.15,
+  "fim": 39.02
+ },
+ {
+  "arquivo": "hurt_3",
+  "texto": "Aiii!",
+  "ouvido": "ai,",
+  "ini": 38.96,
+  "fim": 39.94
+ },
+ {
+  "arquivo": "hurt_4",
+  "texto": "Ai, minha mandioca!",
+  "ouvido": "ai minha mandioca,",
+  "ini": 39.88,
+  "fim": 42.06
+ },
+ {
+  "arquivo": "hurt_5",
+  "texto": "Ui, isso é golpe!",
+  "ouvido": "ui, isso é golpe",
+  "ini": 42.0,
+  "fim": 43.83
+ },
+ {
+  "arquivo": "lose_1",
+  "texto": "Ai, ai, ai!",
+  "ouvido": "Ai, ai, ai,",
+  "ini": 43.77,
+  "fim": 45.59
+ },
+ {
+  "arquivo": "ko_1",
+  "texto": "Nãooo!",
+  "ouvido": "não",
+  "ini": 45.53,
+  "fim": 47.6
+ }
+]
